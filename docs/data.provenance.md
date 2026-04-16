@@ -14,11 +14,14 @@ Phase 2a: Regex Score (surface quality signals)
 Phase 2b: Dedup (SHA-256 fingerprint)
     ↓  deterministic, no API cost
 Phase 2c: LLM Judge (semantic quality, Claude Haiku)
-    ↓  ~$2-3, results saved to dataset/judge_results.jsonl
+    ↓  ~$2-3, optional, results saved to dataset/judge_results.jsonl
 Phase 2d: Balance (cap per domain)
     ↓  deterministic, no API cost
-Phase 2e: Instruct (generate instructions, Claude Sonnet)
-    ↓  ~$3-5, results saved to dataset/typescript_training.jsonl
+Phase 2e: Instruct (generate instructions)
+    ↓  Two options:
+    ↓  A) Template-based (free, deterministic) — lib/common/template_instruct.py
+    ↓  B) LLM-generated (Claude Sonnet, ~$3-5) — lib/common/instruct.py
+    ↓
 Training Data (checked into git)
 ```
 
@@ -185,6 +188,44 @@ Units are selected in descending quality score order.
 
 ## Instruction Generation (Phase 2e)
 
+Two methods available. Both produce the same output format.
+
+### Method A: Template-based (free, deterministic)
+
+**Tool:** `lib/common/template_instruct.py`
+
+**Cost:** Free
+
+**Method:** For each code unit, a training instruction is constructed from:
+1. The **domain** (fp, reactive, xstate, eventsourcing)
+2. The **unit type** (function or type)
+3. The **primary identifier** extracted from the code (e.g. `ask`, `repeatWhen`, `SetupReturn`)
+4. **Domain types** referenced in the code (e.g. Either, Observable, StateMachine)
+
+These are combined using per-domain templates:
+
+| Domain | Example instruction |
+|---|---|
+| typescript.fp | "Implement the fp-ts function `ask` that works with Reader, Task using pipe/flow composition" |
+| typescript.reactive | "Implement the RxJS operator `repeatWhen` that transforms Observable streams with proper subscription lifecycle" |
+| typescript.xstate | "Define the XState v5 types for `SetupReturn` including MachineContext, EventObject, and ActorLogic generics" |
+| typescript.eventsourcing | "Implement `getEventStore` for an event-sourced system with aggregate state evolution and event stream operations" |
+
+Template selection is deterministic: the same unit always produces the same instruction
+(selected by `hash(fingerprint) % len(templates)`).
+
+**Limitations:** Templates produce less varied instructions than LLM generation.
+The model may learn to associate specific phrasings with specific patterns
+rather than generalizing. For higher quality, use Method B.
+
+**Run standalone:**
+
+```bash
+python3 -m lib.common.template_instruct
+```
+
+### Method B: LLM-generated (requires API key)
+
 **Tool:** `lib/common/instruct.py`
 
 **Model:** Claude Sonnet (`claude-sonnet-4-20250514`)
@@ -193,7 +234,10 @@ Units are selected in descending quality score order.
 
 **Method:** Each code unit is sent to Claude with the prompt: "Given this code
 and its domain, generate one natural instruction that would produce this code."
-The code is ground truth; the instruction just needs to be plausible.
+
+**Advantages over templates:** More varied phrasing, context-aware descriptions,
+catches nuances that templates miss. Produces better training signal for
+instruction-following.
 
 **Validation rules:**
 - Must be phrased as a task (implement, create, write)
@@ -201,24 +245,47 @@ The code is ground truth; the instruction just needs to be plausible.
 - Must mention a domain-specific term (e.g. "fp-ts", "observable", "xstate")
 - Rejected instructions are logged to `dataset/rejected.jsonl`
 
-**Output format:** `dataset/typescript_training.jsonl` with messages-only JSONL
-compatible with Unsloth/TRL SFTTrainer. Metadata sidecar at `dataset/metadata.jsonl`.
+### Output format (both methods)
+
+`dataset/typescript_training.jsonl` — messages-only JSONL compatible with Unsloth/TRL SFTTrainer:
+
+```json
+{
+  "messages": [
+    {"role": "user", "content": "Implement the RxJS operator `repeatWhen`..."},
+    {"role": "assistant", "content": "import { Observable } from '...'\n\nexport function repeatWhen..."}
+  ],
+  "id": "abc1234f-0042"
+}
+```
+
+Metadata sidecar at `dataset/metadata.jsonl`:
+
+```json
+{"id": "abc1234f-0042", "domain": "typescript.reactive", "source": "rxjs:src/internal/operators/repeatWhen.ts", "unit_type": "function", "quality_score": 0.64}
+```
 
 ## Reproducing the Dataset
 
-### From scratch (full pipeline, ~$5-8 API cost)
-
-```bash
-export ANTHROPIC_API_KEY="your-key"
-
-# Clone repos, extract, score, dedup, judge, balance, generate instructions
-python3 extract_pipeline.py
-```
-
-### From checked-in training data (free)
+### From checked-in training data (free, instant)
 
 The training data in `dataset/typescript_training.jsonl` is ready to use.
 No pipeline run needed. Proceed directly to `train.py`.
+
+### From scratch with templates (free, ~10 seconds)
+
+```bash
+# Extract, score, dedup, balance, template instructions
+python3 extract_pipeline.py --skip-judge --skip-instruct
+python3 -m lib.common.template_instruct
+```
+
+### From scratch with LLM instructions (requires API key, ~$5-8)
+
+```bash
+export ANTHROPIC_API_KEY="your-key"
+python3 extract_pipeline.py
+```
 
 ### Partial re-runs
 
