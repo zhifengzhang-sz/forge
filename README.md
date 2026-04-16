@@ -93,14 +93,28 @@ Output:
 - `dataset/judge_results.jsonl` — LLM judge scores and reasoning per unit
 - `dataset/rejected.jsonl` — failed instruction generations for review
 
-To review data quality interactively, use the data reviewer agent:
+To review data quality interactively, first run extraction with the judge:
+
+```bash
+# Step 1: Extract and score (no API cost)
+python3 extract_pipeline.py --skip-judge --skip-instruct
+
+# Step 2: Run LLM judge (~$2-3 via Haiku)
+python3 extract_pipeline.py --skip-instruct
+
+# Step 3: Review quality in Claude Code
+claude
+```
+
+Then in the Claude Code session, ask:
 
 ```
-Review the training data quality. Read dataset/judge_results.jsonl,
-sample examples from each domain, and tell me if the data looks good.
+Read agents/data.reviewer.md for instructions, then review the training
+data quality. Read dataset/judge_results.jsonl, sample examples from
+each domain, and tell me if the data looks good for fine-tuning.
 ```
 
-See `agents/data.reviewer.md` for the full agent spec.
+See `agents/data.reviewer.md` for the full agent spec and review criteria.
 
 The script prints an estimated API cost before starting and asks for confirmation.
 

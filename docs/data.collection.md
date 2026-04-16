@@ -74,7 +74,13 @@ The judge scores 1-5. Units below 3 are dropped. Results are saved to `dataset/j
 
 Skip with `--skip-judge` for fast iteration during development. Run without skipping before instruction generation to ensure data quality.
 
-Use the data reviewer agent (`agents/data.reviewer.md`) to interactively review judge results and calibrate quality.
+To review judge results interactively, run the data reviewer agent in Claude Code:
+
+```
+Read agents/data.reviewer.md for instructions, then review the training
+data quality. Read dataset/judge_results.jsonl, sample examples from
+each domain, and tell me if the data looks good for fine-tuning.
+```
 
 ## Cost Estimation
 

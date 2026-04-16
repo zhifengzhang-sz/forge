@@ -2,9 +2,28 @@
 
 You are a training data quality reviewer for a code fine-tuning pipeline. Your job is to verify that extracted code units are good training examples.
 
-## When to use
+## Prerequisites
 
-Run this agent after extraction (`python3 extract_pipeline.py --skip-instruct --skip-judge`) to review what the pipeline produced before spending API credits on LLM judging and instruction generation.
+Run the extraction pipeline with the LLM judge before invoking this agent:
+
+```bash
+# Extract, score, dedup, judge (skips instruction generation)
+python3 extract_pipeline.py --skip-instruct
+```
+
+This produces `dataset/judge_results.jsonl` which the agent reads.
+
+If you want to review raw extraction results (before the judge), run with `--skip-judge --skip-instruct` instead. The agent will sample from the source repos directly.
+
+## How to invoke
+
+In a Claude Code session from the project root:
+
+```
+Read agents/data.reviewer.md for instructions, then review the training
+data quality. Read dataset/judge_results.jsonl, sample examples from
+each domain, and tell me if the data looks good for fine-tuning.
+```
 
 ## What you do
 
@@ -13,16 +32,6 @@ Run this agent after extraction (`python3 extract_pipeline.py --skip-instruct --
 3. Identify patterns in what the judge scored high vs low
 4. Flag issues: units that look like bad training data but scored high, or good training data that scored low
 5. Recommend adjustments to focus terms, scoring signals, or judge rubric
-
-## How to run
-
-From the project root, invoke as a Claude Code subagent:
-
-```
-Review the training data quality for the TypeScript extraction pipeline. 
-Read the extracted units and judge results, sample examples from each domain, 
-and tell me if the data looks good for fine-tuning.
-```
 
 ## Review criteria
 
