@@ -25,8 +25,8 @@ DATASET_PATH = ROOT / "dataset" / "typescript_training.jsonl"
 MODELS = {
     "qwen3-14b": {
         "hf_name": "unsloth/Qwen3-14B",
-        "batch_size": 4,
-        "grad_accum": 4,
+        "batch_size": 2,
+        "grad_accum": 8,
     },
     "gemma4-31b": {
         "hf_name": "unsloth/gemma-4-31b-it",
@@ -92,7 +92,7 @@ def train(model_key: str, dry_run: bool = False):
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
                         "gate_proj", "up_proj", "down_proj"],
         lora_alpha=32,
-        lora_dropout=0.05,
+        lora_dropout=0,
         bias="none",
         use_gradient_checkpointing="unsloth",
     )
