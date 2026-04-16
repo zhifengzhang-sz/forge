@@ -51,9 +51,9 @@ pip install trl transformers datasets peft accelerate bitsandbytes
 pip install anthropic   # for instruction generation (Phase 2)
 ```
 
-### 4. Create the eval held-out set
+### 4. Create the eval held-out set (recommended before training)
 
-Write 50 test examples per domain **before** running data extraction. These go in `eval/held_out/` and are excluded from training data by SHA-256 fingerprint.
+Write 50 test examples per domain. These go in `eval/held_out/` and are excluded from training data by SHA-256 fingerprint when present. The extraction pipeline runs without them (with a warning), but they should exist before you train.
 
 ```bash
 mkdir -p eval/held_out

@@ -10,7 +10,12 @@ CONFIG = TopicConfig(
     file_extensions=[".ts"],
     skip_dirs=["node_modules", "dist", "build", ".git", "__tests__"],
     skip_suffixes=[".d.ts", ".spec.ts", ".test.ts"],
-    focus_terms=["pipe(", "flow(", "Option<", "Either<", "Task<", "Reader"],
+    focus_terms=[
+        "pipe(", "pipe,", "flow(", "flow,",
+        "Option<", "Option,", "Either<", "Either,",
+        "Task<", "Task,", "Reader<", "Reader,",
+        "Effect<", "Effect.", "Layer<", "Layer.",
+    ],
     scoring_signals=[],   # use TypeScript defaults
     scoring_penalties=[], # use TypeScript defaults
     system_prompt_fragment="functional programming (fp-ts, Effect)",

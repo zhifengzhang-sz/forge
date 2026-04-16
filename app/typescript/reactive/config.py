@@ -9,7 +9,12 @@ CONFIG = TopicConfig(
     file_extensions=[".ts"],
     skip_dirs=["node_modules", "dist", "build", ".git", "__tests__"],
     skip_suffixes=[".d.ts", ".spec.ts", ".test.ts"],
-    focus_terms=["Observable<", "Subject", "switchMap(", "mergeMap(", "combineLatest"],
+    focus_terms=[
+        "Observable<", "Observable,", "Subject<", "Subject,",
+        "switchMap(", "mergeMap(", "concatMap(", "exhaustMap(",
+        "combineLatest(", "combineLatest<",
+        "Subscriber", "Operator", "OperatorFunction",
+    ],
     scoring_signals=[],
     scoring_penalties=[],
     system_prompt_fragment="reactive programming (RxJS)",

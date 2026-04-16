@@ -62,15 +62,18 @@ def load_topics(names: list[str] | None) -> list[TopicConfig]:
     return topics
 
 
-def check_held_out():
+def check_held_out() -> bool:
+    """Check if held-out eval set exists. Returns True if present."""
     if not HELD_OUT_DIR.exists() or not any(HELD_OUT_DIR.iterdir()):
-        log.error(
+        log.warning(
             "Held-out eval set not found at %s. "
-            "Create eval/held_out/ JSON files BEFORE running extraction.",
+            "Training data will NOT be filtered against eval examples. "
+            "Create eval/held_out/ JSON files before training to prevent contamination.",
             HELD_OUT_DIR,
         )
-        sys.exit(1)
+        return False
     log.info("Held-out eval set found at %s", HELD_OUT_DIR)
+    return True
 
 
 def run_topic(topic: TopicConfig, lang: LanguageModule, full_history: bool) -> list:
@@ -108,7 +111,7 @@ def main():
     parser.add_argument("--full-history", action="store_true", help="Clone full git history for diffs")
     args = parser.parse_args()
 
-    check_held_out()
+    has_held_out = check_held_out()
 
     topics = load_topics(args.topics)
     log.info("=== Phase 1-2: %d topics ===", len(topics))
@@ -121,7 +124,7 @@ def main():
 
     log.info("Total scored units across all topics: %d", len(all_units))
 
-    held_out_fps = load_held_out_fingerprints(HELD_OUT_DIR)
+    held_out_fps = load_held_out_fingerprints(HELD_OUT_DIR) if has_held_out else set()
     deduped = deduplicate(all_units, held_out_fps=held_out_fps)
 
     balanced = balance_domains(deduped)

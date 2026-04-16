@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 # Default TypeScript-specific positive signals
 DEFAULT_TS_SIGNALS = [
     (r"\breadonly\b",             0.08),
-    (r":\s*\w+(<",               0.08),  # type annotations with generics
+    (r":\s*\w+<",                0.08),  # type annotations with generics
     (r"\bexport\b",              0.08),
     (r"<\w+(\s*,\s*\w+)*>",     0.08),  # generic parameters
     (r"\bas\s+const\b",          0.08),

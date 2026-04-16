@@ -8,14 +8,15 @@ from lib.common.types import Unit
 log = logging.getLogger(__name__)
 
 MAX_PER_DOMAIN = 500
+MIN_FLOOR = 100  # small domains get all their units; cap is at least this
 
 
 def balance_domains(units: list[Unit]) -> list[Unit]:
     """Balance units across domains.
 
-    Soft cap: no domain exceeds 2x the size of the smallest domain,
-    capped at MAX_PER_DOMAIN. Units are selected in descending quality
-    score order within each domain.
+    Cap formula: max(2 * median_domain_size, MIN_FLOOR), capped at MAX_PER_DOMAIN.
+    Uses median instead of min so one small domain doesn't crush the rest.
+    Small domains that fall below the cap contribute all their units.
     """
     by_domain: dict[str, list[Unit]] = defaultdict(list)
     for unit in units:
@@ -24,12 +25,13 @@ def balance_domains(units: list[Unit]) -> list[Unit]:
     for domain in by_domain:
         by_domain[domain].sort(key=lambda u: u.quality_score, reverse=True)
 
-    domain_sizes = {d: len(us) for d, us in by_domain.items()}
+    domain_sizes = sorted(len(us) for us in by_domain.values())
     if not domain_sizes:
         return []
 
-    min_size = min(domain_sizes.values())
-    cap = min(2 * min_size, MAX_PER_DOMAIN)
+    # Use median instead of min
+    median_size = domain_sizes[len(domain_sizes) // 2]
+    cap = min(max(2 * median_size, MIN_FLOOR), MAX_PER_DOMAIN)
 
     result = []
     for domain, domain_units in by_domain.items():
@@ -37,5 +39,5 @@ def balance_domains(units: list[Unit]) -> list[Unit]:
         result.extend(selected)
         log.info("Domain '%s': %d available, %d selected (cap=%d)", domain, len(domain_units), len(selected), cap)
 
-    log.info("Balanced dataset: %d total units across %d domains", len(result), len(by_domain))
+    log.info("Balanced dataset: %d total units across %d domains (cap=%d)", len(result), len(by_domain), cap)
     return result

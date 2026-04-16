@@ -271,16 +271,18 @@ node_modules/   # third-party code
 dist/ build/    # compiled output
 *.spec.ts       # test files (handled separately)
 *.test.ts
+__tests__/      # test directories
+.git/           # git internals
 ```
 
-Only process files containing at least one **focus term** per domain:
+Only process files containing at least one **focus term** per domain. Focus terms include both call-site patterns (e.g. `setup(`) and definition-site patterns (e.g. `setup<`, `StateMachine`) to capture function declarations, type definitions, and usage:
 
 | Domain | Focus terms |
 |---|---|
-| fp | `pipe(` `flow(` `Option<` `Either<` `Task<` `Reader` |
-| reactive | `Observable<` `Subject` `switchMap(` `mergeMap(` `combineLatest` |
-| xstate | `setup(` `createMachine(` `fromPromise(` `fromObservable(` `assign(` |
-| eventsourcing | `Aggregate` `evolve(` `Command` `EventStore` `append(` `readStream(` |
+| fp | `pipe(` `pipe,` `flow(` `flow,` `Option<` `Option,` `Either<` `Either,` `Task<` `Task,` `Reader<` `Reader,` `Effect<` `Effect.` `Layer<` `Layer.` |
+| reactive | `Observable<` `Observable,` `Subject<` `Subject,` `switchMap(` `mergeMap(` `concatMap(` `exhaustMap(` `combineLatest(` `combineLatest<` `Subscriber` `Operator` `OperatorFunction` |
+| xstate | `setup(` `setup<` `createMachine(` `createMachine<` `fromPromise(` `fromPromise<` `fromObservable(` `fromObservable<` `assign(` `assign<` `StateMachine` `MachineContext` `AnyActorRef` `ActorLogic` `EventObject` |
+| eventsourcing | `Aggregate` `AggregateStream` `evolve(` `evolve<` `evolve:` `Command` `CommandHandler` `EventStore` `EventStream` `append(` `appendToStream(` `readStream(` `readFromStream(` `Decider` `Projector` |
 
 ### 5.4 Semantic unit types
 
@@ -356,11 +358,11 @@ Near-duplicate detection is intentionally skipped — slight variations in simil
 
 ### 6.3 Domain balancing
 
-Without balancing, the largest repo would dominate the dataset. A soft cap prevents any single domain from exceeding twice the size of the smallest:
+Without balancing, the largest repo would dominate the dataset. A soft cap prevents any single domain from exceeding twice the median domain size, with a floor of 100 to prevent small domains from crushing larger ones:
 
-$$N_{\text{cap}} = \min\!\left(2 \cdot \min_d N_d,\ 500\right)$$
+$$N_{\text{cap}} = \min\!\left(\max\!\left(2 \cdot \text{median}_d N_d,\ 100\right),\ 500\right)$$
 
-Units are selected in descending quality score order within each domain.
+Domains smaller than the cap contribute all their units. Units are selected in descending quality score order within each domain.
 
 ### 6.4 Instruction generation
 
@@ -421,12 +423,12 @@ Metadata is stored in a separate sidecar file `dataset/metadata.jsonl` to keep t
 | Domain | Target examples | Source type split |
 |---|---|---|
 | fp | 400–500 | 60% functions, 30% types, 10% diffs |
-| reactive | 400–500 | 50% functions, 20% types, 30% diffs |
-| xstate | 400–500 | 70% functions, 10% types, 20% diffs |
-| eventsourcing | 400–500 | 40% functions, 20% types, 40% diffs |
-| **Total** | **1,600–2,000** | |
+| reactive | 200–300 | 50% functions, 20% types, 30% diffs |
+| xstate | 150–200 | 70% functions, 10% types, 20% diffs |
+| eventsourcing | 100–150 | 40% functions, 20% types, 40% diffs |
+| **Total** | **~1,000–1,200** | |
 
-This is intentionally modest. LoRA fine-tuning on a strong base model converges quickly on focused domains — 2,000 high-quality examples outperforms 20,000 noisy ones.
+Actual yields depend on repo size and focus term coverage. Shallow clones (default) produce functions and types only. Add `--full-history` for git diff examples, which increases the dataset by 10–30% per domain. LoRA fine-tuning on a strong base model converges quickly on focused domains — 1,000+ high-quality examples outperforms 20,000 noisy ones.
 
 ---
 
@@ -733,7 +735,7 @@ Where $S_d$ is the set of expected signal terms for domain $d$. Target: $> 0.75$
 
 **3. Semantic correctness** — does the code do what was asked?
 
-Manual review on a held-out test set of 50 examples per domain (200 total), written before extraction to avoid contamination. The held-out set is stored in `eval/held_out/` and must be created **before** Phase 1 runs. The extraction pipeline excludes any code that appears in the held-out set via SHA-256 fingerprint matching.
+Manual review on a held-out test set of 50 examples per domain (200 total). The held-out set is stored in `eval/held_out/` and should be created before training to prevent contamination. If present during extraction, the pipeline excludes any code that matches the held-out set via SHA-256 fingerprint. If absent, extraction proceeds with a warning.
 
 ### 11.2 Baseline comparison
 
@@ -900,4 +902,4 @@ forge/
 
 ---
 
-*Document version 2.2 — covers Qwen3-14B / Gemma 4 31B dual-model evaluation strategy, Ollama, Claude Code as of April 2026. Eng review applied: r=32, bf16 export, disk budget, API error handling, eval isolation, early stopping. Refactored to lib/app structure with LanguageModule protocol for multi-language extensibility.*
+*Document version 2.3 — covers Qwen3-14B / Gemma 4 31B dual-model evaluation strategy, Ollama, Claude Code as of April 2026. Eng review applied: r=32, bf16 export, disk budget, API error handling, eval isolation, early stopping. Refactored to lib/app structure with LanguageModule protocol. Focus terms expanded to cover both call-site and definition-site patterns. Balance formula uses median with floor.*
