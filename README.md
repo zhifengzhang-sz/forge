@@ -187,21 +187,29 @@ Or add to your project's `.claude/settings.json`:
 
 ```
 forge/
-├── README.md
-├── extract/                 # Phase 1-2: modules
-│   ├── clone.py             # Clone source repositories
-│   ├── walk.py              # Walk .ts files, filter by focus terms
-│   ├── extract.py           # Parse semantic units
-│   ├── score.py             # Quality scoring
-│   ├── dedup.py             # SHA-256 deduplication
-│   ├── balance.py           # Domain balancing
-│   └── instruct.py          # Instruction generation (Claude API)
+├── lib/
+│   ├── common/              # Generic pipeline modules
+│   │   ├── types.py         # TopicConfig, Unit, LanguageModule protocol
+│   │   ├── clone.py         # Git clone with retry
+│   │   ├── dedup.py         # SHA-256 dedup + held-out exclusion
+│   │   ├── balance.py       # Domain balancing
+│   │   └── instruct.py      # Claude API instruction generation
+│   └── typescript/          # TypeScript-specific modules
+│       ├── walk.py          # .ts file walking
+│       ├── extract.py       # Brace-matching parser
+│       └── score.py         # TS scoring signals
+├── app/
+│   └── typescript/          # TypeScript topic configs
+│       ├── fp/config.py
+│       ├── reactive/config.py
+│       ├── xstate/config.py
+│       └── eventsourcing/config.py
 ├── extract_pipeline.py      # Phase 1-2: orchestrator
 ├── train.py                 # Phase 3: QLoRA fine-tuning
 ├── export.sh                # Phase 4: merge, convert, quantise, cleanup
 ├── Modelfile                # Phase 5: Ollama model definition
 ├── docs/
-│   └── design.md            # Full design document (v2.1)
+│   └── design.md            # Full design document (v2.2)
 ├── repos/                   # Cloned source repositories (gitignored)
 ├── dataset/
 │   ├── typescript_training.jsonl
@@ -216,21 +224,44 @@ forge/
     └── results/
 ```
 
+## Adding a New Language
+
+1. Create `lib/<language>/` with `walk.py`, `extract.py`, `score.py` and a `LanguageModule` implementation in `__init__.py`
+2. Create `app/<language>/<topic>/config.py` for each domain
+3. Register the language module in `extract_pipeline.py`
+
+Generic modules (clone, dedup, balance, instruct) work unchanged. See [docs/design.md](docs/design.md) Section 13.
+
 ## Retraining
 
 Retrain when a target library releases a major version, evaluation fidelity drops below 0.70, or your codebase conventions diverge from the training data. See [docs/design.md](docs/design.md) Section 12.
 
-To add your own codebase as a training source:
+To add your own codebase as a training source, create a new topic config:
 
 ```python
-# In extract/clone.py, add to the REPOS list:
-{"url": "file:///path/to/your/project", "domain": "internal", "name": "my-project"},
+# app/typescript/internal/config.py
+from lib.common.types import TopicConfig, RepoConfig
+
+CONFIG = TopicConfig(
+    name="typescript.internal",
+    language="typescript",
+    repos=[RepoConfig(url="file:///path/to/your/project", name="my-project")],
+    file_extensions=[".ts"],
+    skip_dirs=["node_modules", "dist", "build", ".git"],
+    skip_suffixes=[".d.ts", ".spec.ts", ".test.ts"],
+    focus_terms=["YourPattern", "yourFunction"],
+    scoring_signals=[],
+    scoring_penalties=[],
+)
+
+DOMAIN_TERMS = ["your-library"]
 ```
 
-And add matching focus terms in `extract/walk.py`:
+Then add it to `app/typescript/__init__.py`:
 
 ```python
-FOCUS_TERMS["internal"] = ["YourPattern", "yourFunction"]
+from app.typescript.internal.config import CONFIG as INTERNAL_CONFIG
+ALL_TOPICS = [..., INTERNAL_CONFIG]
 ```
 
 ## License

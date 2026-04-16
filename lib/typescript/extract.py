@@ -10,16 +10,36 @@ log = logging.getLogger(__name__)
 
 
 def _extract_imports(content: str) -> str:
-    """Extract the import block from the top of a file."""
+    """Extract the import block from the top of a file.
+
+    Handles multi-line imports like:
+        import {
+          Option,
+          some,
+          none,
+        } from 'fp-ts/Option'
+    """
     lines = []
+    in_multiline = False
+
     for line in content.splitlines():
         stripped = line.strip()
+
+        if in_multiline:
+            lines.append(line)
+            if "}" in stripped:
+                in_multiline = False
+            continue
+
         if stripped.startswith("import ") or stripped.startswith("from "):
             lines.append(line)
+            if "{" in stripped and "}" not in stripped:
+                in_multiline = True
         elif stripped.startswith("//") or stripped == "":
             continue
-        elif lines:
+        elif lines and not in_multiline:
             break
+
     return "\n".join(lines)
 
 

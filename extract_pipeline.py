@@ -6,7 +6,7 @@ Usage:
     python3 extract_pipeline.py --topics typescript.fp   # single topic
     python3 extract_pipeline.py --dry-run                # estimate API cost only
     python3 extract_pipeline.py --skip-instruct          # skip instruction generation
-    python3 extract_pipeline.py --full-history            # include git diffs
+    python3 extract_pipeline.py --full-history           # include git diffs
 """
 
 import argparse
@@ -14,16 +14,13 @@ import logging
 import sys
 from pathlib import Path
 
-from lib.common.types import TopicConfig
+from lib.common.types import TopicConfig, LanguageModule
 from lib.common.clone import clone_repos
 from lib.common.dedup import deduplicate, load_held_out_fingerprints
 from lib.common.balance import balance_domains
 from lib.common.instruct import generate_instructions
 
-from lib.typescript.walk import walk_ts_files
-from lib.typescript.extract import extract_units_from_file, extract_diffs
-from lib.typescript.score import filter_by_quality
-
+from lib.typescript import TypeScriptModule
 from app.typescript import ALL_TOPICS
 
 logging.basicConfig(
@@ -38,9 +35,20 @@ REPOS_DIR = ROOT / "repos"
 DATASET_DIR = ROOT / "dataset"
 HELD_OUT_DIR = ROOT / "eval" / "held_out"
 
+# Register language modules here. Add new languages by importing and registering.
+LANGUAGES: dict[str, LanguageModule] = {
+    "typescript": TypeScriptModule(),
+}
+
+
+def get_language_module(language: str) -> LanguageModule:
+    if language not in LANGUAGES:
+        log.error("No language module for '%s'. Available: %s", language, list(LANGUAGES.keys()))
+        sys.exit(1)
+    return LANGUAGES[language]
+
 
 def load_topics(names: list[str] | None) -> list[TopicConfig]:
-    """Load topic configs by name, or all if None."""
     if not names:
         return ALL_TOPICS
 
@@ -65,33 +73,30 @@ def check_held_out():
     log.info("Held-out eval set found at %s", HELD_OUT_DIR)
 
 
-def run_topic(topic: TopicConfig, full_history: bool) -> list:
-    """Run extraction and scoring for a single topic. Returns scored units."""
+def run_topic(topic: TopicConfig, lang: LanguageModule, full_history: bool) -> list:
+    """Run extraction and scoring for a single topic."""
     log.info("--- Topic: %s ---", topic.name)
 
-    # Clone
     repos = clone_repos(topic.repos, REPOS_DIR, full_history=full_history)
     if not repos:
         log.warning("No repos cloned for %s", topic.name)
         return []
 
-    # Walk and extract
     units = []
     for repo in repos:
         repo_path = REPOS_DIR / repo.name
-        files = walk_ts_files(repo_path, topic)
+        files = lang.walk(repo_path, topic)
         for file_info in files:
-            extracted = extract_units_from_file(file_info, topic.name)
+            extracted = lang.extract(file_info, topic.name)
             units.extend(extracted)
 
         if full_history:
-            diffs = extract_diffs(repo_path, topic.name)
+            diffs = lang.extract_diffs(repo_path, topic.name)
             units.extend(diffs)
 
     log.info("Raw units for %s: %d", topic.name, len(units))
 
-    # Score
-    scored = filter_by_quality(units, topic)
+    scored = lang.score(units, topic)
     return scored
 
 
@@ -108,19 +113,17 @@ def main():
     topics = load_topics(args.topics)
     log.info("=== Phase 1-2: %d topics ===", len(topics))
 
-    # Extract and score per topic
     all_units = []
     for topic in topics:
-        scored = run_topic(topic, args.full_history)
+        lang = get_language_module(topic.language)
+        scored = run_topic(topic, lang, args.full_history)
         all_units.extend(scored)
 
     log.info("Total scored units across all topics: %d", len(all_units))
 
-    # Dedup (with held-out exclusion)
     held_out_fps = load_held_out_fingerprints(HELD_OUT_DIR)
     deduped = deduplicate(all_units, held_out_fps=held_out_fps)
 
-    # Balance
     balanced = balance_domains(deduped)
     log.info("Final dataset size: %d units", len(balanced))
 
@@ -131,10 +134,12 @@ def main():
     # Collect domain validation terms from topic configs
     domain_terms = {}
     for topic in topics:
-        module = __import__(f"app.typescript.{topic.name.split('.')[-1]}.config", fromlist=["DOMAIN_TERMS"])
+        # topic.name is "typescript.fp" -> language="typescript", domain="fp"
+        parts = topic.name.split(".")
+        module_path = f"app.{'.'.join(parts)}.config"
+        module = __import__(module_path, fromlist=["DOMAIN_TERMS"])
         domain_terms[topic.name] = getattr(module, "DOMAIN_TERMS", [])
 
-    # Generate instructions
     results = generate_instructions(
         units=balanced,
         output_path=DATASET_DIR / "typescript_training.jsonl",

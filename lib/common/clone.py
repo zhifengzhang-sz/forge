@@ -1,6 +1,8 @@
 """Clone source repositories. Generic across all languages."""
 
+import shutil
 import subprocess
+import time
 import logging
 from pathlib import Path
 
@@ -8,15 +10,31 @@ from lib.common.types import RepoConfig
 
 log = logging.getLogger(__name__)
 
+MAX_RETRIES = 3
+BASE_DELAY = 2.0
+
+
+def _clone_with_retry(cmd: list[str], dest: Path, repo_url: str) -> bool:
+    for attempt in range(MAX_RETRIES):
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            log.warning("Clone attempt %d/%d failed for %s: %s", attempt + 1, MAX_RETRIES, repo_url, e.stderr.strip())
+            # Clean up partial clone before retry
+            if dest.exists():
+                shutil.rmtree(dest, ignore_errors=True)
+            if attempt < MAX_RETRIES - 1:
+                delay = BASE_DELAY * (2 ** attempt)
+                log.info("Retrying in %.0fs...", delay)
+                time.sleep(delay)
+
+    log.error("Failed to clone %s after %d attempts", repo_url, MAX_RETRIES)
+    return False
+
 
 def clone_repos(repos: list[RepoConfig], repos_dir: Path, full_history: bool = False) -> list[RepoConfig]:
-    """Clone repos. Returns list of successfully cloned RepoConfigs.
-
-    Args:
-        repos: List of repo configurations.
-        repos_dir: Directory to clone into.
-        full_history: If True, clone full history (needed for diff extraction).
-    """
+    """Clone repos with retry. Returns list of successfully cloned RepoConfigs."""
     repos_dir.mkdir(parents=True, exist_ok=True)
     results = []
 
@@ -34,10 +52,7 @@ def clone_repos(repos: list[RepoConfig], repos_dir: Path, full_history: bool = F
         cmd += [repo.url, str(dest)]
 
         log.info("Cloning %s -> %s", repo.url, dest)
-        try:
-            subprocess.run(cmd, check=True, capture_output=True, text=True)
+        if _clone_with_retry(cmd, dest, repo.url):
             results.append(repo)
-        except subprocess.CalledProcessError as e:
-            log.error("Failed to clone %s: %s", repo.url, e.stderr.strip())
 
     return results

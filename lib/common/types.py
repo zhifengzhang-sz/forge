@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Protocol
 
 
 @dataclass
@@ -37,3 +38,28 @@ class Unit:
     quality_score: float = 0.0
     fingerprint: str = ""
     commit_message: str = ""
+
+
+class LanguageModule(Protocol):
+    """Protocol for language-specific extraction modules.
+
+    Each language (typescript, haskell, python, etc.) implements this
+    protocol. The orchestrator dispatches to the correct module based
+    on TopicConfig.language.
+    """
+
+    def walk(self, repo_path: Path, config: TopicConfig) -> list[dict]:
+        """Walk source files matching the topic's focus terms."""
+        ...
+
+    def extract(self, file_info: dict, domain: str) -> list[Unit]:
+        """Extract semantic units from a single source file."""
+        ...
+
+    def extract_diffs(self, repo_path: Path, domain: str) -> list[Unit]:
+        """Extract diffs from git history."""
+        ...
+
+    def score(self, units: list[Unit], config: TopicConfig) -> list[Unit]:
+        """Score and filter units by quality."""
+        ...

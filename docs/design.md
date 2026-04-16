@@ -812,26 +812,52 @@ The domain balancer treats it as a fifth category, ensuring your conventions are
 
 ---
 
-## 13. Appendix — File Structure
+## 13. Appendix — Code Architecture
+
+### Language abstraction
+
+The pipeline is language-agnostic at the orchestration layer. Each language implements a `LanguageModule` protocol with four methods: `walk`, `extract`, `extract_diffs`, and `score`. The orchestrator dispatches to the correct language module based on `TopicConfig.language`.
+
+Adding a new language (e.g. Haskell, Python, Rust) requires:
+1. Create `lib/<language>/` with walk, extract, score modules
+2. Register a `LanguageModule` implementation in `lib/<language>/__init__.py`
+3. Create `app/<language>/<topic>/config.py` for each domain
+
+Generic modules (clone, dedup, balance, instruct) work unchanged across all languages.
+
+### File structure
 
 ```
 forge/
-├── extract/                     # Phase 1–2: extraction and curation
-│   ├── __init__.py
-│   ├── clone.py                 # Clone source repositories
-│   ├── walk.py                  # Walk .ts files, filter by focus terms
-│   ├── extract.py               # Parse semantic units (functions, types, diffs)
-│   ├── score.py                 # Quality scoring
-│   ├── dedup.py                 # SHA-256 deduplication
-│   ├── balance.py               # Domain balancing
-│   └── instruct.py              # Instruction generation via Claude API
+├── lib/
+│   ├── common/                  # Generic pipeline modules
+│   │   ├── types.py             # TopicConfig, Unit, RepoConfig, LanguageModule
+│   │   ├── clone.py             # Git clone with retry
+│   │   ├── dedup.py             # SHA-256 dedup + held-out exclusion
+│   │   ├── balance.py           # Domain balancing
+│   │   └── instruct.py          # Claude API instruction generation
+│   └── typescript/              # TypeScript-specific modules
+│       ├── __init__.py          # TypeScriptModule (LanguageModule impl)
+│       ├── walk.py              # .ts file walking, skip patterns
+│       ├── extract.py           # Brace-matching parser
+│       └── score.py             # TS scoring signals
+│
+├── app/
+│   └── typescript/              # TypeScript topic configs
+│       ├── __init__.py          # ALL_TOPICS list
+│       ├── fp/config.py         # fp-ts, Effect repos + focus terms
+│       ├── reactive/config.py   # RxJS repos + focus terms
+│       ├── xstate/config.py     # XState v5 repos + focus terms
+│       └── eventsourcing/config.py  # EventSourcing.NodeJS repos + focus terms
+│
 ├── extract_pipeline.py          # Phase 1–2: orchestrator
 ├── train.py                     # Phase 3: LoRA fine-tuning
 ├── export.sh                    # Phase 4: merge, convert, quantise
 ├── Modelfile                    # Phase 5: Ollama model definition
 │
-├── repos/                       # cloned source repositories
+├── repos/                       # Cloned source repositories (gitignored)
 │   ├── fp-ts/
+│   ├── effect/
 │   ├── rxjs/
 │   ├── xstate/
 │   └── EventSourcing.NodeJS/
@@ -874,4 +900,4 @@ forge/
 
 ---
 
-*Document version 2.1 — covers Qwen3-14B / Gemma 4 31B dual-model evaluation strategy, Ollama, Claude Code as of April 2026. Eng review applied: r=32, bf16 export, disk budget, API error handling, eval isolation, early stopping.*
+*Document version 2.2 — covers Qwen3-14B / Gemma 4 31B dual-model evaluation strategy, Ollama, Claude Code as of April 2026. Eng review applied: r=32, bf16 export, disk budget, API error handling, eval isolation, early stopping. Refactored to lib/app structure with LanguageModule protocol for multi-language extensibility.*

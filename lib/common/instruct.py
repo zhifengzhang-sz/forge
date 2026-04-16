@@ -53,8 +53,17 @@ def _call_api(client, code: str, domain: str, imports: str = "") -> str | None:
             )
             return response.content[0].text.strip()
         except Exception as e:
-            error_str = str(e)
-            if "429" in error_str or "500" in error_str or "502" in error_str or "503" in error_str:
+            retryable = False
+            # Check for Anthropic SDK APIStatusError with status_code attribute
+            status = getattr(e, "status_code", None)
+            if status is not None:
+                retryable = status == 429 or (500 <= status < 600)
+            else:
+                # Fallback: check error string for status codes
+                error_str = str(e)
+                retryable = any(code in error_str for code in ["429", "500", "502", "503", "504", "529"])
+
+            if retryable:
                 delay = BASE_DELAY * (2 ** attempt) + random.uniform(0, 1)
                 log.warning("API error (attempt %d/%d): %s. Retrying in %.1fs", attempt + 1, MAX_RETRIES, e, delay)
                 time.sleep(delay)
