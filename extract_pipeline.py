@@ -144,9 +144,11 @@ def main():
     balanced = balance_domains(judged)
     log.info("Final dataset size: %d units", len(balanced))
 
-    # Always save extracted units (small, tracked in git)
+    # Save extracted units and source versions
     DATASET_DIR.mkdir(parents=True, exist_ok=True)
     import json
+    import subprocess as _sp
+
     units_path = DATASET_DIR / "extracted_units.jsonl"
     with open(units_path, "w") as f:
         for unit in balanced:
@@ -160,6 +162,21 @@ def main():
                 "fingerprint": unit.fingerprint,
             }) + "\n")
     log.info("Saved %d units to %s", len(balanced), units_path)
+
+    # Pin source repo versions for reproducibility
+    versions = {}
+    for topic in topics:
+        for repo in topic.repos:
+            repo_path = REPOS_DIR / repo.name
+            try:
+                result = _sp.run(["git", "rev-parse", "HEAD"], cwd=repo_path, capture_output=True, text=True, check=True)
+                versions[repo.name] = result.stdout.strip()
+            except _sp.CalledProcessError:
+                versions[repo.name] = "unknown"
+    versions_path = DATASET_DIR / "source_versions.json"
+    with open(versions_path, "w") as f:
+        json.dump(versions, f, indent=2)
+    log.info("Saved source versions to %s", versions_path)
 
     if args.skip_instruct:
         log.info("Skipping instruction generation (--skip-instruct)")

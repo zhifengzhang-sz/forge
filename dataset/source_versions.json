@@ -1,0 +1,7 @@
+{
+  "fp-ts": "09045f5819af260b5a6c4aeabdf2fbc8d9b9e335",
+  "effect": "ec5c50507b1a2f5ad712c148a7da0fadb8cb9f52",
+  "rxjs": "c15b37f81ba5f5abea8c872b0189a70b150df4cb",
+  "xstate": "d601a7f18dc64e82cc07aef6434741a6bcb21512",
+  "EventSourcing.NodeJS": "9869c6489fd0f27a6dbe27b18be9a8dd8ce1de88"
+}

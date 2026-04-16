@@ -11,8 +11,13 @@ checkpoints/
 *-typescript-merged/
 gguf/
 
-# Dataset — track training data (costs API money to produce)
-# Ignore intermediate artifacts (free to regenerate)
+# Dataset — track files that cost money or are hard to reproduce
+# typescript_training.jsonl  — tracked (API cost ~$3-5)
+# metadata.jsonl             — tracked (same run as training)
+# judge_results.jsonl        — tracked (API cost ~$2-3)
+# rejected.jsonl             — tracked (same run as training)
+# source_versions.json       — tracked (repo commit pins)
+# extracted_units.jsonl      — NOT tracked (deterministic from repos)
 dataset/extracted_units.jsonl
 dataset/*.tmp
 
