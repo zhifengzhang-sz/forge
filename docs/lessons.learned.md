@@ -59,6 +59,14 @@ Unsloth patches TRL's SFTTrainer heavily. The `formatting_func` parameter works 
 ### Dropout 0 enables Unsloth fast patching
 Unsloth warns: "Dropout = 0 is supported for fast patching. You are using dropout = 0.05." Setting dropout to 0 enables memory-saving optimizations. On a tight VRAM budget (31 GB for 14B model), this matters.
 
+### Actual training results for Qwen3-14B
+- Batch size 2, grad accum 8, effective batch 16, LoRA r=32, dropout 0
+- 1,048 train examples, 56 eval examples, 3 epochs, 198 steps
+- Training time: 12 minutes on RTX 5090
+- Training loss: 0.4346, eval loss: 0.3817 (healthy, no overfitting)
+- LoRA adapter size: 501 MB
+- Peak VRAM: ~30.4 GB out of 31.3 GB (tight but fit)
+
 ### PYTORCH_CUDA_ALLOC_CONF helps with fragmentation
 Setting `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` reduces CUDA memory fragmentation. This doesn't increase total VRAM but makes better use of what's available. Worth adding to the training command by default.
 
