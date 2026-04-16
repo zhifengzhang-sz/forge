@@ -2,6 +2,8 @@
 
 Lessons from running the extraction pipeline on TypeScript source repositories.
 
+**Prerequisites:** Run `bash setup.sh` first to install all dependencies and download models. Activate the venv with `source .venv/bin/activate` before running pipeline commands.
+
 ## First Run Results (2026-04-16)
 
 Shallow clone, no git diffs, quality threshold 0.30.
@@ -96,3 +98,29 @@ Two API cost stages in the pipeline:
 - Approximate cost: $2-5 depending on model choice
 
 The pipeline prints the estimate and asks for confirmation before making API calls. Use `--dry-run` to see the estimate without running anything.
+
+## Training Data Format
+
+The training JSONL uses HuggingFace's messages format:
+
+```json
+{
+  "messages": [
+    {"role": "user", "content": "Implement the RxJS operator `repeatWhen`..."},
+    {"role": "assistant", "content": "import { Observable } from...\n\nexport function repeatWhen..."}
+  ],
+  "id": "abc1234f-0042"
+}
+```
+
+**Unsloth SFTTrainer requires a `formatting_func`** that converts these messages into the model's chat template. The function must return a list of strings (not a single string). This applies the model-specific tokens (e.g. `<|im_start|>user`, `<|im_end|>` for Qwen3):
+
+```python
+def formatting_func(example):
+    text = tokenizer.apply_chat_template(
+        example["messages"], tokenize=False, add_generation_prompt=False
+    )
+    return [text]
+```
+
+**HuggingFace model names for training** use Unsloth's pre-quantized 4-bit variants (`unsloth/Qwen3-14B`, `unsloth/gemma-4-31b-it`), not the original vendor names (`Qwen/Qwen3-14B-Instruct`). The vendor models may require authentication; Unsloth's copies don't.

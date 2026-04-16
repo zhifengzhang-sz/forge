@@ -153,6 +153,32 @@ rm -f ./gguf/${MODEL_KEY}-typescript-f16.gguf
 
 **Note:** The FP16 merge step for Gemma 4 31B loads ~62 GB into system RAM. Close Ollama and other memory-intensive processes before running `export.sh` for the 31B model.
 
+### Environment setup
+
+All dependencies are pinned in `requirements.txt`. One-time setup:
+
+```bash
+bash setup.sh
+```
+
+This creates a Python venv, installs all dependencies (PyTorch with CUDA, Unsloth, TRL, etc.), and downloads model weights from HuggingFace and Ollama.
+
+**HuggingFace model names** (Unsloth's pre-quantized 4-bit variants for training):
+
+| Model key | HuggingFace ID |
+|---|---|
+| qwen3-14b | `unsloth/Qwen3-14B-unsloth-bnb-4bit` |
+| gemma4-31b | `unsloth/gemma-4-31b-it-unsloth-bnb-4bit` |
+
+These are distinct from the Ollama models (`qwen3:14b`, `gemma4:31b`) which are pre-quantized GGUFs for inference only. Training requires the HuggingFace format with full-precision LoRA-compatible tensors.
+
+**Ollama model names** (for inference and base model testing):
+
+| Model | Ollama tag |
+|---|---|
+| Qwen3 14B | `qwen3:14b` |
+| Gemma 4 31B | `gemma4:31b` |
+
 ---
 
 ## 4. System Architecture
@@ -462,7 +488,7 @@ $$W' = W + \Delta W = W + BA$$
 
 Where $B \in \mathbb{R}^{d \times r}$, $A \in \mathbb{R}^{r \times k}$, and rank $r \ll \min(d, k)$.
 
-The number of trainable parameters reduces from $d \times k$ to $r(d + k)$. At rank $r = 16$ on a 31B model, trainable parameters represent approximately 0.5% of total weights.
+The number of trainable parameters reduces from $d \times k$ to $r(d + k)$. At rank $r = 32$ on a 14B model, trainable parameters represent approximately 1% of total weights.
 
 ### 7.2 Setup
 
@@ -471,8 +497,8 @@ from unsloth import FastLanguageModel
 
 # Train both, evaluate both, pick the winner:
 MODELS = {
-    "qwen3-14b": "Qwen/Qwen3-14B-Instruct",
-    "gemma4-31b": "google/gemma-4-31b-it",
+    "qwen3-14b": "unsloth/Qwen3-14B",
+    "gemma4-31b": "unsloth/gemma-4-31b-it",
 }
 
 MODEL_KEY = "qwen3-14b"  # or "gemma4-31b"
@@ -534,10 +560,23 @@ dataset = load_dataset("json", data_files="dataset/typescript_training.jsonl")
 BATCH_SIZE = 4 if "qwen3" in MODEL_KEY else 2
 GRAD_ACCUM = 4 if "qwen3" in MODEL_KEY else 8
 
+# Unsloth's SFTTrainer requires a formatting_func to convert messages
+# into the model's chat template. Must return a list of strings.
+def formatting_func(example):
+    text = tokenizer.apply_chat_template(
+        example["messages"], tokenize=False, add_generation_prompt=False
+    )
+    return [text]
+
+# Split for validation (early stopping)
+split = dataset["train"].train_test_split(test_size=0.05, seed=42)
+
 trainer = SFTTrainer(
     model            = model,
     tokenizer        = tokenizer,
-    train_dataset    = dataset["train"],
+    train_dataset    = split["train"],
+    eval_dataset     = split["test"],
+    formatting_func  = formatting_func,
     max_seq_length   = 8192,
     dataset_num_proc = 4,
     args = TrainingArguments(
@@ -855,7 +894,9 @@ forge/
 │   │   ├── clone.py             # Git clone with retry
 │   │   ├── dedup.py             # SHA-256 dedup + held-out exclusion
 │   │   ├── balance.py           # Domain balancing
-│   │   └── instruct.py          # Claude API instruction generation
+│   │   ├── judge.py             # LLM-as-judge quality verification
+│   │   ├── instruct.py          # Claude API instruction generation
+│   │   └── template_instruct.py # Template-based instruction generation (free)
 │   └── typescript/              # TypeScript-specific modules
 │       ├── __init__.py          # TypeScriptModule (LanguageModule impl)
 │       ├── walk.py              # .ts file walking, skip patterns
@@ -872,6 +913,8 @@ forge/
 │
 ├── agents/
 │   └── data.reviewer.md        # Claude Code agent for training data review
+├── requirements.txt             # Pinned Python dependencies
+├── setup.sh                     # One-time setup: venv + deps + model downloads
 ├── extract_pipeline.py          # Phase 1–2: orchestrator
 ├── train.py                     # Phase 3: LoRA fine-tuning
 ├── export.sh                    # Phase 4: merge, convert, quantise
@@ -923,4 +966,4 @@ forge/
 
 ---
 
-*Document version 2.4 — covers Qwen3-14B / Gemma 4 31B dual-model evaluation strategy, Ollama, Claude Code as of April 2026. Includes LLM-as-judge quality verification (Section 6.3) and data reviewer agent (agents/data.reviewer.md).*
+*Document version 2.5 — covers Qwen3-14B / Gemma 4 31B dual-model evaluation strategy, Ollama, Claude Code as of April 2026. Includes setup.sh/requirements.txt for reproducible environment, Unsloth model names, formatting_func for SFTTrainer, LLM-as-judge quality verification, and data reviewer agent.*
