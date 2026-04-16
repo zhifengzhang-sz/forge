@@ -1,15 +1,10 @@
-"""Extract semantic units from TypeScript files.
+"""Extract semantic units from TypeScript files. Brace-matching parser."""
 
-Three unit types:
-  1. Exported functions and arrow functions
-  2. Type aliases and interfaces
-  3. Git commit diffs (extracted separately)
-"""
-
-import re
 import subprocess
 import logging
 from pathlib import Path
+
+from lib.common.types import Unit
 
 log = logging.getLogger(__name__)
 
@@ -28,8 +23,11 @@ def _extract_imports(content: str) -> str:
     return "\n".join(lines)
 
 
-def _extract_exported_functions(content: str) -> list[str]:
-    """Extract exported function/const declarations with their bodies."""
+def _extract_exported_declarations(content: str) -> list[tuple[str, str]]:
+    """Extract exported declarations with their bodies.
+
+    Returns list of (code, unit_type) tuples.
+    """
     units = []
     lines = content.splitlines()
     i = 0
@@ -44,11 +42,16 @@ def _extract_exported_functions(content: str) -> list[str]:
             or "type " in stripped
             or "interface " in stripped
         ):
+            # Classify by the export keyword on the first line
+            if "type " in stripped or "interface " in stripped:
+                unit_type = "type"
+            else:
+                unit_type = "function"
+
             # Collect the full declaration including braces
             brace_depth = 0
-            paren_depth = 0
-            unit_lines = []
             started = False
+            unit_lines = []
 
             while i < len(lines):
                 unit_lines.append(lines[i])
@@ -58,43 +61,28 @@ def _extract_exported_functions(content: str) -> list[str]:
                         started = True
                     elif ch == "}":
                         brace_depth -= 1
-                    elif ch == "(":
-                        paren_depth += 1
-                    elif ch == ")":
-                        paren_depth -= 1
 
                 i += 1
 
-                # End conditions
                 if started and brace_depth == 0:
                     break
-                # Single-line type alias or interface without body
                 if not started and lines[i - 1].strip().endswith(";"):
                     break
-                # Multi-line type with pipe unions (no braces)
                 if not started and i < len(lines) and not lines[i].strip().startswith("|") and unit_lines[-1].strip().endswith(";"):
                     break
 
             unit_text = "\n".join(unit_lines).strip()
-            if len(unit_text) > 50:  # skip trivial re-exports
-                units.append(unit_text)
+            if len(unit_text) > 50:
+                units.append((unit_text, unit_type))
         else:
             i += 1
 
     return units
 
 
-def extract_units_from_file(file_info: dict) -> list[dict]:
-    """Extract semantic units from a single .ts file.
-
-    Args:
-        file_info: dict with keys: path, content, domain, repo_path
-
-    Returns:
-        List of dicts with keys: code, imports, domain, source, unit_type
-    """
+def extract_units_from_file(file_info: dict, domain: str) -> list[Unit]:
+    """Extract semantic units from a single .ts file."""
     content = file_info["content"]
-    domain = file_info["domain"]
     file_path = file_info["path"]
     repo_path = file_info["repo_path"]
 
@@ -103,30 +91,20 @@ def extract_units_from_file(file_info: dict) -> list[dict]:
     source = f"{repo_path.name}:{rel_path}"
 
     units = []
-    for code in _extract_exported_functions(content):
-        # Classify by the export keyword on the first line
-        first_line = code.split("\n", 1)[0].strip()
-        if "type " in first_line or "interface " in first_line:
-            unit_type = "type"
-        else:
-            unit_type = "function"
-
-        units.append({
-            "code": code,
-            "imports": imports,
-            "domain": domain,
-            "source": source,
-            "unit_type": unit_type,
-        })
+    for code, unit_type in _extract_exported_declarations(content):
+        units.append(Unit(
+            code=code,
+            imports=imports,
+            domain=domain,
+            source=source,
+            unit_type=unit_type,
+        ))
 
     return units
 
 
-def extract_diffs(repo_path: Path, domain: str, max_commits: int = 300) -> list[dict]:
-    """Extract TypeScript-only diffs from git history.
-
-    Requires full clone (not --depth=1).
-    """
+def extract_diffs(repo_path: Path, domain: str, max_commits: int = 300) -> list[Unit]:
+    """Extract TypeScript-only diffs from git history."""
     try:
         result = subprocess.run(
             ["git", "log", "--oneline", "--no-merges", f"-n{max_commits}"],
@@ -153,14 +131,14 @@ def extract_diffs(repo_path: Path, domain: str, max_commits: int = 300) -> list[
             continue
 
         commit_msg = line[len(commit_hash):].strip()
-        units.append({
-            "code": diff_text,
-            "imports": "",
-            "domain": domain,
-            "source": f"{repo_path.name}@{commit_hash}",
-            "unit_type": "diff",
-            "commit_message": commit_msg,
-        })
+        units.append(Unit(
+            code=diff_text,
+            imports="",
+            domain=domain,
+            source=f"{repo_path.name}@{commit_hash}",
+            unit_type="diff",
+            commit_message=commit_msg,
+        ))
 
     log.info("Extracted %d diffs from %s", len(units), repo_path.name)
     return units
