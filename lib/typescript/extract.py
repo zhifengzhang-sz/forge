@@ -100,6 +100,62 @@ def _extract_exported_declarations(content: str) -> list[tuple[str, str]]:
     return units
 
 
+INLINE_PATTERNS = ["createMachine(", "createMachine<", "setup(", "setup<"]
+
+
+def _extract_inline_definitions(content: str) -> list[tuple[str, str]]:
+    """Extract non-exported inline definitions (e.g. machine configs in test files).
+
+    Captures patterns like:
+        const machine = createMachine({...})
+        const machine = setup({...}).createMachine({...})
+    """
+    units = []
+    lines = content.splitlines()
+    i = 0
+
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+
+        # Skip lines that start with export (already handled by _extract_exported_declarations)
+        if stripped.startswith("export "):
+            i += 1
+            continue
+
+        if any(p in stripped for p in INLINE_PATTERNS) and ("const " in stripped or "let " in stripped or "=" in stripped):
+            brace_depth = 0
+            paren_depth = 0
+            started = False
+            unit_lines = []
+
+            while i < len(lines):
+                unit_lines.append(lines[i])
+                for ch in lines[i]:
+                    if ch == "{":
+                        brace_depth += 1
+                        started = True
+                    elif ch == "}":
+                        brace_depth -= 1
+                    elif ch == "(":
+                        paren_depth += 1
+                    elif ch == ")":
+                        paren_depth -= 1
+
+                i += 1
+
+                if started and brace_depth == 0 and paren_depth <= 0:
+                    break
+
+            unit_text = "\n".join(unit_lines).strip()
+            if len(unit_text) > 100:  # inline defs need more context to be useful
+                units.append((unit_text, "function"))
+        else:
+            i += 1
+
+    return units
+
+
 def extract_units_from_file(file_info: dict, domain: str) -> list[Unit]:
     """Extract semantic units from a single .ts file."""
     content = file_info["content"]
@@ -111,7 +167,19 @@ def extract_units_from_file(file_info: dict, domain: str) -> list[Unit]:
     source = f"{repo_path.name}:{rel_path}"
 
     units = []
+
+    # Exported declarations (all domains)
     for code, unit_type in _extract_exported_declarations(content):
+        units.append(Unit(
+            code=code,
+            imports=imports,
+            domain=domain,
+            source=source,
+            unit_type=unit_type,
+        ))
+
+    # Inline definitions (machine configs in test/example files)
+    for code, unit_type in _extract_inline_definitions(content):
         units.append(Unit(
             code=code,
             imports=imports,
