@@ -21,6 +21,28 @@ DEPS_ONLY=false
 echo "=== Forge Setup ==="
 echo ""
 
+# Step 0: Check system dependencies
+echo "--- Checking system dependencies ---"
+MISSING=""
+
+python3 --version >/dev/null 2>&1 || MISSING="$MISSING python3"
+python3 -c "import venv" 2>/dev/null || MISSING="$MISSING python3.13-venv"
+[ -f /usr/include/python3.13/Python.h ] || MISSING="$MISSING python3.13-dev"
+gcc --version >/dev/null 2>&1 || MISSING="$MISSING gcc"
+nvidia-smi >/dev/null 2>&1 || MISSING="$MISSING nvidia-driver"
+
+if [ -n "$MISSING" ]; then
+    echo "ERROR: Missing system packages:$MISSING"
+    echo ""
+    echo "Install with:"
+    echo "  sudo apt install -y$MISSING"
+    echo ""
+    echo "See docs/setup.pitfalls.md for details."
+    exit 1
+fi
+echo "  All system dependencies OK"
+echo ""
+
 # Step 1: Python venv
 if [ ! -d ".venv" ]; then
     echo "--- Creating Python venv ---"

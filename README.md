@@ -25,12 +25,18 @@ Two candidate base models are trained and evaluated. The winner is selected afte
 
 ## Quick Start
 
-### 1. Prerequisites
+### 1. System prerequisites
 
-- Python 3.11+ with `python3-venv`
-- NVIDIA GPU with CUDA 12.x
+```bash
+sudo apt install -y python3.13-venv python3.13-dev gcc
+```
+
+Also needed:
+- NVIDIA GPU with CUDA 12.x drivers
 - Ollama 0.20+ (`curl -fsSL https://ollama.com/install.sh | sh`)
-- ~50 GB disk for model downloads (HuggingFace cache + Ollama)
+- ~50 GB disk for model downloads
+
+See `docs/setup.pitfalls.md` for common issues and solutions.
 
 ### 2. Setup (one-time)
 

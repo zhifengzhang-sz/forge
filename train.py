@@ -53,14 +53,14 @@ def check_prerequisites():
         gpu_mem = torch.cuda.get_device_properties(0).total_memory / 1024**3
         log.info("GPU: %s (%.1f GB)", gpu_name, gpu_mem)
     except ImportError:
-        log.error("PyTorch not installed. Run: pip install torch")
+        log.error("PyTorch not installed. Run: bash setup.sh")
         sys.exit(1)
 
     try:
         import unsloth
         log.info("Unsloth version: %s", unsloth.__version__)
     except ImportError:
-        log.error("Unsloth not installed. Run: pip install unsloth")
+        log.error("Unsloth not installed. Run: bash setup.sh")
         sys.exit(1)
 
 
@@ -97,32 +97,36 @@ def train(model_key: str, dry_run: bool = False):
         use_gradient_checkpointing="unsloth",
     )
 
-    # Load dataset
+    # Load dataset and apply chat template
     log.info("Loading dataset from %s...", DATASET_PATH)
     dataset = load_dataset("json", data_files=str(DATASET_PATH))
 
+    def format_chat(examples):
+        texts = []
+        for messages in examples["messages"]:
+            text = tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=False
+            )
+            texts.append(text)
+        return {"text": texts}
+
+    log.info("Applying chat template...")
+    dataset = dataset["train"].map(format_chat, batched=True, remove_columns=["messages", "id"])
+
     # Split for validation (5% held out for early stopping)
-    split = dataset["train"].train_test_split(test_size=0.05, seed=42)
+    split = dataset.train_test_split(test_size=0.05, seed=42)
     train_dataset = split["train"]
     eval_dataset = split["test"]
     log.info("Train: %d examples, Eval: %d examples", len(train_dataset), len(eval_dataset))
 
     if dry_run:
-        log.info("Dry run — model loaded, dataset split. Exiting before training.")
+        log.info("Dry run — model loaded, dataset formatted. Exiting before training.")
+        log.info("Sample text (first 300 chars): %s", train_dataset[0]["text"][:300])
         return
 
     # Output directory
     output_dir = ROOT / "checkpoints" / model_key
     lora_dir = ROOT / f"{model_key}-typescript-lora"
-
-    # Format messages into the model's chat template
-    # Unsloth expects a list of strings returned even for a single example
-    def formatting_func(example):
-        messages = example["messages"]
-        text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=False
-        )
-        return [text]
 
     # Training
     log.info("Starting training (batch=%d, grad_accum=%d, effective_batch=%d)...",
@@ -134,7 +138,6 @@ def train(model_key: str, dry_run: bool = False):
         tokenizer=tokenizer,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        formatting_func=formatting_func,
         max_seq_length=8192,
         dataset_num_proc=4,
         args=TrainingArguments(
@@ -165,7 +168,7 @@ def train(model_key: str, dry_run: bool = False):
     tokenizer.save_pretrained(str(lora_dir))
 
     log.info("Training complete. Adapter saved to %s", lora_dir)
-    log.info("Next: run export.sh %s", model_key)
+    log.info("Next: bash export.sh %s", model_key)
 
 
 def main():
