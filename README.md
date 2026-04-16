@@ -70,8 +70,8 @@ python3 extract_pipeline.py
 # Estimate API cost without calling Claude
 python3 extract_pipeline.py --dry-run
 
-# Extract and curate only (skip instruction generation)
-python3 extract_pipeline.py --skip-instruct
+# Extract and curate only (skip judge and instruction generation)
+python3 extract_pipeline.py --skip-judge --skip-instruct
 
 # Include git history diffs (requires full clone, slower)
 python3 extract_pipeline.py --full-history
@@ -83,13 +83,24 @@ The pipeline runs in order:
 3. **Extract** — parse exported functions, types, and optionally git diffs
 4. **Score** — quality scoring based on TS patterns and domain signals (threshold: 0.3)
 5. **Dedup** — SHA-256 fingerprint exact deduplication
-6. **Balance** — cap each domain at 2x the smallest, max 500 per domain
-7. **Instruct** — generate instructions via Claude API (requires `ANTHROPIC_API_KEY`)
+6. **Judge** — LLM quality verification via Claude Haiku (scores 1-5, keeps >= 3)
+7. **Balance** — cap each domain at 2x median, floor 100, max 500
+8. **Instruct** — generate instructions via Claude API (requires `ANTHROPIC_API_KEY`)
 
 Output:
-- `dataset/typescript_training.jsonl` — training data (~1,600-2,000 examples)
+- `dataset/typescript_training.jsonl` — training data (~1,000+ examples)
 - `dataset/metadata.jsonl` — sidecar with domain, source, unit type per example
+- `dataset/judge_results.jsonl` — LLM judge scores and reasoning per unit
 - `dataset/rejected.jsonl` — failed instruction generations for review
+
+To review data quality interactively, use the data reviewer agent:
+
+```
+Review the training data quality. Read dataset/judge_results.jsonl,
+sample examples from each domain, and tell me if the data looks good.
+```
+
+See `agents/data.reviewer.md` for the full agent spec.
 
 The script prints an estimated API cost before starting and asks for confirmation.
 
@@ -198,6 +209,8 @@ forge/
 │       ├── walk.py          # .ts file walking
 │       ├── extract.py       # Brace-matching parser
 │       └── score.py         # TS scoring signals
+├── agents/
+│   └── data.reviewer.md    # Claude Code agent for training data review
 ├── app/
 │   └── typescript/          # TypeScript topic configs
 │       ├── fp/config.py

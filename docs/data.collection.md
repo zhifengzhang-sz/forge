@@ -66,12 +66,27 @@ If the dataset is too small:
 3. **Lower quality threshold** — change `QUALITY_THRESHOLD` in `lib/typescript/score.py` from 0.30 to 0.25. This adds marginal units that scored just below the cutoff. Inspect samples before deciding.
 4. **Broaden focus terms** — add more type names, function names, and patterns from the target library's API surface.
 
+## LLM Quality Judge
+
+After regex scoring and dedup, an LLM judge (Claude Haiku) evaluates each unit semantically. This catches problems the regex scorer misses: boilerplate that happens to use domain terms, config objects with generics, test utilities that aren't real patterns.
+
+The judge scores 1-5. Units below 3 are dropped. Results are saved to `dataset/judge_results.jsonl` with scores and one-line reasoning.
+
+Skip with `--skip-judge` for fast iteration during development. Run without skipping before instruction generation to ensure data quality.
+
+Use the data reviewer agent (`agents/data.reviewer.md`) to interactively review judge results and calibrate quality.
+
 ## Cost Estimation
 
-Instruction generation (Phase 2) calls the Claude API once per unit. At ~1,000 units with average context of ~500 tokens:
+Two API cost stages in the pipeline:
 
-- Estimated input: ~500K tokens
-- Estimated output: ~50K tokens
+**LLM judge** (Claude Haiku) — evaluates each unit after regex scoring:
+- ~5,000 units at ~500 tokens context each
+- Estimated cost: $2-3
+
+**Instruction generation** (Claude Sonnet) — generates training prompts:
+- ~1,000 units after judging and balancing
+- Estimated input: ~500K tokens, output: ~50K tokens
 - Approximate cost: $2-5 depending on model choice
 
 The pipeline prints the estimate and asks for confirmation before making API calls. Use `--dry-run` to see the estimate without running anything.

@@ -6,6 +6,7 @@ Usage:
     python3 extract_pipeline.py --topics typescript.fp   # single topic
     python3 extract_pipeline.py --dry-run                # estimate API cost only
     python3 extract_pipeline.py --skip-instruct          # skip instruction generation
+    python3 extract_pipeline.py --skip-judge             # skip LLM quality judge
     python3 extract_pipeline.py --full-history           # include git diffs
 """
 
@@ -18,6 +19,7 @@ from lib.common.types import TopicConfig, LanguageModule
 from lib.common.clone import clone_repos
 from lib.common.dedup import deduplicate, load_held_out_fingerprints
 from lib.common.balance import balance_domains
+from lib.common.judge import judge_units
 from lib.common.instruct import generate_instructions
 
 from lib.typescript import TypeScriptModule
@@ -107,6 +109,7 @@ def main():
     parser = argparse.ArgumentParser(description="Extract and curate training data")
     parser.add_argument("--topics", nargs="+", help="Topic names to process (default: all)")
     parser.add_argument("--dry-run", action="store_true", help="Estimate API cost without calling")
+    parser.add_argument("--skip-judge", action="store_true", help="Skip LLM quality judge")
     parser.add_argument("--skip-instruct", action="store_true", help="Skip instruction generation")
     parser.add_argument("--full-history", action="store_true", help="Clone full git history for diffs")
     args = parser.parse_args()
@@ -127,7 +130,18 @@ def main():
     held_out_fps = load_held_out_fingerprints(HELD_OUT_DIR) if has_held_out else set()
     deduped = deduplicate(all_units, held_out_fps=held_out_fps)
 
-    balanced = balance_domains(deduped)
+    # LLM judge (semantic quality filter)
+    if args.skip_judge:
+        log.info("Skipping LLM judge (--skip-judge)")
+        judged = deduped
+    else:
+        judged = judge_units(
+            deduped,
+            output_path=DATASET_DIR / "judge_results.jsonl",
+            dry_run=args.dry_run,
+        )
+
+    balanced = balance_domains(judged)
     log.info("Final dataset size: %d units", len(balanced))
 
     if args.skip_instruct:

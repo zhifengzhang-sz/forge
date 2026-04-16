@@ -194,8 +194,9 @@ flowchart LR
     subgraph Curation
         C1[Quality score]
         C2[SHA-256 dedup]
-        C3[Domain balance]
-        C4[Generate instructions\nClaude API]
+        C3[LLM judge\nClaude Haiku]
+        C4[Domain balance]
+        C5[Generate instructions\nClaude API]
     end
 
     subgraph Training
@@ -356,7 +357,24 @@ $$\text{fp}(c) = \text{SHA256}(\text{strip}(c))[:16]$$
 
 Near-duplicate detection is intentionally skipped — slight variations in similar patterns (e.g. `Option` vs `Either` chains) are valuable training signal, not noise.
 
-### 6.3 Domain balancing
+### 6.3 LLM quality judge
+
+After regex scoring and deduplication, an LLM judge evaluates each unit semantically. The regex scorer catches surface signals (has generics, has export, no `any`). The LLM judge catches meaning: "this is boilerplate wiring, not a useful pattern" or "this perfectly demonstrates the Either chain pattern."
+
+Each unit is sent to Claude Haiku with a rubric evaluating:
+1. **Pattern clarity** — does it demonstrate a clear, learnable pattern?
+2. **Idiomaticity** — is this how an expert would write it?
+3. **Self-containedness** — can the model learn from this without external context?
+4. **Domain signal** — does it teach something specific to the target domain?
+5. **Training value** — would including this improve model output?
+
+Units are scored 1-5. Units scoring below 3 are discarded. Results are logged to `dataset/judge_results.jsonl` for review.
+
+Estimated cost: ~$2-3 for 5,000 units using Haiku. Skip with `--skip-judge` for fast iteration during development.
+
+A data reviewer agent (`agents/data.reviewer.md`) can be invoked via Claude Code to interactively review judge results, sample examples across quality levels, and recommend adjustments to focus terms, scoring signals, or the judge rubric.
+
+### 6.4 Domain balancing
 
 Without balancing, the largest repo would dominate the dataset. A soft cap prevents any single domain from exceeding twice the median domain size, with a floor of 100 to prevent small domains from crushing larger ones:
 
@@ -364,7 +382,7 @@ $$N_{\text{cap}} = \min\!\left(\max\!\left(2 \cdot \text{median}_d N_d,\ 100\rig
 
 Domains smaller than the cap contribute all their units. Units are selected in descending quality score order within each domain.
 
-### 6.4 Instruction generation
+### 6.5 Instruction generation
 
 The key insight: **generate the question from the code, not the code from the question.** The code is ground truth. The question just needs to be plausible.
 
@@ -387,7 +405,7 @@ Constraints enforced via system prompt:
 - Log rejected instructions to `dataset/rejected.jsonl` for manual review
 - Print estimated cost before starting (token count × model price) and require confirmation
 
-### 6.5 Output format
+### 6.6 Output format
 
 Standard instruction fine-tuning JSONL, compatible with Unsloth and HuggingFace TRL:
 
@@ -418,7 +436,7 @@ Metadata is stored in a separate sidecar file `dataset/metadata.jsonl` to keep t
 }
 ```
 
-### 6.6 Target dataset size
+### 6.7 Target dataset size
 
 | Domain | Target examples | Source type split |
 |---|---|---|
@@ -852,6 +870,8 @@ forge/
 │       ├── xstate/config.py     # XState v5 repos + focus terms
 │       └── eventsourcing/config.py  # EventSourcing.NodeJS repos + focus terms
 │
+├── agents/
+│   └── data.reviewer.md        # Claude Code agent for training data review
 ├── extract_pipeline.py          # Phase 1–2: orchestrator
 ├── train.py                     # Phase 3: LoRA fine-tuning
 ├── export.sh                    # Phase 4: merge, convert, quantise
@@ -867,6 +887,7 @@ forge/
 ├── dataset/
 │   ├── typescript_training.jsonl  # messages only (for training)
 │   ├── metadata.jsonl             # sidecar: domain, source, unit_type
+│   ├── judge_results.jsonl        # LLM judge scores and reasoning
 │   └── rejected.jsonl             # failed instruction generations
 │
 ├── checkpoints/                 # LoRA training checkpoints
@@ -902,4 +923,4 @@ forge/
 
 ---
 
-*Document version 2.3 — covers Qwen3-14B / Gemma 4 31B dual-model evaluation strategy, Ollama, Claude Code as of April 2026. Eng review applied: r=32, bf16 export, disk budget, API error handling, eval isolation, early stopping. Refactored to lib/app structure with LanguageModule protocol. Focus terms expanded to cover both call-site and definition-site patterns. Balance formula uses median with floor.*
+*Document version 2.4 — covers Qwen3-14B / Gemma 4 31B dual-model evaluation strategy, Ollama, Claude Code as of April 2026. Includes LLM-as-judge quality verification (Section 6.3) and data reviewer agent (agents/data.reviewer.md).*
