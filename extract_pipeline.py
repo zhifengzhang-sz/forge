@@ -144,6 +144,23 @@ def main():
     balanced = balance_domains(judged)
     log.info("Final dataset size: %d units", len(balanced))
 
+    # Always save extracted units (small, tracked in git)
+    DATASET_DIR.mkdir(parents=True, exist_ok=True)
+    import json
+    units_path = DATASET_DIR / "extracted_units.jsonl"
+    with open(units_path, "w") as f:
+        for unit in balanced:
+            f.write(json.dumps({
+                "code": unit.code,
+                "imports": unit.imports,
+                "domain": unit.domain,
+                "source": unit.source,
+                "unit_type": unit.unit_type,
+                "quality_score": unit.quality_score,
+                "fingerprint": unit.fingerprint,
+            }) + "\n")
+    log.info("Saved %d units to %s", len(balanced), units_path)
+
     if args.skip_instruct:
         log.info("Skipping instruction generation (--skip-instruct)")
         return
