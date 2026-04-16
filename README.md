@@ -25,30 +25,33 @@ Two candidate base models are trained and evaluated. The winner is selected afte
 
 ## Quick Start
 
-### 1. Install Ollama
+### 1. Prerequisites
+
+- Python 3.11+ with `python3-venv`
+- NVIDIA GPU with CUDA 12.x
+- Ollama 0.20+ (`curl -fsSL https://ollama.com/install.sh | sh`)
+- ~50 GB disk for model downloads (HuggingFace cache + Ollama)
+
+### 2. Setup (one-time)
 
 ```bash
-curl -fsSL https://ollama.com/install.sh | sh
+bash setup.sh
 ```
 
-Verify: `ollama --version` (requires 0.20+).
+This creates a venv, installs all pinned dependencies from `requirements.txt`,
+downloads HuggingFace model weights for training, and pulls Ollama models for
+inference. Takes ~10 minutes on a fast connection.
 
-### 2. Pull base models
+To install dependencies only (skip model downloads):
 
 ```bash
-ollama pull qwen3:14b
-ollama pull gemma4:31b
+bash setup.sh --deps-only
 ```
 
-### 3. Install Python dependencies
+### 3. Activate the environment
 
 ```bash
-python -m venv .venv
 source .venv/bin/activate
-
-pip install unsloth
-pip install trl transformers datasets peft accelerate bitsandbytes
-pip install anthropic   # for instruction generation (Phase 2)
 ```
 
 ### 4. Create the eval held-out set (recommended before training)

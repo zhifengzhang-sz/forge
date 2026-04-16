@@ -24,12 +24,12 @@ DATASET_PATH = ROOT / "dataset" / "typescript_training.jsonl"
 
 MODELS = {
     "qwen3-14b": {
-        "hf_name": "Qwen/Qwen3-14B-Instruct",
+        "hf_name": "unsloth/Qwen3-14B",
         "batch_size": 4,
         "grad_accum": 4,
     },
     "gemma4-31b": {
-        "hf_name": "google/gemma-4-31b-it",
+        "hf_name": "unsloth/gemma-4-31b-it",
         "batch_size": 2,
         "grad_accum": 8,
     },
@@ -50,7 +50,7 @@ def check_prerequisites():
             log.error("CUDA not available. GPU required for training.")
             sys.exit(1)
         gpu_name = torch.cuda.get_device_name(0)
-        gpu_mem = torch.cuda.get_device_properties(0).total_mem / 1024**3
+        gpu_mem = torch.cuda.get_device_properties(0).total_memory / 1024**3
         log.info("GPU: %s (%.1f GB)", gpu_name, gpu_mem)
     except ImportError:
         log.error("PyTorch not installed. Run: pip install torch")
@@ -115,6 +115,15 @@ def train(model_key: str, dry_run: bool = False):
     output_dir = ROOT / "checkpoints" / model_key
     lora_dir = ROOT / f"{model_key}-typescript-lora"
 
+    # Format messages into the model's chat template
+    # Unsloth expects a list of strings returned even for a single example
+    def formatting_func(example):
+        messages = example["messages"]
+        text = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=False
+        )
+        return [text]
+
     # Training
     log.info("Starting training (batch=%d, grad_accum=%d, effective_batch=%d)...",
              config["batch_size"], config["grad_accum"],
@@ -125,6 +134,7 @@ def train(model_key: str, dry_run: bool = False):
         tokenizer=tokenizer,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
+        formatting_func=formatting_func,
         max_seq_length=8192,
         dataset_num_proc=4,
         args=TrainingArguments(

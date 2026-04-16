@@ -1,0 +1,28 @@
+# Training dependencies for forge pipeline.
+#
+# Install:
+#   python3 -m venv .venv
+#   source .venv/bin/activate
+#   pip install -r requirements.txt
+#
+# Requires: Python 3.11+, NVIDIA GPU with CUDA 12.x
+
+# PyTorch with CUDA 12.8 (install first, before other packages)
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128
+
+# Unsloth (QLoRA training)
+unsloth @ git+https://github.com/unslothai/unsloth.git@d20b3067
+unsloth_zoo==2026.4.8
+
+# HuggingFace training stack
+transformers==5.5.0
+trl==0.24.0
+datasets==4.3.0
+peft==0.19.1
+accelerate==1.13.0
+bitsandbytes==0.49.2
+
+# Optional: for Claude API instruction generation
+# anthropic>=0.40.0
