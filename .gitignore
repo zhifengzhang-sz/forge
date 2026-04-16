@@ -11,8 +11,9 @@ checkpoints/
 *-typescript-merged/
 gguf/
 
-# Dataset — tracked in git (small, ~2 MB)
-# Only ignore large intermediate files
+# Dataset — track training data (costs API money to produce)
+# Ignore intermediate artifacts (free to regenerate)
+dataset/extracted_units.jsonl
 dataset/*.tmp
 
 # Eval results (generated)
