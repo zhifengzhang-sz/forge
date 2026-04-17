@@ -28,7 +28,7 @@ Two candidate base models are trained and evaluated. The winner is selected afte
 ### 1. System prerequisites
 
 ```bash
-sudo apt install -y python3.13-venv python3.13-dev gcc
+sudo apt install -y python3.13-venv python3.13-dev gcc cmake
 ```
 
 Also needed:

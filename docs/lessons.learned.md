@@ -96,14 +96,29 @@ Every code change should update the design doc. We hit multiple cases where the 
 ### Use Unsloth's built-in GGUF export, not llama.cpp
 Our original export.sh cloned llama.cpp, ran its requirements.txt (which destroyed the training venv by downgrading torch to CPU-only), then ran separate merge/convert/quantize steps. Unsloth has `save_pretrained_gguf()` that does all three in one call, handles the chat template correctly, and auto-generates the Ollama Modelfile. The entire export.sh was unnecessary. The lesson: before building custom glue, check if the framework already provides the functionality.
 
+### Unsloth's GGUF export still uses llama.cpp under the hood
+Even `save_pretrained_gguf()` clones and builds llama.cpp internally. It just automates the process. This means:
+- `cmake` must be installed on the system (not in requirements.txt)
+- First export run takes extra time to clone + build llama.cpp (~5 min)
+- The build is cached at `./llama.cpp-unsloth/` for subsequent runs
+- It prompts for confirmation to install missing system packages, which fails in non-interactive mode (background processes). Pipe empty input to auto-accept: `echo "" | python3 export.py`
+
 ## What We'd Do Differently
 
-1. **Verify model availability first.** Before writing any code, confirm that every model referenced in the design actually exists and can be downloaded without auth.
+1. **Find a known-working reference pipeline first.** Before building custom glue, search for someone who has done exactly this (Unsloth → GGUF → Ollama) on similar hardware and follow their approach. We wasted hours on an export.sh that Unsloth already handles natively.
 
-2. **Test the full setup on a clean machine.** The requirements.txt and setup.sh should be tested from scratch, not built incrementally by fixing errors.
+2. **Verify model availability first.** Before writing any code, confirm that every model referenced in the design actually exists and can be downloaded without auth.
 
-3. **Start with a tiny training run.** 10 examples, 1 epoch, verify the full pipeline (extract → train → export → serve → query) works end-to-end before scaling up to 1,000+ examples.
+3. **Test the full pipeline end-to-end with 10 examples before scaling.** Extract 10 units, train 1 epoch, export, import to Ollama, query. Verify the entire chain works before scaling to 1,000+. We scaled training before verifying export worked.
 
-4. **Pin everything from day one.** requirements.txt with pinned versions, source repo commit hashes, model download checksums. Reproducibility is not optional.
+4. **List ALL system packages upfront.** python3.13-venv, python3.13-dev, gcc, cmake. Every one of these caused a separate failure. setup.sh should check them all before starting.
 
-5. **Budget VRAM with 30% headroom.** If the model + LoRA + batch fits in 25 GB on paper, assume 32 GB in practice. Activation memory, Triton workspace, and PyTorch allocator overhead are real.
+5. **Test the full setup on a clean machine.** The requirements.txt and setup.sh should be tested from scratch, not built incrementally by fixing errors.
+
+6. **Pin everything from day one.** requirements.txt with pinned versions, source repo commit hashes, model download checksums. Reproducibility is not optional. But beware of overly strict pins (unsloth_zoo's torch<2.11.0 constraint) that require `--no-deps` workarounds.
+
+7. **Budget VRAM with 30% headroom.** If the model + LoRA + batch fits in 25 GB on paper, assume 32 GB in practice. Activation memory, Triton workspace, and PyTorch allocator overhead are real.
+
+8. **Never run third-party requirements.txt in your venv.** llama.cpp's requirements.txt downgraded torch from CUDA to CPU-only and broke everything. Always isolate or only install the specific package you need (e.g. `pip install gguf`).
+
+9. **Non-interactive mode breaks interactive prompts.** Background processes can't answer `input()` prompts. Unsloth's export prompts to install cmake. Pipe empty input or pre-install dependencies.

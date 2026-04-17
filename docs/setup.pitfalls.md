@@ -7,12 +7,13 @@ Problems encountered setting up the training environment on Ubuntu with RTX 5090
 Before `setup.sh`, install these system packages:
 
 ```bash
-sudo apt install -y python3.13-venv python3.13-dev gcc
+sudo apt install -y python3.13-venv python3.13-dev gcc cmake
 ```
 
 - **python3.13-venv** — Python's `venv` module is not included by default on Ubuntu
 - **python3.13-dev** — Python C headers needed by Triton to compile CUDA runtime modules
 - **gcc** — C compiler needed by Triton (usually pre-installed on Ubuntu)
+- **cmake** — needed by Unsloth's GGUF export to build llama.cpp
 
 ## Unsloth Dependencies
 
@@ -92,6 +93,15 @@ The export script (`export.sh`) clones llama.cpp for the `convert-hf-to-gguf.py`
 3. Install unsloth with `--no-deps`: `pip install --no-deps unsloth_zoo unsloth`
 
 `setup.sh` handles this automatically.
+
+## Unsloth GGUF Export Needs cmake and Prompts for Install
+
+`save_pretrained_gguf()` still uses llama.cpp internally. On first run it clones, builds, and caches llama.cpp. This requires `cmake` on the system. If cmake is missing, Unsloth prompts to install it via `sudo apt-get install cmake -y`. This prompt fails in non-interactive contexts (background processes, CI) with `EOFError: EOF when reading a line`.
+
+Fixes:
+- Pre-install cmake: `sudo apt install -y cmake`
+- For non-interactive runs, pipe empty input: `echo "" | python3 export.py --model qwen3-14b`
+- After the first successful export, llama.cpp is cached and no further prompts occur
 
 ## Ollama Version
 

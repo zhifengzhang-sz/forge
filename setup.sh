@@ -29,6 +29,7 @@ python3 --version >/dev/null 2>&1 || MISSING="$MISSING python3"
 python3 -c "import venv" 2>/dev/null || MISSING="$MISSING python3.13-venv"
 [ -f /usr/include/python3.13/Python.h ] || MISSING="$MISSING python3.13-dev"
 gcc --version >/dev/null 2>&1 || MISSING="$MISSING gcc"
+cmake --version >/dev/null 2>&1 || MISSING="$MISSING cmake"
 nvidia-smi >/dev/null 2>&1 || MISSING="$MISSING nvidia-driver"
 
 if [ -n "$MISSING" ]; then
