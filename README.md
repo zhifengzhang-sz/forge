@@ -28,7 +28,7 @@ Two candidate base models are trained and evaluated. The winner is selected afte
 ### 1. System prerequisites
 
 ```bash
-sudo apt install -y python3.13-venv python3.13-dev gcc cmake
+sudo apt install -y python3.13-venv python3.13-dev gcc cmake libcurl4-openssl-dev libssl-dev
 ```
 
 Also needed:
@@ -132,11 +132,11 @@ The script prints an estimated API cost before starting and asks for confirmatio
 Train each model sequentially:
 
 ```bash
-# Train Qwen3-14B (~18 minutes)
-python train.py --model qwen3-14b
+# Train Qwen3-14B (~12 minutes)
+python3 train.py --model qwen3-14b
 
-# Train Gemma 4 31B (~31 minutes)
-python train.py --model gemma4-31b
+# Train Gemma 4 31B (~25 minutes, estimated)
+python3 train.py --model gemma4-31b
 ```
 
 Training uses QLoRA with rank 32, saving checkpoints every 50 steps with early stopping on validation loss.

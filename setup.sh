@@ -30,6 +30,8 @@ python3 -c "import venv" 2>/dev/null || MISSING="$MISSING python3.13-venv"
 [ -f /usr/include/python3.13/Python.h ] || MISSING="$MISSING python3.13-dev"
 gcc --version >/dev/null 2>&1 || MISSING="$MISSING gcc"
 cmake --version >/dev/null 2>&1 || MISSING="$MISSING cmake"
+[ -f /usr/include/curl/curl.h ] || MISSING="$MISSING libcurl4-openssl-dev"
+[ -f /usr/include/openssl/ssl.h ] || MISSING="$MISSING libssl-dev"
 nvidia-smi >/dev/null 2>&1 || MISSING="$MISSING nvidia-driver"
 
 if [ -n "$MISSING" ]; then
@@ -95,13 +97,16 @@ echo ""
 .venv/bin/python3 -c "
 from huggingface_hub import snapshot_download
 
-print('  Downloading unsloth/Qwen3-14B-unsloth-bnb-4bit...')
+print('  Downloading unsloth/Qwen3-14B (resolves to bnb-4bit variant)...')
 snapshot_download('unsloth/Qwen3-14B-unsloth-bnb-4bit', local_files_only=False)
 print('  Done.')
 
-print('  Downloading unsloth/gemma-4-31b-it-unsloth-bnb-4bit...')
+print('  Downloading unsloth/gemma-4-31b-it (resolves to bnb-4bit variant)...')
 snapshot_download('unsloth/gemma-4-31b-it-unsloth-bnb-4bit', local_files_only=False)
 print('  Done.')
+
+# Note: train.py uses short names (unsloth/Qwen3-14B, unsloth/gemma-4-31b-it).
+# Unsloth internally resolves these to the -unsloth-bnb-4bit variants cached above.
 "
 
 # Step 4: Pull Ollama models (for inference)

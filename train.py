@@ -168,7 +168,7 @@ def train(model_key: str, dry_run: bool = False):
     tokenizer.save_pretrained(str(lora_dir))
 
     log.info("Training complete. Adapter saved to %s", lora_dir)
-    log.info("Next: bash export.sh %s", model_key)
+    log.info("Next: python3 export.py --model %s", model_key)
 
 
 def main():

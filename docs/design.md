@@ -1,5 +1,5 @@
 # TypeScript-Specialised Local LLM Pipeline
-### Design Document v2.0
+### Design Document v2.5
 
 ---
 
@@ -163,14 +163,14 @@ bash setup.sh
 
 This creates a Python venv, installs all dependencies (PyTorch with CUDA, Unsloth, TRL, etc.), and downloads model weights from HuggingFace and Ollama.
 
-**HuggingFace model names** (Unsloth's pre-quantized 4-bit variants for training):
+**HuggingFace model names** for training:
 
-| Model key | HuggingFace ID |
-|---|---|
-| qwen3-14b | `unsloth/Qwen3-14B-unsloth-bnb-4bit` |
-| gemma4-31b | `unsloth/gemma-4-31b-it-unsloth-bnb-4bit` |
+| Model key | Short name (used in train.py) | Resolves to (cached by setup.sh) |
+|---|---|---|
+| qwen3-14b | `unsloth/Qwen3-14B` | `unsloth/Qwen3-14B-unsloth-bnb-4bit` |
+| gemma4-31b | `unsloth/gemma-4-31b-it` | `unsloth/gemma-4-31b-it-unsloth-bnb-4bit` |
 
-These are distinct from the Ollama models (`qwen3:14b`, `gemma4:31b`) which are pre-quantized GGUFs for inference only. Training requires the HuggingFace format with full-precision LoRA-compatible tensors.
+Unsloth automatically resolves short names to the `-unsloth-bnb-4bit` variants. These are 4-bit NF4 quantized for training. They are distinct from the Ollama models (`qwen3:14b`, `gemma4:31b`) which are pre-quantized GGUFs for inference only.
 
 **Ollama model names** (for inference and base model testing):
 
@@ -517,7 +517,7 @@ model = FastLanguageModel.get_peft_model(
     target_modules = ["q_proj", "k_proj", "v_proj", "o_proj",
                       "gate_proj", "up_proj", "down_proj"],
     lora_alpha     = 32,
-    lora_dropout   = 0.05,
+    lora_dropout   = 0,       # 0 enables Unsloth fast patching
     bias           = "none",
     use_gradient_checkpointing = "unsloth",
 )
@@ -529,10 +529,10 @@ model = FastLanguageModel.get_peft_model(
 |---|---|---|
 | Rank $r$ | 32 | Higher rank for code/reasoning domain adaptation |
 | Alpha $\alpha$ | 32 | $\alpha = r$ keeps effective LR stable |
-| Dropout | 0.05 | Light regularisation for small dataset |
+| Dropout | 0 | Enables Unsloth fast patching; dropout > 0 disables it |
 | Learning rate | 2e-4 | Standard LoRA LR |
 | LR schedule | Cosine with warmup | 3% warmup steps |
-| Batch size | 2–8 + grad accum 4–8 | Effective batch size 16–32 (see below) |
+| Batch size | 2 + grad accum 8 | Effective batch size 16 (see below) |
 | Epochs | 3 | Sufficient for ~2,000 examples |
 | Max seq length | 8,192 | Covers all training examples |
 | Optimizer | AdamW 8-bit | Reduces RAM footprint |
@@ -541,11 +541,10 @@ model = FastLanguageModel.get_peft_model(
 
 | Model | Batch size | Grad accum | Effective batch | VRAM usage |
 |---|---|---|---|---|
-| Qwen3-14B | 4 | 4 | 16 | ~13 GB |
-| Qwen3-14B | 8 | 4 | 32 | ~18 GB |
-| Gemma 4 31B | 2 | 8 | 16 | ~20 GB |
+| Qwen3-14B | 2 | 8 | 16 | ~30 GB |
+| Gemma 4 31B | 2 | 8 | 16 | ~30 GB (estimated) |
 
-Qwen3-14B allows larger per-device batch sizes, reducing gradient accumulation steps needed and improving training throughput.
+Both models require batch_size=2. Initial estimates of batch_size=4 for Qwen3-14B caused OOM at 30.4 GB. Design doc VRAM estimates should be treated as lower bounds. Actual peak VRAM is ~30 GB on a 31.3 GB card.
 
 ### 7.5 Training script
 
@@ -556,32 +555,33 @@ from datasets import load_dataset
 
 dataset = load_dataset("json", data_files="dataset/typescript_training.jsonl")
 
-# Adjust batch size based on model choice (see table above)
-BATCH_SIZE = 4 if "qwen3" in MODEL_KEY else 2
-GRAD_ACCUM = 4 if "qwen3" in MODEL_KEY else 8
+# Pre-map messages to text column using the model's chat template.
+# Do NOT pass formatting_func to SFTTrainer — Unsloth's patched version
+# does not accept it the same way as vanilla TRL.
+def format_chat(examples):
+    texts = []
+    for messages in examples["messages"]:
+        text = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=False
+        )
+        texts.append(text)
+    return {"text": texts}
 
-# Unsloth's SFTTrainer requires a formatting_func to convert messages
-# into the model's chat template. Must return a list of strings.
-def formatting_func(example):
-    text = tokenizer.apply_chat_template(
-        example["messages"], tokenize=False, add_generation_prompt=False
-    )
-    return [text]
+dataset = dataset["train"].map(format_chat, batched=True, remove_columns=["messages", "id"])
 
 # Split for validation (early stopping)
-split = dataset["train"].train_test_split(test_size=0.05, seed=42)
+split = dataset.train_test_split(test_size=0.05, seed=42)
 
 trainer = SFTTrainer(
     model            = model,
     tokenizer        = tokenizer,
     train_dataset    = split["train"],
     eval_dataset     = split["test"],
-    formatting_func  = formatting_func,
     max_seq_length   = 8192,
     dataset_num_proc = 4,
     args = TrainingArguments(
-        per_device_train_batch_size  = BATCH_SIZE,
-        gradient_accumulation_steps  = GRAD_ACCUM,
+        per_device_train_batch_size  = 2,
+        gradient_accumulation_steps  = 8,
         warmup_ratio                 = 0.03,
         num_train_epochs             = 3,
         learning_rate                = 2e-4,
@@ -611,9 +611,9 @@ At ~250 tokens average per example, 2,000 examples, 3 epochs on RTX 5090:
 
 | Model | Throughput | Effective batch | Estimated time |
 |---|---|---|---|
-| Qwen3-14B | ~1,400 tok/s | 16 | ~18 minutes |
-| Gemma 4 31B | ~800 tok/s | 16 | ~31 minutes |
-| **Both** | | | **~49 minutes total** |
+| Qwen3-14B | ~4.3 samples/s | 16 | ~12 minutes (actual) |
+| Gemma 4 31B | ~2 samples/s (est.) | 16 | ~25 minutes (estimated) |
+| **Both** | | | **~37 minutes total** |
 
 ---
 
@@ -660,7 +660,7 @@ python3 export.py --model gemma4-31b   # Q6_K default
 ### 9.1 Import GGUF
 
 ```bash
-ollama create gemma4-typescript -f ./Modelfile
+ollama create ts-forge -f ./Modelfile
 ```
 
 ### 9.2 Modelfile
@@ -696,7 +696,7 @@ Never:
 ### 9.3 Verify
 
 ```bash
-ollama run gemma4-typescript \
+ollama run ts-forge \
     "Write an fp-ts pipe that validates an email, trims it, and returns Either<ValidationError, Email>"
 ```
 
@@ -717,7 +717,7 @@ Create `.claude/settings.json` at the project root to persist the model choice w
 
 ```json
 {
-  "model": "gemma4-typescript",
+  "model": "ts-forge",
   "env": {
     "ANTHROPIC_BASE_URL": "http://localhost:11434",
     "ANTHROPIC_API_KEY": "ollama"
@@ -728,7 +728,7 @@ Create `.claude/settings.json` at the project root to persist the model choice w
 ### 10.3 Launch
 
 ```bash
-claude --model gemma4-typescript
+claude --model ts-forge
 ```
 
 ### 10.4 Fallback strategy
@@ -739,7 +739,7 @@ For tasks that exceed the fine-tuned model's capabilities, use Claude Sonnet as 
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#3e44514D', 'primaryTextColor': '#abb2bf', 'primaryBorderColor': '#4b5263', 'lineColor': '#61afef', 'secondaryColor': '#2c313a4D', 'secondaryTextColor': '#abb2bf', 'secondaryBorderColor': '#4b5263', 'tertiaryColor': '#282c344D', 'mainBkg': '#3e44514D', 'nodeBorder': '#4b5263', 'clusterBkg': '#2c313a4D', 'clusterBorder': '#4b5263', 'titleColor': '#e5c07b', 'edgeLabelBackground': '#282c34', 'textColor': '#abb2bf', 'background': '#282c34'}}}%%
 flowchart TD
     Q[User query] --> T{Task type?}
-    T -->|Single domain\ncode generation| L[gemma4-typescript\nlocal Ollama]
+    T -->|Single domain\ncode generation| L[ts-forge\nlocal Ollama]
     T -->|Multi-file\narchitectural| R[Claude Sonnet\ncloud API]
     T -->|Debugging\nproduction issues| R
     L -->|Uncertain output| R
@@ -788,7 +788,7 @@ Manual review on a held-out test set of 50 examples per domain (200 total). The 
 
 ```bash
 python eval/run_tests.py \
-    --model  gemma4-typescript \
+    --model  ts-forge \
     --suite  eval/tests/*.json \
     --output eval/results/$(date +%Y%m%d).json
 ```

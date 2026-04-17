@@ -113,14 +113,19 @@ The training JSONL uses HuggingFace's messages format:
 }
 ```
 
-**Unsloth SFTTrainer requires a `formatting_func`** that converts these messages into the model's chat template. The function must return a list of strings (not a single string). This applies the model-specific tokens (e.g. `<|im_start|>user`, `<|im_end|>` for Qwen3):
+**Unsloth SFTTrainer requires pre-mapping the dataset** to a `text` column. Do NOT pass `formatting_func` to SFTTrainer — Unsloth's patched version doesn't accept it the same way as vanilla TRL. Instead, apply the chat template via `dataset.map()` before creating the trainer:
 
 ```python
-def formatting_func(example):
-    text = tokenizer.apply_chat_template(
-        example["messages"], tokenize=False, add_generation_prompt=False
-    )
-    return [text]
+def format_chat(examples):
+    texts = []
+    for messages in examples["messages"]:
+        text = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=False
+        )
+        texts.append(text)
+    return {"text": texts}
+
+dataset = dataset.map(format_chat, batched=True, remove_columns=["messages", "id"])
 ```
 
 **HuggingFace model names for training** use Unsloth's pre-quantized 4-bit variants (`unsloth/Qwen3-14B`, `unsloth/gemma-4-31b-it`), not the original vendor names (`Qwen/Qwen3-14B-Instruct`). The vendor models may require authentication; Unsloth's copies don't.

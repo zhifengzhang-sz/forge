@@ -7,13 +7,15 @@ Problems encountered setting up the training environment on Ubuntu with RTX 5090
 Before `setup.sh`, install these system packages:
 
 ```bash
-sudo apt install -y python3.13-venv python3.13-dev gcc cmake
+sudo apt install -y python3.13-venv python3.13-dev gcc cmake libcurl4-openssl-dev libssl-dev
 ```
 
 - **python3.13-venv** — Python's `venv` module is not included by default on Ubuntu
 - **python3.13-dev** — Python C headers needed by Triton to compile CUDA runtime modules
 - **gcc** — C compiler needed by Triton (usually pre-installed on Ubuntu)
 - **cmake** — needed by Unsloth's GGUF export to build llama.cpp
+- **libcurl4-openssl-dev** — needed by llama.cpp's cmake build (Unsloth installs internally)
+- **libssl-dev** — needed by llama.cpp's cmake build (Unsloth installs internally)
 
 ## Unsloth Dependencies
 
@@ -82,7 +84,7 @@ Unsloth reports "Flash Attention 2 installation seems to be broken. Using Xforme
 
 **Never run `pip install -r requirements.txt` inside the llama.cpp directory.** It installs CPU-only torch, downgrades transformers, and destroys the training venv. The only dependency needed from llama.cpp is the `gguf` Python package, which is already in our `requirements.txt`.
 
-The export script (`export.sh`) clones llama.cpp for the `convert-hf-to-gguf.py` script and the `llama-quantize` binary. It deliberately does not install llama.cpp's Python requirements.
+`export.py` uses Unsloth's `save_pretrained_gguf()` which handles llama.cpp internally. The old `export.sh` was removed because it cloned llama.cpp manually and its `pip install -r requirements.txt` destroyed the training venv.
 
 ## Unsloth Version Constraint Conflict
 
