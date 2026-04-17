@@ -52,9 +52,18 @@ else
     echo "--- Python venv exists ---"
 fi
 
-# Step 2: Install dependencies
-echo "--- Installing dependencies ---"
-.venv/bin/pip install -r requirements.txt
+# Step 2: Install dependencies (staged to avoid version conflicts)
+echo "--- Installing PyTorch with CUDA ---"
+.venv/bin/pip install torch==2.11.0+cu128 torchvision==0.26.0+cu128 triton==3.6.0 \
+    --extra-index-url https://download.pytorch.org/whl/cu128
+
+echo "--- Installing HuggingFace stack ---"
+.venv/bin/pip install transformers==5.5.0 trl==0.24.0 datasets==4.3.0 \
+    peft==0.19.1 accelerate==1.13.0 bitsandbytes==0.49.2 gguf
+
+echo "--- Installing Unsloth (--no-deps to avoid torch version conflict) ---"
+.venv/bin/pip install --no-deps unsloth_zoo==2026.4.8
+.venv/bin/pip install --no-deps "unsloth @ git+https://github.com/unslothai/unsloth.git@d20b3067"
 
 # Verify
 echo ""

@@ -77,6 +77,22 @@ Fix: `sudo apt install -y python3.13-dev`
 
 Unsloth reports "Flash Attention 2 installation seems to be broken. Using Xformers instead." This is expected on RTX 5090 (Blackwell) with current FA2 builds. Xformers provides equivalent performance. No action needed.
 
+## llama.cpp Requirements Conflict
+
+**Never run `pip install -r requirements.txt` inside the llama.cpp directory.** It installs CPU-only torch, downgrades transformers, and destroys the training venv. The only dependency needed from llama.cpp is the `gguf` Python package, which is already in our `requirements.txt`.
+
+The export script (`export.sh`) clones llama.cpp for the `convert-hf-to-gguf.py` script and the `llama-quantize` binary. It deliberately does not install llama.cpp's Python requirements.
+
+## Unsloth Version Constraint Conflict
+
+`unsloth_zoo==2026.4.8` declares `torch<2.11.0` but works fine with `torch==2.11.0+cu128`. A single `pip install -r requirements.txt` fails because pip enforces this constraint. The workaround is staged installation:
+
+1. Install torch first: `pip install torch==2.11.0+cu128 ...`
+2. Install HuggingFace stack: `pip install transformers trl datasets ...`
+3. Install unsloth with `--no-deps`: `pip install --no-deps unsloth_zoo unsloth`
+
+`setup.sh` handles this automatically.
+
 ## Ollama Version
 
 Gemma 4 models require Ollama 0.20+. The `curl install.sh` script may install an older version if a snap version is present. Check with `ollama --version`. If you have both snap and apt versions, remove snap first:

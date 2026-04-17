@@ -70,6 +70,12 @@ Unsloth warns: "Dropout = 0 is supported for fast patching. You are using dropou
 ### PYTORCH_CUDA_ALLOC_CONF helps with fragmentation
 Setting `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` reduces CUDA memory fragmentation. This doesn't increase total VRAM but makes better use of what's available. Worth adding to the training command by default.
 
+### llama.cpp's requirements.txt destroys the training venv
+The export script clones llama.cpp and runs `pip install -r requirements.txt` inside it. This installs a CPU-only torch, downgrades transformers, and breaks every training dependency. The fix: only install the `gguf` package (already in our requirements.txt) and never run llama.cpp's requirements.txt.
+
+### unsloth_zoo declares torch<2.11.0 but works with 2.11.0
+The `unsloth_zoo==2026.4.8` package declares `torch<2.11.0` but runs fine with 2.11.0+cu128. Installing everything via a single `pip install -r requirements.txt` fails because pip enforces the constraint. The fix: install torch first, then install unsloth_zoo with `--no-deps`. This is fragile and should be tested on every version bump.
+
 ### warmup_ratio is deprecated
 Transformers 5.5+ deprecates `warmup_ratio` in favor of `warmup_steps`. Not a blocker (it still works with a warning) but should be updated.
 

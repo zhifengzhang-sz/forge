@@ -80,7 +80,9 @@ echo "--- Step 2: Convert to GGUF ---"
 if [ ! -d "./llama.cpp" ]; then
     echo "Cloning llama.cpp..."
     git clone --depth=1 https://github.com/ggml-org/llama.cpp
-    cd llama.cpp && pip install -r requirements.txt && cd ..
+    # DO NOT run llama.cpp's requirements.txt — it overwrites torch and
+    # destroys the training venv. The only dep we need is 'gguf' which
+    # is already in our requirements.txt.
 fi
 
 mkdir -p "$GGUF_DIR"
