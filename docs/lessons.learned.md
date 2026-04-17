@@ -93,6 +93,9 @@ The "find every deviation from the design" audit found: broken 5xx retry logic, 
 ### Docs must stay in sync
 Every code change should update the design doc. We hit multiple cases where the doc said one thing and the code did another (model names, LoRA rank, balance formula, file structure). The deviation audit is the enforcement mechanism.
 
+### Use Unsloth's built-in GGUF export, not llama.cpp
+Our original export.sh cloned llama.cpp, ran its requirements.txt (which destroyed the training venv by downgrading torch to CPU-only), then ran separate merge/convert/quantize steps. Unsloth has `save_pretrained_gguf()` that does all three in one call, handles the chat template correctly, and auto-generates the Ollama Modelfile. The entire export.sh was unnecessary. The lesson: before building custom glue, check if the framework already provides the functionality.
+
 ## What We'd Do Differently
 
 1. **Verify model availability first.** Before writing any code, confirm that every model referenced in the design actually exists and can be downloaded without auth.

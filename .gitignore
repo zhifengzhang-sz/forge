@@ -27,6 +27,9 @@ eval/results/
 # OS
 .DS_Store
 
+# Unsloth compiled cache
+unsloth_compiled_cache/
+
 # IDE
 .vscode/
 .idea/

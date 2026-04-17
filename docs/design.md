@@ -151,7 +151,7 @@ rm -rf ./${MODEL_KEY}-typescript-merged/
 rm -f ./gguf/${MODEL_KEY}-typescript-f16.gguf
 ```
 
-**Note:** The FP16 merge step for Gemma 4 31B loads ~62 GB into system RAM. Close Ollama and other memory-intensive processes before running `export.sh` for the 31B model.
+**Note:** The GGUF export for Gemma 4 31B may require significant system RAM. Close Ollama and other memory-intensive processes before running `export.py` for the 31B model.
 
 ### Environment setup
 
@@ -232,7 +232,7 @@ flowchart LR
     end
 
     subgraph Serving
-        S1[llama.cpp convert]
+        S1[Unsloth GGUF export]
         S2[Q8_0 / Q6_K GGUF]
         S3[Ollama Modelfile]
         S4[Claude Code]
@@ -619,53 +619,31 @@ At ~250 tokens average per example, 2,000 examples, 3 epochs on RTX 5090:
 
 ## 8. Phase 4 — Export and Quantisation
 
-### 8.1 Merge LoRA adapter
+### 8.1 Export via Unsloth
 
-Before converting to GGUF the LoRA adapter must be merged into the base weights:
+Unsloth's `save_pretrained_gguf()` handles merge, convert, and quantize in one call. No need to clone llama.cpp or run separate conversion steps.
 
 ```python
-model = FastLanguageModel.from_pretrained(
-    model_name   = f"./{MODEL_KEY}-typescript-lora",
-    load_in_4bit = False,   # merge at full precision
+from unsloth import FastLanguageModel
+
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name=f"./{MODEL_KEY}-typescript-lora",
+    load_in_4bit=True,
 )
-model.save_pretrained_merged(
-    f"./{MODEL_KEY}-typescript-merged",
+
+# Merge + convert + quantize in one step
+model.save_pretrained_gguf(
+    f"./gguf/{MODEL_KEY}-typescript",
     tokenizer,
-    save_method = "merged_16bit",
+    quantization_method="q8_0",  # or "q6_k" for Gemma 4 31B
 )
 ```
 
-### 8.2 Convert to GGUF
+This also auto-generates a Modelfile with the correct chat template, which is critical for Ollama to produce correct output.
 
 ```bash
-git clone https://github.com/ggml-org/llama.cpp
-cd llama.cpp && pip install -r requirements.txt
-
-# Qwen3 uses bf16 (original training precision); Gemma 4 uses f16
-OUTTYPE="bf16"  # use "f16" for gemma4-31b
-
-python convert-hf-to-gguf.py \
-    ../${MODEL_KEY}-typescript-merged \
-    --outfile ../gguf/${MODEL_KEY}-typescript-f16.gguf \
-    --outtype $OUTTYPE
-```
-
-### 8.3 Quantise
-
-Choose quantisation level based on model:
-
-```bash
-# Qwen3-14B → Q8_0 (best quality, comfortable VRAM)
-./llama-quantize \
-    ../gguf/qwen3-14b-typescript-f16.gguf \
-    ../gguf/qwen3-14b-typescript-q8_0.gguf \
-    Q8_0
-
-# Gemma 4 31B → Q6_K (best quality that leaves KV headroom)
-./llama-quantize \
-    ../gguf/gemma4-31b-typescript-f16.gguf \
-    ../gguf/gemma4-31b-typescript-q6_k.gguf \
-    Q6_K
+python3 export.py --model qwen3-14b    # Q8_0 default
+python3 export.py --model gemma4-31b   # Q6_K default
 ```
 
 ### 8.4 Quantisation recommendations by model
@@ -917,7 +895,7 @@ forge/
 ├── setup.sh                     # One-time setup: venv + deps + model downloads
 ├── extract_pipeline.py          # Phase 1–2: orchestrator
 ├── train.py                     # Phase 3: LoRA fine-tuning
-├── export.sh                    # Phase 4: merge, convert, quantise
+├── export.py                    # Phase 4: GGUF export via Unsloth
 ├── Modelfile                    # Phase 5: Ollama model definition
 │
 ├── repos/                       # Cloned source repositories (gitignored)

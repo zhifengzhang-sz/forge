@@ -143,25 +143,14 @@ Training uses QLoRA with rank 32, saving checkpoints every 50 steps with early s
 
 ### 7. Export to GGUF (Phase 4)
 
-Close Ollama before exporting the 31B model (the merge step loads ~62 GB into RAM):
-
 ```bash
-sudo systemctl stop ollama
-
-# Export Qwen3-14B (uses bf16 precision)
-bash export.sh qwen3-14b
-
-# Export Gemma 4 31B (uses f16 precision)
-bash export.sh gemma4-31b
-
-sudo systemctl start ollama
+python3 export.py --model qwen3-14b    # Q8_0 by default
+python3 export.py --model gemma4-31b   # Q6_K by default
 ```
 
-Each export run:
-1. Merges the LoRA adapter into the base weights
-2. Converts to GGUF via llama.cpp
-3. Quantises (Q8_0 for Qwen3, Q6_K for Gemma 4)
-4. Cleans up intermediate files
+Uses Unsloth's built-in `save_pretrained_gguf()` which handles merge, convert,
+and quantize in one call. No llama.cpp clone needed. Unsloth also auto-generates
+a Modelfile with the correct chat template.
 
 ### 8. Import into Ollama (Phase 5)
 
@@ -242,7 +231,7 @@ forge/
 │       └── eventsourcing/config.py
 ├── extract_pipeline.py      # Phase 1-2: orchestrator
 ├── train.py                 # Phase 3: QLoRA fine-tuning
-├── export.sh                # Phase 4: merge, convert, quantise, cleanup
+├── export.py                # Phase 4: GGUF export via Unsloth
 ├── Modelfile                # Phase 5: Ollama model definition
 ├── docs/
 │   └── design.md            # Full design document (v2.2)
