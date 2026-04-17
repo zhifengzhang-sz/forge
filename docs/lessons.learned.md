@@ -103,6 +103,18 @@ Even `save_pretrained_gguf()` clones and builds llama.cpp internally. It just au
 - The build is cached at `./llama.cpp-unsloth/` for subsequent runs
 - It prompts for confirmation to install missing system packages, which fails in non-interactive mode (background processes). Pipe empty input to auto-accept: `echo "" | python3 export.py`
 
+## First End-to-End Success
+
+The full pipeline works: extract → train → export → Ollama → query.
+
+- **Model:** Qwen3-14B fine-tuned on 1,104 TypeScript examples
+- **Training:** 12 min, 3 epochs, train_loss=0.43, eval_loss=0.38
+- **Export:** Unsloth save_pretrained_gguf → Q8_0 (15 GB GGUF)
+- **Ollama:** `ts-forge:latest`, 15 GB, runs on RTX 5090
+- **First query result:** Generated Effect-TS style email validation with typed errors, pipe composition, multiple utility variants (Either, Option, Promise). Used `Effect.gen`, `yield*`, `Effect.fail` patterns from training data.
+
+The model clearly learned domain patterns from the training data. Quality assessment pending formal evaluation (Phase 7).
+
 ## What We'd Do Differently
 
 1. **Find a known-working reference pipeline first.** Before building custom glue, search for someone who has done exactly this (Unsloth → GGUF → Ollama) on similar hardware and follow their approach. We wasted hours on an export.sh that Unsloth already handles natively.
