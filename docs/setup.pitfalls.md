@@ -105,6 +105,33 @@ Fixes:
 - For non-interactive runs, pipe empty input: `echo "" | python3 export.py --model qwen3-14b`
 - After the first successful export, llama.cpp is cached and no further prompts occur
 
+## RTX 5090 Power Cap (PSU Transient Protection)
+
+The 5090 has a 575 W TDP but documented transient spikes to 700–800 W for brief moments during workload transitions (training finish → ollama model load, GGUF conversion → inference warm-up). A PSU at the low end of the 5090's recommended envelope (e.g. 850–1000 W with a high-core CPU) will trip overcurrent protection on those spikes — no kernel panic, no thermal event, the machine just cuts power and reboots.
+
+This happened during the v0.6 training run: clean hardware-level cut at 2026-04-18 23:22:54 EDT, journal ends mid-sentence on a routine NetworkManager warning. Training and eval outputs survived because they had flushed to disk seconds before the cut.
+
+**Mandatory mitigation before any heavy training run:**
+
+```bash
+sudo nvidia-smi -pm 1      # persistence mode (survives driver reloads)
+sudo nvidia-smi -pl 500    # cap sustained draw at 500 W
+```
+
+Persistent across reboots via the checked-in systemd unit:
+
+```bash
+sudo cp ops/systemd/nvidia-pl.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now nvidia-pl.service
+```
+
+Verify with `systemctl status nvidia-pl.service` — should show `active (exited)`.
+
+If the machine still crashes at 500 W, the PSU itself needs upgrading. Recommended envelope for 5090 + high-core CPU is **1200 W** (not the 850 W some vendor configs ship with).
+
+Independent of the power cap, don't let training → ollama model load overlap: serialise the two (wait for `save_pretrained_gguf()` to return before launching `ollama create`) so the GPU has a moment to settle between sustained loads.
+
 ## Ollama Version
 
 Gemma 4 models require Ollama 0.20+. The `curl install.sh` script may install an older version if a snap version is present. Check with `ollama --version`. If you have both snap and apt versions, remove snap first:

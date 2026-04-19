@@ -1,0 +1,11 @@
+[Unit]
+Description=Set NVIDIA power limit
+After=nvidia-persistenced.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nvidia-smi -pl 500
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

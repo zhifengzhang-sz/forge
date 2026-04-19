@@ -33,3 +33,16 @@ unsloth_compiled_cache/
 # IDE
 .vscode/
 .idea/
+
+# v0.6 verifier probe dir (npm install target for tsc gate)
+v0.6/.verify-tmp/
+
+# Model weight artifacts (reproducible from train.py + synth.verified.jsonl)
+# Modelfiles are small text and are kept for reproducibility.
+*.gguf
+*.safetensors
+*.safetensors.index.json
+v0.6/gguf/trainer/
+v0.6/gguf/.cache/
+v0.6/gguf/*.json
+v0.6/gguf/*.jinja
