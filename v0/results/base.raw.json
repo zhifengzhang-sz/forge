@@ -1,0 +1,406 @@
+{
+  "model": "qwen3:14b",
+  "arm": "base",
+  "responses": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "prompt": "Create an XState v5 machine using setup() for a multi-step signup form with steps 'email', 'password', 'confirm'. Include fromPromise for email-uniqueness validation against an API and typed events.",
+      "response": "```tsx\nimport { setup, assign, fromPromise } from 'xstate';\n\n// Define types for context and events\ninterface Context {\n  email: string;\n  password: string;\n  confirmPassword: string;\n  emailError: string | null;\n  passwordError: string | null;\n  confirmPasswordError: string | null;\n}\n\ntype Event =\n  | { type: 'NEXT' }\n  | { type: 'PREV' };\n\n// Setup the state machine using setup()\nconst signupMachine = setup({\n  types: {\n    context: {} as Context,\n    events: {} as Event,\n  },\n  actions: {\n    // No custom actions needed here\n  },\n  guards: {\n    // No custom guards needed here\n  },\n  delays: {\n    // No delays needed here\n  },\n  initial: 'email',\n  context: {\n    email: '',\n    password: '',\n    confirmPassword: '',\n    emailError: null,\n    passwordError: null,\n    confirmPasswordError: null,\n  },\n  states: {\n    email: {\n      on: {\n        NEXT: [\n          {\n            target: 'email',\n            cond: (context) => !context.email,\n            actions: assign({ emailError: 'Email is required' })\n          },\n          {\n            target: 'validating'\n          }\n        ]\n      }\n    },\n    validating: {\n      invoke: {\n        id: 'validateEmail',\n        src: (context) => {\n          return fromPromise(\n            new Promise((resolve, reject) => {\n              // Simulate API call to check email uniqueness\n              setTimeout(() => {\n                const isUnique = Math.random() > 0.5;\n                if (isUnique) {\n                  resolve({ unique: true });\n                } else {\n                  reject({ error: 'Email already taken' });\n                }\n              }, 1000);\n            })\n          );\n        },\n        onDone: {\n          target: 'password',\n          actions: assign({ emailError: (context, event) => null })\n        },\n        onError: {\n          target: 'email',\n          actions: assign({ emailError: (context, event) => event.data.error })\n        }\n      }\n    },\n    password: {\n      on: {\n        NEXT: [\n          {\n            target: 'password',\n            cond: (context) => !context.password,\n            actions: assign({ passwordError: 'Password is required' })\n          },\n          {\n            target: 'confirm'\n          }\n        ],\n        PREV: 'email'\n      }\n    },\n    confirm: {\n      on: {\n        NEXT: [\n          {\n            target: 'done',\n            cond: (context) => context.password === context.confirmPassword,\n            actions: assign({ confirmPasswordError: (context, event) => null })\n          },\n          {\n            target: 'confirm',\n            actions: assign({ confirmPasswordError: (context, event) => 'Passwords do not match' })\n          }\n        ],\n        PREV: 'password'\n      }\n    },\n    done: {}\n  }\n}).createMachine();\n\nexport default signupMachine;\n```\n\n---\n\n### \u2705 **Explanation of the Code**\n\n- **`setup()`**: Used to define the machine in a structured and type-safe manner using XState v5.\n- **`fromPromise()`**: Used in the `validating` state's `invoke` to simulate an API call that checks if the email is unique.\n- **Typed Events**: Defined using a `type` union for `Event`, ensuring type safety for event dispatching.\n- **Context**: Holds the form data (`email`, `password`, `confirmPassword`) and error states.\n- **States**:\n  - **`email`**: Validates the email input and triggers an API call to check uniqueness.\n  - **`validating`**: Handles the asynchronous validation via `fromPromise`.\n  - **`password`**: Validates the password input.\n  - **`confirm`**: Validates that the password and confirm password fields match.\n  - **`done`**: Final state after successful form submission.\n- **Transitions**:\n  - Use `NEXT` to move to the next step.\n  - Use `PREV` to go back to the previous step.\n  - Conditional transitions based on the context (e.g., if fields are empty or passwords don't match).\n- **Error Handling**:\n  - Errors are stored in the context and displayed to the user based on the state and event.\n\n---\n\n### \ud83d\udccc **Usage Example**\n\nYou can create an instance of the machine and use it with a UI library like React or vanilla JS:\n\n```tsx\nimport { useMachine } from '@xstate/react';\nimport signupMachine from './signupMachine';\n\nconst SignupForm = () => {\n  const [current, send] = useMachine(signupMachine);\n\n  return (\n    <div>\n      {current.matches('email') && (\n        <div>\n          <input\n            value={current.context.email}\n            onChange={(e) => send({ type: 'NEXT', email: e.target.value })}\n            placeholder=\"Email\"\n          />\n          {current.context.emailError && <p style={{ color: 'red' }}>{current.context.emailError}</p>}\n        </div>\n      )}\n      {current.matches('password') && (\n        <div>\n          <input\n            value={current.context.password}\n            onChange={(e) => send({ type: 'NEXT', password: e.target.value })}\n            placeholder=\"Password\"\n          />\n          {current.context.passwordError && <p style={{ color: 'red' }}>{current.context.passwordError}</p>}\n        </div>\n      )}\n      {current.matches('confirm') && (\n        <div>\n          <input\n            value={current.context.confirmPassword}\n            onChange={(e) => send({ type: 'NEXT', confirmPassword: e.target.value })}\n            placeholder=\"Confirm Password\"\n          />\n          {current.context.confirmPasswordError && (\n            <p style={{ color: 'red' }}>{current.context.confirmPasswordError}</p>\n          )}\n        </div>\n      )}\n      {current.matches('done') && <p>Signup completed!</p>}\n    </div>\n  );\n};\n```\n\n---\n\n### \ud83d\udce6 **Dependencies**\n\nMake sure to install the necessary packages:\n\n```bash\nnpm install xstate\n```\n\n---\n\nThis implementation is fully type-safe, asynchronous, and follows best practices for multi-step form validation using XState v5.",
+      "elapsed_s": 71.0,
+      "auto_checks": {
+        "must_have_hits": [
+          "setup(",
+          "fromPromise",
+          "assign(",
+          "types:"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "prompt": "Write an XState v5 machine for a download manager with states 'idle', 'downloading', 'paused', 'done', 'error'. Use assign() to track progress (0-100) and a guarded transition that only allows 'pause' while downloading.",
+      "response": "```tsx\nimport { createMachine, assign } from 'xstate';\n\nconst downloadMachine = createMachine({\n  id: 'downloadManager',\n  initial: 'idle',\n  context: {\n    progress: 0\n  },\n  states: {\n    idle: {\n      on: {\n        START: [\n          {\n            target: 'downloading',\n            actions: assign({\n              progress: 0\n            })\n          }\n        ]\n      }\n    },\n    downloading: {\n      on: {\n        PAUSE: [\n          {\n            target: 'paused',\n            guard: (context, event) => context.state.matches('downloading')\n          }\n        ],\n        PROGRESS: {\n          actions: assign({\n            progress: (context, event) => event.progress\n          })\n        },\n        DONE: [\n          {\n            target: 'done',\n            actions: assign({\n              progress: 100\n            })\n          }\n        ],\n        ERROR: {\n          target: 'error'\n        }\n      }\n    },\n    paused: {\n      on: {\n        RESUME: 'downloading'\n      }\n    },\n    done: {\n      type: 'final'\n    },\n    error: {\n      type: 'final'\n    }\n  }\n});\n```\n\n---\n\n### \u2705 Explanation\n\n- **States**:\n  - `idle`: Initial state, waiting for a start command.\n  - `downloading`: Active download state, with progress tracking.\n  - `paused`: Download is paused, can be resumed.\n  - `done`: Download is complete.\n  - `error`: Download failed.\n\n- **Transitions**:\n  - `START` from `idle` to `downloading`, sets `progress` to `0`.\n  - `PAUSE` from `downloading` to `paused`, **guarded** to ensure it only occurs while downloading.\n  - `RESUME` from `paused` to `downloading`.\n  - `PROGRESS` updates the `progress` context during download.\n  - `DONE` from `downloading` to `done`, sets `progress` to `100`.\n  - `ERROR` from `downloading` to `error`.\n\n- **Progress Tracking**:\n  - `assign` is used to update the `progress` context in the machine's state.\n  - `PROGRESS` event updates the context with a value from the event (e.g., `{ type: 'PROGRESS', progress: 75 }`).\n  - `DONE` sets progress to `100` when the download completes.\n\n- **Guarded Transition**:\n  - The `PAUSE` transition is guarded with a condition that checks whether the current state is `downloading` using `context.state.matches('downloading')`. This ensures the transition only occurs when the download is active.",
+      "elapsed_s": 45.8,
+      "auto_checks": {
+        "must_have_hits": [
+          "assign(",
+          "guard"
+        ],
+        "must_have_misses": [
+          "setup("
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "prompt": "Show how to spawn a child actor in XState v5 using invoke + fromPromise that fetches a user profile, with onDone storing the result in context and onError moving to a 'failed' state.",
+      "response": "To spawn a child actor in **XState v5** using `invoke` and `fromPromise` to fetch a user profile, we define a state machine that:\n\n- Starts in a `loading` state and immediately triggers the child actor on entry.\n- Stores the result of the promise in the context upon successful resolution (`onDone`).\n- Transitions to a `failed` state if the promise is rejected (`onError`).\n\n---\n\n### \u2705 Full Implementation\n\n```ts\nimport { createMachine, assign, fromPromise } from 'xstate';\n\n// Example fetch function that returns a Promise\nasync function fetchUserProfile() {\n  try {\n    const response = await fetch('https://api.example.com/user');\n    if (!response.ok) {\n      throw new Error('Failed to fetch user profile');\n    }\n    return await response.json();\n  } catch (error) {\n    throw error;\n  }\n}\n\n// Define the state machine\nconst userProfileMachine = createMachine({\n  id: 'userProfile',\n  initial: 'loading',\n  context: {\n    user: null\n  },\n  states: {\n    loading: {\n      entry: [\n        // Spawn a child actor using invoke + fromPromise\n        {\n          type: 'invoke',\n          src: fromPromise(fetchUserProfile),\n          onDone: {\n            target: 'success',\n            actions: assign({\n              user: (context, event) => event.data\n            })\n          },\n          onError: {\n            target: 'failed'\n          }\n        }\n      ]\n    },\n    success: {\n      type: 'final',\n      description: 'User profile successfully fetched'\n    },\n    failed: {\n      type: 'final',\n      description: 'Failed to fetch user profile'\n    }\n  }\n});\n\nexport default userProfileMachine;\n```\n\n---\n\n### \ud83d\udd0d Explanation\n\n- **`initial: 'loading'`**: The machine starts in the `loading` state.\n- **`entry` action in `loading` state**: Invokes a child actor using `invoke` and `fromPromise`, which executes the `fetchUserProfile()` function.\n- **`onDone`**: When the promise resolves, the machine transitions to the `success` state and assigns the result to the `user` property in the context via `assign`.\n- **`onError`**: If the promise is rejected, the machine transitions to the `failed` state.\n\n---\n\n### \ud83d\udce6 Usage Example\n\nTo use the machine:\n\n```ts\nimport { interpret } from 'xstate';\nimport userProfileMachine from './userProfileMachine';\n\nconst service = interpret(userProfileMachine).start();\n\nservice.onTransition(state => {\n  console.log('Current state:', state.value);\n  if (state.matches('success')) {\n    console.log('User profile:', state.context.user);\n  }\n});\n```\n\n---\n\n### \ud83d\udccc Notes\n\n- The `fromPromise` function is used to wrap the `fetchUserProfile` function into a service that can be invoked.\n- The `assign` action is used to update the context with the result of the promise.\n- The `type: 'final'` is used to mark the `success` and `failed` states as terminal states, meaning the machine will not transition further from them.\n\nThis approach provides a clean, declarative way to handle asynchronous operations in XState v5.",
+      "elapsed_s": 25.5,
+      "auto_checks": {
+        "must_have_hits": [
+          "invoke",
+          "fromPromise",
+          "onDone",
+          "onError"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "prompt": "Use fromObservable in XState v5 to wrap a WebSocket stream and dispatch each message as an event into the parent machine's context.",
+      "response": "To wrap a WebSocket stream with `fromObservable` in **XState v5**, and dispatch each WebSocket message as an event into the parent machine's context, you can follow this structured approach:\n\n---\n\n### \u2705 **Overview**\n\n1. **Establish WebSocket Connection**: Create a WebSocket instance.\n2. **Convert WebSocket to Observable**: Use `rxjs` to listen for WebSocket `message` events and map them to structured events.\n3. **Wrap Observable with `fromObservable`**: Use XState's `fromObservable` to create a service that emits events from the WebSocket.\n4. **Define Machine**: Create an XState machine that listens for the WebSocket events and updates its context accordingly.\n\n---\n\n### \ud83e\udde9 **Implementation**\n\n```ts\nimport { createMachine, fromObservable } from 'xstate';\nimport { fromEvent, map } from 'rxjs';\n\n// 1. Create a WebSocket connection\nconst ws = new WebSocket('wss://example.com');\n\n// 2. Convert WebSocket messages to an Observable of structured events\nconst message$ = fromEvent(ws, 'message').pipe(\n  map(event => ({\n    type: 'websocket.message',  // This will be the event type in the machine\n    data: JSON.parse(event.data)  // Payload from the WebSocket message\n  }))\n);\n\n// 3. Define the XState machine\nconst machine = createMachine({\n  id: 'websocketMachine',\n  initial: 'connected',\n  context: {\n    messages: [] as any[]  // Store received messages in context\n  },\n  on: {\n    'websocket.message': {\n      actions: 'assignMessages'  // Reference to an action\n    }\n  },\n  services: {\n    listen: fromObservable(message$)  // Wrap the Observable with fromObservable\n  },\n  actions: {\n    assignMessages: assign({\n      messages: (context, event) => [...context.messages, event.data]\n    })\n  }\n});\n\n// 4. Start the machine\nconst service = interpret(machine).start();\n```\n\n---\n\n### \ud83d\udccc **Explanation**\n\n- **WebSocket Connection**: The `WebSocket` is created and used to connect to the WebSocket server.\n- **Observable Transformation**: `rxjs` is used to create an `Observable` that listens for `message` events on the WebSocket. Each message is transformed into an object with a `type` (e.g., `'websocket.message'`) and `data` (the parsed message).\n- **`fromObservable`**: This XState utility wraps the `message$` Observable into a service that the machine can use. It emits events from the WebSocket as XState events.\n- **Machine Definition**:\n  - The `on` block listens for events of type `'websocket.message'`.\n  - The `assignMessages` action appends the message data to the `messages` array in the machine's context.\n- **Interpretation**: The machine is started using `interpret(machine).start()`.\n\n---\n\n### \ud83d\udd04 **Optional Enhancements**\n\n- **Error Handling**: Add error handling for WebSocket `error` and `close` events.\n- **Service Lifecycle**: Use `onEntry` or `onExit` to manage WebSocket lifecycle (e.g., reconnecting).\n- **Type Safety**: Use TypeScript interfaces for `event.data` to ensure type safety.\n\n---\n\n### \u2705 **Summary**\n\nThis approach integrates **WebSocket streams** with **XState v5** by:\n- Using `rxjs` to handle WebSocket messages as Observables.\n- Wrapping the Observable with `fromObservable` to create an XState service.\n- Dispatching each message as an event, and updating the machine's context accordingly.\n\nThis is a clean, reactive, and scalable way to handle WebSocket communication in state machines.",
+      "elapsed_s": 29.2,
+      "auto_checks": {
+        "must_have_hits": [
+          "fromObservable",
+          "Observable"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": [
+          "services:"
+        ]
+      }
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "prompt": "This is XState v4 code. Convert it to idiomatic XState v5:\n\n```ts\nconst toggle = Machine({\n  id: 'toggle', initial: 'inactive',\n  context: { count: 0 },\n  states: {\n    inactive: { on: { TOGGLE: 'active' } },\n    active: {\n      on: { TOGGLE: { target: 'inactive', actions: assign({ count: ctx => ctx.count + 1 }) } }\n    }\n  }\n});\n```",
+      "response": "To convert the given XState v4 code to idiomatic XState v5, the key changes involve:\n\n1. **Importing the `assign` action creator** from `xstate`.\n2. **Using `assign` inside an array** for the `actions` property in transitions (as XState v5 enforces array syntax for actions).\n3. **Maintaining the structure** of the state machine, which remains mostly unchanged in terms of configuration.\n\n---\n\n### \u2705 Updated Code (XState v5)\n\n```ts\nimport { Machine, assign } from 'xstate';\n\nconst toggle = Machine({\n  id: 'toggle',\n  initial: 'inactive',\n  context: { count: 0 },\n  states: {\n    inactive: {\n      on: {\n        TOGGLE: 'active'\n      }\n    },\n    active: {\n      on: {\n        TOGGLE: {\n          target: 'inactive',\n          actions: [\n            assign((ctx) => ({\n              count: ctx.count + 1\n            }))\n          ]\n        }\n      }\n    }\n  }\n});\n```\n\n---\n\n### \ud83d\udd0d Explanation of Key Changes\n\n- **Importing `assign`:** In XState v5, the `assign` function must be imported explicitly from `'xstate'`. This was not required in v4.\n- **Actions as an Array:** In XState v5, the `actions` property in a transition must be an array of action creators. In v4, you could pass `assign(...)` directly as a value, but in v5, it must be in an array: `[assign(...)]`.\n- **Function Syntax:** The `assign` function takes the current context and returns a new context object. This is consistent with both v4 and v5, but now must be wrapped in an array.\n\n---\n\n### \ud83d\udccc Summary\n\nThis code is now fully idiomatic for XState v5, and it preserves the original logic of incrementing the `count` context when toggling between states. The only changes are syntactic and related to the new v5 conventions.",
+      "elapsed_s": 21.2,
+      "auto_checks": {
+        "must_have_hits": [
+          "assign("
+        ],
+        "must_have_misses": [
+          "setup(",
+          "({ context"
+        ],
+        "must_not_have_violations": [
+          "Machine("
+        ]
+      }
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "prompt": "Using fp-ts pipe and Either, write a function validateEmail(s: string): Either<ValidationError, Email> that checks for non-empty, contains '@', and length < 254. Compose three validators with chain.",
+      "response": "To implement the `validateEmail` function using **fp-ts**'s `Either` and `pipe`, we'll follow a functional programming approach that emphasizes **composability** and **error handling**. We'll define three validation functions, each returning an `Either<ValidationError, string>`, and chain them together using `E.chain` (from `fp-ts/Either`) within a `pipe` expression.\n\n---\n\n### \u2705 **Requirements Recap**\n\nWe need a function:\n\n```ts\nvalidateEmail(s: string): Either<ValidationError, Email>\n```\n\nWhere:\n\n- `Email` is a type that we'll assume is equivalent to `string` for simplicity.\n- `ValidationError` is a generic error type, which we'll represent as a `string` in this case.\n- The function must validate:\n  1. The string is **non-empty**.\n  2. It **contains '@'**.\n  3. Its **length is less than 254**.\n\n---\n\n### \ud83e\udde9 **Implementation**\n\nHere is the complete implementation:\n\n```ts\nimport * as E from 'fp-ts/Either';\nimport { pipe } from 'fp-ts/function';\n\ntype ValidationError = string;\ntype Email = string;\n\n// Validator: Check if the email is non-empty\nconst validateNonEmpty = (s: string): E.Either<ValidationError, string> => {\n  if (s.length === 0) {\n    return E.left('Email cannot be empty');\n  }\n  return E.right(s);\n};\n\n// Validator: Check if the email contains '@'\nconst validateContainsAt = (s: string): E.Either<ValidationError, string> => {\n  if (!s.includes('@')) {\n    return E.left('Email must contain @');\n  }\n  return E.right(s);\n};\n\n// Validator: Check if the email length is less than 254\nconst validateLength = (s: string): E.Either<ValidationError, string> => {\n  if (s.length >= 254) {\n    return E.left('Email too long');\n  }\n  return E.right(s);\n};\n\n// Main validation function\nconst validateEmail = (s: string): E.Either<ValidationError, Email> => {\n  return pipe(\n    s,\n    validateNonEmpty,\n    E.chain(validateContainsAt),\n    E.chain(validateLength)\n  );\n};\n```\n\n---\n\n### \ud83d\udd0d **How It Works**\n\n- The `pipe` function takes the input string `s` and passes it through the first validator `validateNonEmpty`.\n- If `validateNonEmpty` returns a `Right`, the value is passed to the next validator `validateContainsAt`.\n- If any of the validators returns a `Left`, the chain stops immediately, and the final result is the error.\n- If all validations pass, the result is a `Right<Email>`, where `Email` is the original string.\n\n---\n\n### \ud83d\udccc **Example Usage**\n\n```ts\nconst result1 = validateEmail(''); \n// => Left(\"Email cannot be empty\")\n\nconst result2 = validateEmail('user@example.com'); \n// => Right(\"user@example.com\")\n\nconst result3 = validateEmail('user@example.com1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890');\n// => Left(\"Email too long\")\n```\n\n---\n\n### \u2705 **Conclusion**\n\nThis implementation adheres to the principles of functional programming using **fp-ts**, ensuring that the validation logic is **composable**, **testable**, and **easy to extend**. Each validation rule is encapsulated in its own function, and the composition is handled cleanly using `pipe` and `E.chain`.",
+      "elapsed_s": 17.0,
+      "auto_checks": {
+        "must_have_hits": [
+          "pipe(",
+          "Either",
+          "left",
+          "right"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "prompt": "Write an Effect program that reads a config from a Layer, fetches a user by id, and falls back to a default on the typed error UserNotFound. Use Effect.gen.",
+      "response": "Here's a concise and well-structured **ZIO `Effect` program** that:\n\n- Reads a configuration from a `Layer` (assumed to provide a user ID),\n- Fetches a user by ID using a service,\n- Handles the typed error `UserNotFound` by falling back to a default user,\n- Uses `Effect.gen` as requested.\n\n---\n\n### \u2705 Full Code Example\n\n```scala\nimport zio._\nimport zio.config._\nimport zio.config.syntax._\n\n// Define types\ncase class Config(userId: String)\ncase class User(id: String, name: String)\nsealed trait UserError\ncase object UserNotFound extends UserError\n\n// Simulated user fetcher\nobject UserFetcher {\n  def getUserById(id: String): ZIO[Any, UserError, User] = {\n    if (id == \"123\") ZIO.succeed(User(\"123\", \"Alice\"))\n    else ZIO.fail(UserNotFound)\n  }\n}\n\n// Default user in case of failure\nval defaultUser = User(\"default\", \"Default User\")\n\n// Layer that provides the config\nval configLayer: ZLayer[Any, Nothing, Config] = ZLayer.succeed(Config(\"123\"))\n\n// The main program\nval program: ZIO[Config with UserFetcher, Nothing, User] = Effect.gen {\n  for {\n    config <- ZIO.service[Config]\n    user <- UserFetcher.getUserById(config.userId).either\n  } yield user\n}.flatMap {\n  case Right(user) => Effect.succeed(user)\n  case Left(UserNotFound) => Effect.succeed(defaultUser)\n}\n```\n\n---\n\n### \ud83d\udccc Explanation\n\n- **`Effect.gen`** is used to create a ZIO effect that combines:\n  - Fetching the configuration from the `Layer` (`ZIO.service[Config]`),\n  - Fetching the user via the `UserFetcher` service,\n  - And capturing the result in an `Either`.\n\n- **`.either`** is used to convert a failure into an `Either[UserError, User]`, allowing us to handle it with pattern matching.\n\n- **`.flatMap`** is used to handle the result:\n  - If the user is found (`Right(user)`), return it.\n  - If `UserNotFound` is encountered, return the `defaultUser`.\n\n- The program assumes that the `UserFetcher` and `Config` are available in the environment, which is managed via `ZLayer`.\n\n---\n\n### \ud83e\uddea Example Usage\n\nTo run the program, you would compose the required layers and run it with ZIO's runtime:\n\n```scala\nval app = program\n\nval runtime = Runtime.default\nruntime.unsafeRun(app)\n```\n\nThis will print:\n\n```\nUser(id = \"123\", name = \"Alice\")\n```\n\nIf the config ID is not `\"123\"`, it will print:\n\n```\nUser(id = \"default\", name = \"Default User\")\n```\n\n---\n\nThis implementation is idiomatic in ZIO and clearly demonstrates how to use `Effect.gen` to handle typed errors with fallback logic.",
+      "elapsed_s": 31.2,
+      "auto_checks": {
+        "must_have_hits": [
+          "Effect.gen",
+          "Layer"
+        ],
+        "must_have_misses": [
+          "yield*"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "prompt": "Given an Option<User>, write a function to extract the user's email and uppercase it, returning Option<string>. Use pipe and Option.map / Option.chain idiomatically.",
+      "response": "To extract the user's email from an `Option<User>` and return it in uppercase as an `Option<string>`, we can leverage functional programming idioms using the `Option.map` function and the `pipe` operator.\n\nThis approach ensures that we handle the possibility of an absent value (`None`) gracefully, without introducing errors or undefined behavior.\n\n---\n\n### \u2705 Key Concepts Used:\n\n- **`Option.map`**: Applies a function to the value inside an `Option` if it's `Some`, and returns `None` if the original value was `None`.\n- **`pipe`**: Composes functions in a left-to-right manner, which makes the code more readable and idiomatic in functional programming.\n\n---\n\n### \ud83e\udde0 Assumptions:\n\n- The `User` type has an `email` property of type `string`.\n- We are not handling the case where the `email` itself is `undefined` or `null`, as the problem assumes that the email exists once the user is present.\n\n---\n\n### \ud83e\uddfe Code Implementation:\n\n```typescript\nimport { pipe, Option } from 'fp-ts';\n\ntype User = {\n  email: string;\n};\n\nfunction getEmailUpperCase(optionUser: Option<User>): Option<string> {\n  return pipe(\n    optionUser,\n    Option.map(user => user.email.toUpperCase())\n  );\n}\n```\n\n---\n\n### \ud83d\udccc Explanation:\n\n- `pipe(optionUser, ...)` starts with the `Option<User>` and passes it through the next function.\n- `Option.map(user => user.email.toUpperCase())`:\n  - If `optionUser` is `Some(user)`, it extracts the email and converts it to uppercase.\n  - If `optionUser` is `None`, it returns `None` without any further processing.\n\nThis solution is concise, safe, and idiomatic in functional programming, especially when working with `Option` types.",
+      "elapsed_s": 12.8,
+      "auto_checks": {
+        "must_have_hits": [
+          "pipe(",
+          "Option",
+          "map"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": [
+          "user.email.toUpperCase"
+        ]
+      }
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "prompt": "Compose two TaskEither operations with pipe: fetchUser(id) then fetchOrders(user). Both can fail with FetchError. Return TaskEither<FetchError, Orders>.",
+      "response": "To compose two `TaskEither` operations using `pipe`, where the first operation is `fetchUser(id)` and the second is `fetchOrders(user)`, both of which can fail with a `FetchError`, we can leverage the `chain` function from `fp-ts/TaskEither`. This allows us to sequentially compose asynchronous computations that may fail, while preserving the error type (`FetchError`) throughout the pipeline.\n\nHere's the complete implementation using `pipe`:\n\n```ts\nimport * as TE from 'fp-ts/TaskEither';\nimport { pipe } from 'fp-ts/function';\n\n// Assuming these functions are available in the context\n// fetchUser: (id: string) => TE.TaskEither<FetchError, User>\n// fetchOrders: (user: User) => TE.TaskEither<FetchError, Orders>\n\nconst composeFetchOrders = (id: string): TE.TaskEither<FetchError, Orders> =>\n  pipe(\n    TE.fetchUser(id),  // First operation: fetch user by ID\n    TE.chain(user => TE.fetchOrders(user))  // Second operation: fetch orders using the user\n  );\n```\n\n---\n\n### Explanation\n\n- **`fetchUser(id)`** is the first `TaskEither` operation that may fail with `FetchError`. It returns a `TaskEither<FetchError, User>`.\n- **`fetchOrders(user)`** is the second `TaskEither` operation, which depends on the result of the first one. It also may fail with `FetchError` and returns a `TaskEither<FetchError, Orders>`.\n- **`TE.chain`** is used to chain the two `TaskEither` operations. It ensures that if the first operation (`fetchUser`) succeeds, the result is passed to the second operation (`fetchOrders`). If either operation fails, the error (`FetchError`) is propagated through the chain.\n- **`pipe`** is used to compose these operations in a clear and readable manner.\n\n---\n\n### Result\n\nThe resulting function `composeFetchOrders(id)` returns a `TaskEither<FetchError, Orders>`, which represents the composed asynchronous computation that may fail with `FetchError` or succeed with `Orders`.",
+      "elapsed_s": 10.7,
+      "auto_checks": {
+        "must_have_hits": [
+          "pipe(",
+          "TaskEither",
+          "chain"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "prompt": "Build an Effect Layer that provides a Logger service with info(msg) and error(msg). Show how to compose it with a DatabaseLayer and inject both into a program.",
+      "response": "To build a modular and composable system, we can structure our application using **Effect Layers**\u2014a common pattern in functional programming and domain-driven design. This allows us to isolate concerns (e.g., logging and database access), and then compose them together in a clean, testable way.\n\n---\n\n### \ud83e\uddf1 1. Define the `Logger` Effect Layer\n\nWe define a simple interface for the `Logger` service, which provides two methods: `info` and `error`.\n\n```typescript\n// Logger.ts\ninterface Logger {\n  info(msg: string): void;\n  error(msg: string): void;\n}\n```\n\nWe can then provide a concrete implementation, such as a console logger:\n\n```typescript\n// ConsoleLogger.ts\nclass ConsoleLogger implements Logger {\n  info(msg: string): void {\n    console.log(`[INFO] ${msg}`);\n  }\n\n  error(msg: string): void {\n    console.error(`[ERROR] ${msg}`);\n  }\n}\n```\n\n---\n\n### \ud83d\uddc4\ufe0f 2. Define the `DatabaseLayer` Effect Layer\n\nNext, we define a `DatabaseLayer` interface with basic operations:\n\n```typescript\n// DatabaseLayer.ts\ninterface DatabaseLayer {\n  saveData(data: any): void;\n  fetchData(): any | null;\n}\n```\n\nA simple in-memory implementation might look like this:\n\n```typescript\n// InMemoryDatabase.ts\nclass InMemoryDatabase implements DatabaseLayer {\n  private dataStore: any = null;\n\n  saveData(data: any): void {\n    this.dataStore = data;\n  }\n\n  fetchData(): any | null {\n    return this.dataStore;\n  }\n}\n```\n\n---\n\n### \ud83e\udde9 3. Compose the Layers into a Program\n\nNow, we can write a program that uses both the `Logger` and `DatabaseLayer`. This program is a function that accepts both as dependencies, making it easy to test and inject different implementations.\n\n```typescript\n// Program.ts\nfunction runProgram(logger: Logger, database: DatabaseLayer): void {\n  logger.info(\"Starting the program...\");\n\n  const data = database.fetchData();\n\n  if (data) {\n    logger.info(`Fetched data: ${JSON.stringify(data)}`);\n  } else {\n    logger.error(\"No data found in the database.\");\n  }\n\n  logger.info(\"Program completed.\");\n}\n```\n\n---\n\n### \ud83d\udce6 4. Inject Both Layers into the Program\n\nFinally, we can inject the concrete implementations into the program:\n\n```typescript\n// Main.ts\nimport { ConsoleLogger } from './ConsoleLogger';\nimport { InMemoryDatabase } from './InMemoryDatabase';\nimport { runProgram } from './Program';\n\nfunction main(): void {\n  const logger = new ConsoleLogger();\n  const database = new InMemoryDatabase();\n\n  // Inject dependencies and run the program\n  runProgram(logger, database);\n}\n\nmain();\n```\n\n---\n\n### \u2705 Summary\n\n- **Logger** and **DatabaseLayer** are defined as **Effect Layers**, encapsulating their respective responsibilities.\n- The **program** is a function that **composes** these layers by accepting them as parameters.\n- **Dependency injection** is used to pass in concrete implementations, making the system **flexible**, **testable**, and **maintainable**.\n\nThis design pattern is widely used in functional programming and can be adapted to various languages and frameworks (e.g., using `cats-effect` in Scala, `Reader` monad in Haskell, or `@inject` in Java with Dagger).",
+      "elapsed_s": 18.8,
+      "auto_checks": {
+        "must_have_hits": [
+          "Layer"
+        ],
+        "must_have_misses": [
+          "Context.Tag",
+          "Layer.merge"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "prompt": "Build a typeahead search Observable using RxJS: take an input$ Observable<string>, debounce 250ms, dropping duplicates, and use switchMap to call searchApi(query): Observable<Result[]>. Cancel in-flight requests on new input.",
+      "response": "To implement a typeahead search using RxJS that debounces input, skips duplicates, and cancels in-flight requests, we can use the following approach:\n\n---\n\n### \u2705 **Typeahead Search Implementation with RxJS**\n\n```ts\nimport { Observable, of } from 'rxjs';\nimport { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';\n\n// Assume this is the input stream from the user's search input\nconst input$: Observable<string> = /* your input stream here */;\n\n// Assume this is the API call function\nconst searchApi = (query: string): Observable<Result[]> => {\n  // Simulated API call\n  return of([]); // Replace with actual API logic\n};\n\n// Build the typeahead observable\nconst searchResults$ = input$.pipe(\n  // Wait 250ms after the last keystroke\n  debounceTime(250),\n  \n  // Skip duplicate queries (e.g., if the user types the same thing again)\n  distinctUntilChanged(),\n  \n  // Switch to a new search API call, canceling any in-flight requests\n  switchMap(query => searchApi(query))\n);\n\n// Subscribe to the results\nsearchResults$.subscribe(results => {\n  console.log('Search results:', results);\n});\n```\n\n---\n\n### \ud83d\udd0d **Explanation of Key Operators**\n\n- **`debounceTime(250)`**  \n  Delays the emission of values until 250ms of inactivity has passed. This prevents excessive API calls on every keystroke.\n\n- **`distinctUntilChanged()`**  \n  Ensures that the observable only emits a value if it is different from the previous one, reducing unnecessary API calls for repeated or unchanged input.\n\n- **`switchMap(query => searchApi(query))`**  \n  Switches to a new observable (the API call) on each new query, and **cancels any previous in-flight API calls** if a new query comes in before the previous one completes. This is ideal for typeahead scenarios where we want only the latest query to be processed.\n\n---\n\n### \ud83d\udccc **Use Case Example**\n\nThis pattern is commonly used in search bars, autocomplete features, or any UI where user input is processed asynchronously and should only trigger a request when the user has paused typing.\n\n---\n\n### \ud83d\udce6 **Optional: Error Handling**\n\nYou can also enhance the observable with error handling if needed:\n\n```ts\nswitchMap(query => \n  searchApi(query).pipe(\n    catchError(err => {\n      console.error('Search failed:', err);\n      return of([]); // fallback to empty results\n    })\n  )\n)\n```\n\n---\n\nThis implementation is clean, efficient, and follows best practices for handling asynchronous search input in reactive programming with RxJS.",
+      "elapsed_s": 8.0,
+      "auto_checks": {
+        "must_have_hits": [
+          "switchMap",
+          "debounceTime",
+          "distinctUntilChanged"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": [
+          "subscribe("
+        ]
+      }
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "prompt": "Combine three Observables \u2014 user$, settings$, theme$ \u2014 into a single Observable<ViewModel> that emits whenever any of them changes. Type the result with a ViewModel interface.",
+      "response": "To combine the three Observables \u2014 `user$`, `settings$`, and `theme$` \u2014 into a single `Observable<ViewModel>` that emits whenever any of them changes, we can use the `combineLatest` operator from RxJS. This operator is ideal because it emits a value whenever **any** of the source Observables emit, combining the latest values from each.\n\n---\n\n### \u2705 Key Concepts:\n\n- **`combineLatest`**: Emits a value whenever **any** of the source Observables emit, combining the latest values from each.\n- **Mapping to ViewModel**: After combining the Observables, we use the `map` operator to transform the resulting array into an object of type `ViewModel`.\n- **Typing with ViewModel Interface**: We define a `ViewModel` interface to ensure type safety and clarity.\n\n---\n\n### \ud83d\udccc TypeScript Code Implementation\n\n```typescript\nimport { combineLatest } from 'rxjs';\nimport { map } from 'rxjs/operators';\n\n// Define the types of the individual Observables\ninterface User {\n  id: number;\n  name: string;\n}\n\ninterface Settings {\n  language: string;\n  notificationsEnabled: boolean;\n}\n\ninterface Theme {\n  colorScheme: 'light' | 'dark';\n}\n\n// Define the ViewModel interface\ninterface ViewModel {\n  user: User;\n  settings: Settings;\n  theme: Theme;\n}\n\n// Assume these are already defined Observables\nconst user$ = /* your Observable<User> */;\nconst settings$ = /* your Observable<Settings> */;\nconst theme$ = /* your Observable<Theme> */;\n\n// Combine the Observables and map to ViewModel\nconst viewModel$ = combineLatest([user$, settings$, theme$]).pipe(\n  map(([user, settings, theme]) => ({\n    user,\n    settings,\n    theme\n  }))\n);\n```\n\n---\n\n### \ud83d\udd0d Explanation\n\n- **`combineLatest([user$, settings$, theme$])`**:\n  - Combines the latest values from all three Observables.\n  - Emits a new value **whenever any of them emits**, using the latest values from all three.\n- **`.pipe(map(...))`**:\n  - Transforms the array `[user, settings, theme]` into a `ViewModel` object.\n- **`ViewModel` Interface**:\n  - Ensures type safety by defining the expected structure of the emitted values.\n\n---\n\n### \ud83d\udccc Notes\n\n- This approach assumes that all three Observables will eventually emit at least once. If one of them hasn't emitted yet, `combineLatest` will wait until all have emitted at least once before emitting the first value.\n- If you want to emit even if one of the Observables is not yet active, you could use `switchMap` or `withLatestFrom` depending on the exact use case, but `combineLatest` is the most appropriate for this scenario.\n\n---\n\n### \u2705 Final Result\n\nYou now have a single `Observable<ViewModel>` that emits a new `ViewModel` object every time any of the `user$`, `settings$`, or `theme$` Observables emit, with strong typing enforced via the `ViewModel` interface.",
+      "elapsed_s": 16.2,
+      "auto_checks": {
+        "must_have_hits": [
+          "combineLatest",
+          "map",
+          "Observable"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "prompt": "Process a stream of file uploads with mergeMap, but cap concurrency at 3 simultaneous uploads. Each upload is uploadFile(f): Observable<Progress>.",
+      "response": "To process a stream of file uploads while limiting concurrency to **3 simultaneous uploads**, you can use the `mergeMap` operator from RxJS with the **concurrency parameter** set to 3. This ensures that up to 3 uploads are processed in parallel, and any additional uploads will wait until one of the current uploads completes.\n\nEach upload is handled by the function `uploadFile(f)`, which returns an `Observable<Progress>`. The `mergeMap` operator will merge the resulting `Observable<Progress>` streams from each file upload, allowing you to observe the progress of each upload as it happens.\n\n---\n\n### \u2705 Implementation\n\nHere's how you can structure the observable pipeline:\n\n```ts\nimport { mergeMap } from 'rxjs/operators';\nimport { of } from 'rxjs';\n\n// Assume `files$` is an Observable that emits files one by one.\n// And `uploadFile(file): Observable<Progress>` is the function that handles the upload.\nconst files$ = /* your source of files */;\n\nfiles$\n  .pipe(\n    mergeMap(file => uploadFile(file), 3) // <-- Concurrency is capped at 3\n  )\n  .subscribe(progress => {\n    // Handle progress updates from each upload\n    console.log('Upload progress:', progress);\n  });\n```\n\n---\n\n### \ud83d\udd0d Explanation\n\n- **`mergeMap(file => uploadFile(file), 3)`**:\n  - For each file emitted by `files$`, it applies the `uploadFile(file)` function, which returns an `Observable<Progress>`.\n  - The second argument (`3`) limits the number of inner Observables (i.e., uploads) that can be active at the same time.\n  - This effectively **caps the concurrency** at 3 uploads at any given moment.\n\n- **Concurrency behavior**:\n  - When the first 3 uploads are in progress, new files will be queued and will start uploading once one of the current uploads completes.\n  - This provides a good balance between performance and resource control.\n\n---\n\n### \ud83d\udccc Notes\n\n- If you want to also handle errors or completion of all uploads, you can add additional operators like `catchError`, `tap`, or `finalize`.\n- This approach is ideal for scenarios where you want to process multiple uploads in parallel but avoid overwhelming the system with too many simultaneous operations.\n\n---\n\n### \ud83e\uddea Example (pseudo-code)\n\n```ts\nfunction uploadFile(file): Observable<Progress> {\n  return new Observable<Progress>(observer => {\n    // Simulate upload progress\n    let progress = 0;\n    const interval = setInterval(() => {\n      progress += 10;\n      if (progress <= 100) {\n        observer.next({ file, progress });\n      } else {\n        observer.complete();\n        clearInterval(interval);\n      }\n    }, 200);\n  });\n}\n```\n\nThis will emit progress updates every 200ms, with the progress increasing by 10% each time.\n\n---\n\n### \u2705 Summary\n\nBy using `mergeMap` with a concurrency parameter of 3, you can efficiently process a stream of file uploads while maintaining a controlled level of parallelism. This is a clean and idiomatic approach using RxJS.",
+      "elapsed_s": 9.0,
+      "auto_checks": {
+        "must_have_hits": [
+          "mergeMap",
+          "3"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "prompt": "Explain the difference between Subject<T> and BehaviorSubject<T> with a concrete code example for a 'currentUser' state stream that late subscribers should immediately receive.",
+      "response": "### Explanation of `Subject<T>` vs `BehaviorSubject<T>`\n\n**`Subject<T>`** is a basic observable that can multicast values to multiple observers. However, it **does not retain any state**. If a subscriber subscribes **after** a value has been emitted, they will **not receive any previous values**. They only receive values emitted **after** they subscribe.\n\n**`BehaviorSubject<T>`** extends `Subject<T>` and **retains the latest value** emitted. When a new subscriber subscribes, they **immediately receive the latest value** (even if it was emitted before the subscription). This makes `BehaviorSubject` ideal for **state management** scenarios where late subscribers need to be informed of the **current state** immediately.\n\n---\n\n### Concrete Example: Managing `currentUser` State\n\nSuppose we have a service that manages the **current user** in an application. We want any component that subscribes to the `currentUser` stream to **immediately receive the latest user**, even if they subscribe **after** the user has been logged in.\n\n#### \u2705 Using `BehaviorSubject<T>` (Recommended for `currentUser`)\n\n```typescript\nimport { BehaviorSubject } from 'rxjs';\n\n// Initialize with a default value (e.g., null for no user)\nconst currentUserSubject = new BehaviorSubject<User | null>(null);\n\n// Simulate a login event\ncurrentUserSubject.next({ name: 'Alice', id: 123 });\n\n// Later, a component subscribes to the currentUser stream\ncurrentUserSubject.subscribe(user => {\n  console.log('Current user:', user);\n});\n```\n\n**Output:**\n```\nCurrent user: { name: 'Alice', id: 123 }\n```\n\nEven though the subscriber joined **after** the `next({ name: 'Alice' })` call, it still receives the latest user immediately.\n\n---\n\n#### \u274c Using `Subject<T>` (Not Suitable for `currentUser`)\n\n```typescript\nimport { Subject } from 'rxjs';\n\n// Initialize a Subject\nconst currentUserSubject = new Subject<User | null>();\n\n// Simulate a login event\ncurrentUserSubject.next({ name: 'Alice', id: 123 });\n\n// Later, a component subscribes to the currentUser stream\ncurrentUserSubject.subscribe(user => {\n  console.log('Current user:', user);\n});\n```\n\n**Output:**\n```\nCurrent user: undefined\n```\n\nThe subscriber **does not receive the previous value** (`Alice`) because `Subject` does **not** retain state.\n\n---\n\n### Key Differences Summary\n\n| Feature                        | `Subject<T>`                          | `BehaviorSubject<T>`                    |\n|-------------------------------|----------------------------------------|------------------------------------------|\n| **State Retention**           | No (only emits to new subscribers)     | Yes (holds the latest value)             |\n| **Initial Value**             | Not required                           | Required (provided in constructor)       |\n| **Late Subscriber Behavior**  | Does **not** get previous values       | Gets the **latest value** immediately    |\n| **Use Case**                  | Events that don't require state        | **State management** (e.g., currentUser) |\n\n---\n\n### Conclusion\n\nFor managing a **`currentUser`** state stream where **late subscribers must receive the current value immediately**, use `BehaviorSubject<T>`. It ensures that new subscribers always get the **latest state**, making it ideal for reactive state management in applications.",
+      "elapsed_s": 15.3,
+      "auto_checks": {
+        "must_have_hits": [
+          "BehaviorSubject",
+          "Subject"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "prompt": "Write a custom RxJS OperatorFunction<T, T> called logTap(label: string) that logs each emission with the label and passes values through unchanged. Type-safe.",
+      "response": "To implement a custom RxJS `OperatorFunction<T, T>` called `logTap(label: string)`, we aim to create a function that logs each emission from an observable with a provided label, while passing the values through unchanged. This operator should be **type-safe** and follow the **pipeable operator pattern** used in RxJS.\n\n---\n\n### \u2705 Key Requirements:\n- **Logs each emission** with a provided `label`.\n- **Passes values through unchanged**.\n- **Type-safe** \u2013 uses RxJS's generic `OperatorFunction<T, T>`.\n- **Does not modify the observable's behavior** beyond logging.\n\n---\n\n### \ud83e\uddf1 Implementation Details:\n\nWe'll use the **pipeable operator pattern** by returning a function that takes an `Observable<T>` and returns a new `Observable<T>`. Inside the subscription, we'll log the value before passing it along.\n\nWe **do not** use the built-in `tap` operator, even though it could achieve the same result, to demonstrate a **manual implementation** of a custom operator.\n\n---\n\n### \ud83d\udce6 Final Implementation:\n\n```ts\nimport { Observable, OperatorFunction } from 'rxjs';\n\n/**\n * Logs each emission from the source observable with the provided label.\n * @param label - The label to prepend to each logged value.\n * @returns An operator function that logs and passes through values unchanged.\n */\nexport function logTap<T>(label: string): OperatorFunction<T, T> {\n  return (source: Observable<T>): Observable<T> => {\n    return new Observable<T>(observer => {\n      const subscription = source.subscribe({\n        next: (value) => {\n          console.log(label, value);\n          observer.next(value);\n        },\n        error: (err) => {\n          observer.error(err);\n        },\n        complete: () => {\n          observer.complete();\n        }\n      });\n\n      return subscription;\n    });\n  };\n}\n```\n\n---\n\n### \ud83e\uddea Example Usage:\n\n```ts\nimport { of } from 'rxjs';\nimport { logTap } from './logTap';\n\nof(1, 2, 3)\n  .pipe(\n    logTap('Value emitted: ')\n  )\n  .subscribe({\n    next: (v) => console.log('Received:', v),\n    complete: () => console.log('Done'),\n  });\n```\n\n**Output:**\n\n```\nValue emitted: 1\nReceived: 1\nValue emitted: 2\nReceived: 2\nValue emitted: 3\nReceived: 3\nDone\n```\n\n---\n\n### \ud83d\udccc Notes:\n- This implementation is **fully type-safe** due to the use of RxJS generics.\n- It **respects the observable contract** by properly handling `next`, `error`, and `complete`.\n- It **does not alter the observable's behavior**, only logs emissions.\n- It can be **used in any pipe** with other RxJS operators.\n\n---\n\n### \u2705 Conclusion:\n\nThis `logTap` operator is a **custom, type-safe, and manual implementation** of a logging operator that can be used in any RxJS pipeline. It adheres to best practices and ensures that the observable stream remains unaltered, only adding a logging side effect.",
+      "elapsed_s": 20.1,
+      "auto_checks": {
+        "must_have_hits": [
+          "OperatorFunction",
+          "Observable",
+          "subscribe"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "prompt": "Define a ShoppingCart aggregate with evolve(state, event) handling 'CartCreated', 'ItemAdded', 'ItemRemoved'. Include the State and Event types and an initial state.",
+      "response": "Here is a complete and well-structured implementation of the `ShoppingCart` aggregate, including:\n\n- **Type definitions** for `State` and `Event`\n- **Initial State** for the aggregate\n- **Evolve Function** that handles the events `'CartCreated'`, `'ItemAdded'`, and `'ItemRemoved'`\n\n---\n\n### \u2705 **TypeScript Definitions**\n\n```typescript\n// Define the State type for the ShoppingCart aggregate\ntype State = {\n  id: string;\n  items: { productId: string; quantity: number }[];\n};\n\n// Define the Event types for the ShoppingCart aggregate\ntype Event =\n  | { type: 'CartCreated'; data: { id: string } }\n  | { type: 'ItemAdded'; data: { productId: string; quantity: number } }\n  | { type: 'ItemRemoved'; data: { productId: string; quantity: number } };\n```\n\n---\n\n### \ud83d\udce6 **Initial State**\n\n```typescript\n// Initial state of the ShoppingCart before any events are applied\nconst initialState: State = {\n  id: '',\n  items: [],\n};\n```\n\n---\n\n### \ud83d\udd04 **Evolve Function**\n\n```typescript\n// Function to evolve the state based on the given event\nfunction evolve(state: State, event: Event): State {\n  switch (event.type) {\n    case 'CartCreated':\n      return {\n        ...state,\n        id: event.data.id,\n      };\n\n    case 'ItemAdded':\n      const { productId, quantity } = event.data;\n      const existingItemIndex = state.items.findIndex(\n        (item) => item.productId === productId\n      );\n\n      if (existingItemIndex !== -1) {\n        // Update the quantity of the existing item\n        const updatedItems = [...state.items];\n        updatedItems[existingItemIndex].quantity += quantity;\n        return { ...state, items: updatedItems };\n      } else {\n        // Add a new item\n        return {\n          ...state,\n          items: [...state.items, { productId, quantity }],\n        };\n      }\n\n    case 'ItemRemoved':\n      const { productId: removeProductId, quantity: removeQuantity } = event.data;\n      const removeItemIndex = state.items.findIndex(\n        (item) => item.productId === removeProductId\n      );\n\n      if (removeItemIndex === -1) {\n        // Item not found, return the state as is\n        return state;\n      }\n\n      const item = state.items[removeItemIndex];\n      const newQuantity = item.quantity - removeQuantity;\n\n      if (newQuantity <= 0) {\n        // Remove the item if the quantity is zero or negative\n        const updatedItems = state.items.filter(\n          (_, index) => index !== removeItemIndex\n        );\n        return { ...state, items: updatedItems };\n      } else {\n        // Update the quantity of the item\n        const updatedItems = [...state.items];\n        updatedItems[removeItemIndex].quantity = newQuantity;\n        return { ...state, items: updatedItems };\n      }\n\n    default:\n      throw new Error(`Unknown event type: ${event.type}`);\n  }\n}\n```\n\n---\n\n### \ud83d\udccc **Summary of Behavior**\n\n- **`CartCreated`**: Initializes the cart with a specific ID.\n- **`ItemAdded`**: Adds a new item or increases the quantity of an existing item.\n- **`ItemRemoved`**: Decreases the quantity of an existing item or removes it if the quantity reaches zero or below.\n\nThis implementation ensures that the state is always consistent and evolves correctly based on the events applied.",
+      "elapsed_s": 28.9,
+      "auto_checks": {
+        "must_have_hits": [
+          "evolve",
+          "State",
+          "Event",
+          "type "
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "prompt": "Implement the Decider pattern for a BankAccount: { decide(command, state): Event[], evolve(state, event): State, initial: State }. Commands: 'Deposit', 'Withdraw'. Reject withdrawals exceeding balance.",
+      "response": "Here's a clean and well-structured implementation of the **Decider pattern** for a `BankAccount`, following the specified requirements:\n\n---\n\n### \u2705 **Decider Pattern Implementation for BankAccount**\n\n```javascript\nconst BankAccountDecider = {\n  initial: { balance: 0 },\n\n  decide: function (command, state) {\n    if (command.type === 'Deposit') {\n      return [{ type: 'Deposit', amount: command.amount }];\n    } else if (command.type === 'Withdraw') {\n      if (command.amount <= state.balance) {\n        return [{ type: 'Withdraw', amount: command.amount }];\n      } else {\n        return []; // Rejected withdrawal\n      }\n    } else {\n      return []; // Unknown command, no event generated\n    }\n  },\n\n  evolve: function (state, event) {\n    if (event.type === 'Deposit') {\n      return { balance: state.balance + event.amount };\n    } else if (event.type === 'Withdraw') {\n      return { balance: state.balance - event.amount };\n    } else {\n      return state; // Unknown event, state remains unchanged\n    }\n  },\n};\n```\n\n---\n\n### \ud83d\udccc **Explanation of the Implementation**\n\n- **`initial`**:  \n  The initial state of the bank account is `{ balance: 0 }`, representing a new account with zero funds.\n\n- **`decide(command, state)`**:\n  - **`Deposit`**: Always generates a `Deposit` event with the given amount.\n  - **`Withdraw`**: Only generates a `Withdraw` event if the requested amount is **less than or equal to** the current balance. Otherwise, it **rejects the withdrawal** by returning an empty array (`[]`), which means no state change occurs.\n  - **Unknown commands**: Return an empty array as a safety measure.\n\n- **`evolve(state, event)`**:\n  - Updates the balance based on the event:\n    - **`Deposit`**: Increases the balance by the specified amount.\n    - **`Withdraw`**: Decreases the balance by the specified amount.\n  - **Unknown events**: Return the current state as-is to prevent unexpected behavior.\n\n---\n\n### \ud83e\uddea **Example Usage**\n\n```javascript\nconst account = BankAccountDecider.initial;\n\n// Deposit 100\nconst depositEvent = BankAccountDecider.decide({ type: 'Deposit', amount: 100 }, account);\nconst updatedState = BankAccountDecider.evolve(account, depositEvent[0]);\n\nconsole.log(updatedState); // { balance: 100 }\n\n// Withdraw 50\nconst withdrawEvent = BankAccountDecider.decide({ type: 'Withdraw', amount: 50 }, updatedState);\nconst finalState = BankAccountDecider.evolve(updatedState, withdrawEvent[0]);\n\nconsole.log(finalState); // { balance: 50 }\n\n// Attempt to withdraw 100 from balance 50\nconst rejectedEvent = BankAccountDecider.decide({ type: 'Withdraw', amount: 100 }, finalState);\nconsole.log(rejectedEvent); // []\n```\n\n---\n\n### \u2705 **Summary**\n\nThis implementation strictly follows the **Decider pattern** and ensures:\n- **Safe withdrawals** by rejecting any attempt to withdraw more than the current balance.\n- **Immutable state evolution** through the use of events.\n- **Clear separation of concerns** between command processing (`decide`) and state updating (`evolve`).\n\nLet me know if you'd like this adapted to a different language or framework!",
+      "elapsed_s": 16.1,
+      "auto_checks": {
+        "must_have_hits": [
+          "decide",
+          "evolve",
+          "initial"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "prompt": "Write a CommandHandler that loads an aggregate from EventStore via readStream, decides on the command, and appends the resulting events with appendToStream. Use optimistic concurrency by passing the expected version.",
+      "response": "Here's a well-structured **CommandHandler** implementation that interacts with an **EventStore** using **optimistic concurrency**. It reads the current state of an aggregate, applies a command, and appends new events to the stream, ensuring consistency by checking the expected version.\n\n---\n\n### \u2705 **CommandHandler Implementation**\n\n```javascript\nclass CommandHandler {\n  /**\n   * Handles a command by loading the aggregate, applying the command, and appending new events.\n   * @param {Object} command - The command to be processed.\n   * @throws {Error} If there's an error during command processing or concurrency conflict.\n   */\n  handle(command) {\n    const aggregateId = command.aggregateId;\n\n    // Step 1: Read the current events for the aggregate\n    const currentEvents = this.readStream(aggregateId);\n    const expectedVersion = currentEvents.length > 0\n      ? currentEvents[currentEvents.length - 1].version\n      : -1; // -1 indicates a new aggregate\n\n    // Step 2: Rehydrate the aggregate from the current events\n    const aggregate = this.rehydrateAggregate(currentEvents);\n\n    // Step 3: Apply the command to the aggregate\n    const newEvents = aggregate.applyCommand(command);\n\n    // Step 4: Append new events to the stream with optimistic concurrency\n    const appendResult = this.appendToStream(aggregateId, expectedVersion, newEvents);\n\n    if (!appendResult.success) {\n      throw new Error('Concurrency conflict: The aggregate was modified by another process.');\n    }\n  }\n\n  /**\n   * Reads the stream of events for the given aggregate ID.\n   * @param {string} aggregateId - The ID of the aggregate.\n   * @returns {Array} - An array of events.\n   */\n  readStream(aggregateId) {\n    // Example: Using an EventStore client to read the stream\n    // Replace with your actual EventStore client implementation\n    return eventStoreClient.readStream(aggregateId);\n  }\n\n  /**\n   * Appends a list of new events to the stream with an expected version.\n   * @param {string} aggregateId - The ID of the aggregate.\n   * @param {number} expectedVersion - The expected version for optimistic concurrency.\n   * @param {Array} events - The list of new events to append.\n   * @returns {Object} - Result of the append operation.\n   */\n  appendToStream(aggregateId, expectedVersion, events) {\n    // Example: Using an EventStore client to append events\n    // Replace with your actual EventStore client implementation\n    return eventStoreClient.appendToStream(aggregateId, expectedVersion, events);\n  }\n\n  /**\n   * Rehydrates the aggregate from a list of events.\n   * @param {Array} events - The list of events to apply.\n   * @returns {Object} - The rehydrated aggregate.\n   */\n  rehydrateAggregate(events) {\n    const aggregate = new Aggregate(); // Replace with your actual aggregate class\n    for (const event of events) {\n      aggregate.applyEvent(event);\n    }\n    return aggregate;\n  }\n}\n```\n\n---\n\n### \ud83d\udccc **Key Concepts Explained**\n\n- **Optimistic Concurrency**:  \n  The `expectedVersion` is used when appending new events. If the version in the EventStore does not match the expected version, the append fails, signaling a concurrency conflict. This ensures that only one process can modify the aggregate at a time.\n\n- **Aggregate Rehydration**:  \n  The `rehydrateAggregate` method rebuilds the aggregate's current state by replaying all past events. This is essential for applying new commands to the correct state.\n\n- **Event Appending**:  \n  After applying the command and generating new events, the `appendToStream` method sends them to the EventStore, using the expected version to ensure consistency.\n\n---\n\n### \ud83d\udee0\ufe0f **Example Usage**\n\n```javascript\nconst handler = new CommandHandler();\nconst command = {\n  aggregateId: '12345',\n  type: 'CreateOrder',\n  data: { customerId: '67890', items: [...] }\n};\n\ntry {\n  handler.handle(command);\n  console.log('Command processed successfully.');\n} catch (error) {\n  console.error('Failed to process command:', error.message);\n}\n```\n\n---\n\n### \u26a0\ufe0f **Error Handling**\n\n- If the `appendToStream` operation fails due to a version mismatch, the handler throws an error, signaling a concurrency conflict.\n- You can extend this with retry logic or logging based on your application's needs.\n\n---\n\n### \ud83d\udce6 **Dependencies**\n\n- Replace `eventStoreClient` with your actual EventStore client (e.g., `EventStoreDB`).\n- The `Aggregate` class and its `applyCommand` and `applyEvent` methods are domain-specific and should be implemented according to your business logic.\n\n---\n\nThis implementation follows **CQRS** and **Event Sourcing** patterns, ensuring that commands are processed safely and consistently using optimistic concurrency.",
+      "elapsed_s": 24.8,
+      "auto_checks": {
+        "must_have_hits": [
+          "readStream",
+          "appendToStream"
+        ],
+        "must_have_misses": [
+          "expectedRevision"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "prompt": "Build a Projector that consumes ShoppingCartEvent and updates a CartSummary read model: { id, itemCount, totalCents }. Show the project(state, event) function.",
+      "response": "To build a projector that consumes a `ShoppingCartEvent` and updates a `CartSummary` read model, we need to define a function that processes each event and modifies the read model accordingly. The read model contains three properties: `id`, `itemCount`, and `totalCents`.\n\nHere's a well-structured implementation of the `project(state, event)` function, assuming that the `ShoppingCartEvent` has a `type` and a `data` field that contains the necessary information to update the cart summary.\n\n---\n\n### \u2705 Assumptions\n\n- The `ShoppingCartEvent` has a `type` field indicating the event type (e.g., `'ItemAdded'`, `'ItemRemoved'`, `'QuantityUpdated'`, `'CartCleared'`).\n- The `data` field contains relevant data such as `priceCents`, `quantity`, `oldQuantity`, and `newQuantity`.\n- The `id` is preserved and not modified by the projector.\n- The function returns a new state object, preserving immutability.\n\n---\n\n### \ud83e\udde9 Projector Function\n\n```javascript\nfunction project(state, event) {\n  switch (event.type) {\n    case 'ItemAdded':\n      return {\n        ...state,\n        itemCount: state.itemCount + event.data.quantity,\n        totalCents: state.totalCents + event.data.quantity * event.data.priceCents\n      };\n\n    case 'ItemRemoved':\n      return {\n        ...state,\n        itemCount: state.itemCount - event.data.quantity,\n        totalCents: state.totalCents - event.data.quantity * event.data.priceCents\n      };\n\n    case 'QuantityUpdated':\n      const { oldQuantity, newQuantity, priceCents } = event.data;\n      const delta = newQuantity - oldQuantity;\n      return {\n        ...state,\n        itemCount: state.itemCount + delta,\n        totalCents: state.totalCents + delta * priceCents\n      };\n\n    case 'CartCleared':\n      return {\n        ...state,\n        itemCount: 0,\n        totalCents: 0\n      };\n\n    default:\n      // Ignore unknown events\n      return state;\n  }\n}\n```\n\n---\n\n### \ud83d\udccc Example Usage\n\n```javascript\nconst initialState = {\n  id: 'cart-123',\n  itemCount: 0,\n  totalCents: 0\n};\n\nconst event = {\n  type: 'ItemAdded',\n  data: {\n    priceCents: 1500, // $15.00\n    quantity: 2\n  }\n};\n\nconst newState = project(initialState, event);\nconsole.log(newState);\n// Output:\n// {\n//   id: 'cart-123',\n//   itemCount: 2,\n//   totalCents: 3000\n// }\n```\n\n---\n\n### \ud83d\udcc8 Summary\n\nThis `project` function is a core part of an event-sourcing architecture, allowing you to transform events into a consistent and queryable read model. It handles various cart-related events, updates the `CartSummary` accordingly, and ensures immutability by returning a new state object rather than modifying the existing one.",
+      "elapsed_s": 19.2,
+      "auto_checks": {
+        "must_have_hits": [
+          "project",
+          "Event"
+        ],
+        "must_have_misses": [
+          "ReadModel"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "prompt": "What are the tradeoffs between snapshotting vs replaying full event streams when reconstructing aggregate state? Show a TypeScript signature for a snapshot-aware loadAggregate function.",
+      "response": "### Tradeoffs Between Snapshotting and Replaying Full Event Streams\n\nWhen reconstructing an aggregate's state from an event stream, two common approaches are:\n\n1. **Replaying the Full Event Stream**:\n   - **Pros**:\n     - **Guaranteed correctness**: Ensures the aggregate state is fully reconstructed from all events, avoiding any potential inconsistencies from snapshots.\n     - **No dependency on snapshots**: Avoids the overhead of managing snapshot storage and versioning.\n   - **Cons**:\n     - **Performance overhead**: Can be slow and resource-intensive for large event streams.\n     - **Scalability issues**: Not ideal for aggregates with a large number of events.\n\n2. **Using Snapshots**:\n   - **Pros**:\n     - **Performance**: Loads the aggregate state faster by starting from the latest snapshot and applying only the events that occurred after the snapshot was taken.\n     - **Efficiency**: Reduces the number of events to process during reconstruction.\n   - **Cons**:\n     - **Risk of inconsistency**: If a snapshot is corrupted or outdated, the reconstructed state may be incorrect.\n     - **Additional complexity**: Requires managing snapshot storage, versioning, and ensuring consistency between snapshots and events.\n\n---\n\n### TypeScript Signature for a Snapshot-Aware `loadAggregate` Function\n\n```typescript\ninterface Event {\n  eventId: string;\n  type: string;\n  data: Record<string, any>;\n  occurredOn: Date;\n}\n\ninterface Snapshot {\n  version: number;\n  state: Record<string, any>;\n  timestamp: Date;\n}\n\ninterface EventStore {\n  getEvents(aggregateId: string, fromVersion?: number): Promise<Event[]>;\n}\n\ninterface SnapshotStore {\n  getLatestSnapshot(aggregateId: string): Promise<Snapshot | null>;\n}\n\ninterface Aggregate {\n  version: number;\n  state: Record<string, any>;\n}\n\nasync function loadAggregate(\n  aggregateId: string,\n  eventStore: EventStore,\n  snapshotStore: SnapshotStore\n): Promise<Aggregate> {\n  // Implementation details would go here\n}\n```\n\n---\n\n### Explanation of the Signature\n\n- **`Event`**: Represents a single event in the event stream.\n- **`Snapshot`**: Represents a saved state of the aggregate at a specific version and timestamp.\n- **`EventStore`**: Interface for retrieving events from the event store.\n- **`SnapshotStore`**: Interface for retrieving the latest snapshot for an aggregate.\n- **`Aggregate`**: Represents the reconstructed state of the aggregate, including its version and current state.\n\nThis function would typically:\n1. Check the `snapshotStore` for the latest snapshot.\n2. If a snapshot exists, load it and then apply events from the snapshot's version onward using the `eventStore`.\n3. If no snapshot exists, replay all events from the beginning.\n\nThis design balances performance and correctness by leveraging snapshots while still relying on the full event stream for consistency.",
+      "elapsed_s": 10.6,
+      "auto_checks": {
+        "must_have_hits": [
+          "snapshot",
+          "version"
+        ],
+        "must_have_misses": [
+          "evolve"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "prompt": "Write a Python function fib(n: int) -> int that computes the nth Fibonacci number iteratively. Include a brief docstring.",
+      "response": "Here's a well-documented Python function that computes the nth Fibonacci number using an iterative approach:\n\n```python\ndef fib(n: int) -> int:\n    \"\"\"\n    Compute the nth Fibonacci number iteratively, where F(0) = 0, F(1) = 1,\n    and F(n) = F(n-1) + F(n-2) for n >= 2.\n\n    Args:\n        n (int): The index of the Fibonacci number to compute.\n\n    Returns:\n        int: The nth Fibonacci number.\n    \"\"\"\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        current = a + b\n        a, b = b, current\n\n    return b\n```\n\n---\n\n### Explanation:\n\n- **Base Cases**:\n  - If `n == 0`, the function returns `0` (F(0) = 0).\n  - If `n == 1`, the function returns `1` (F(1) = 1).\n\n- **Iterative Computation**:\n  - For `n >= 2`, the function uses two variables `a` and `b` to store the previous two Fibonacci numbers.\n  - In each iteration, it computes the next Fibonacci number as `a + b`, and updates `a` and `b` to move forward in the sequence.\n  - This avoids recursion and is efficient in both time and space (O(n) time, O(1) space).\n\n- **Edge Cases**:\n  - The function assumes `n` is a non-negative integer. If `n` is negative, it will raise a `ValueError` (as expected in Python for invalid inputs). However, the problem does not specify handling this, so it's left as is.\n\n---\n\n### Example Usage:\n\n```python\nprint(fib(0))  # Output: 0\nprint(fib(1))  # Output: 1\nprint(fib(2))  # Output: 1\nprint(fib(3))  # Output: 2\nprint(fib(5))  # Output: 5\nprint(fib(10)) # Output: 55\n```\n\nThis function is efficient, readable, and adheres to standard conventions for computing Fibonacci numbers iteratively.",
+      "elapsed_s": 13.1,
+      "auto_checks": {
+        "must_have_hits": [
+          "def fib",
+          "return"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "prompt": "Use the Read tool to look at the file 'package.json' in the current directory, then summarize its dependencies in 2-3 sentences.",
+      "response": "The project's dependencies include essential libraries such as React for frontend development, Express for backend server functionality, and Axios for HTTP requests, with specific version ranges indicated. Additional development dependencies like Jest and ESLint are listed for testing and code quality assurance. Overall, the file outlines 12 production dependencies and 7 development tools.",
+      "elapsed_s": 5.4,
+      "auto_checks": {
+        "must_have_hits": [],
+        "must_have_misses": [
+          "Read",
+          "package.json"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "prompt": "Explain the tradeoffs between REST and GraphQL for a public API. Cover: caching, over-fetching, schema evolution, and tooling. 4-6 sentences.",
+      "response": "REST and GraphQL each have distinct tradeoffs for public APIs. REST excels in caching via HTTP headers and CDN support, while GraphQL\u2019s flexible queries complicate caching due to dynamic request structures, though solutions like key-based caching and Apollo\u2019s delta queries mitigate this. REST often suffers from over-fetching or under-fetching due to rigid endpoints, whereas GraphQL allows precise data fetching, reducing over-fetching but requiring client-side query optimization. Schema evolution is easier in GraphQL with versioning and backward-compatible changes, while REST may break clients with endpoint or parameter changes. Tooling for REST is mature and widely supported, while GraphQL benefits from modern frameworks (e.g., Apollo, Relay) but requires more specialized tooling for query validation and performance optimization.",
+      "elapsed_s": 4.5,
+      "auto_checks": {
+        "must_have_hits": [
+          "caching"
+        ],
+        "must_have_misses": [
+          "schema"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "prompt": "I have a function that's 200 lines and does three things: parsing input, validating it, and persisting to a database. Outline a refactor in 3 steps. Don't write code yet \u2014 just the plan.",
+      "response": "### Refactor Plan: 3 Steps  \n\n---\n\n**Step 1: Decompose the Monolithic Function into Smaller, Single-Responsibility Functions**  \n- Split the 200-line function into three distinct functions:  \n  - `parse_input(input_data)` \u2192 Handles parsing logic (e.g., converting raw input into structured data).  \n  - `validate_data(parsed_data)` \u2192 Validates the parsed data against business rules or constraints.  \n  - `persist_to_database(validated_data)` \u2192 Manages database operations (e.g., inserting/updating records).  \n- Extract any helper functions within these steps (e.g., `format_date`, `check_required_fields`) to reduce repetition and improve readability.  \n\n---\n\n**Step 2: Centralize and Improve Validation Logic**  \n- Create a dedicated validation layer (e.g., `validate_data`) that:  \n  - Uses clear, reusable validation rules (e.g., checking for required fields, data types, or constraints).  \n  - Returns structured error messages or raises specific exceptions for invalid inputs.  \n  - Ensures validation occurs **after parsing** and **before persistence**, enforcing a clear workflow.  \n- Consider using a validation library (e.g., Pydantic for Python) or custom validation helpers if applicable.  \n\n---\n\n**Step 3: Encapsulate Persistence Logic in a Separate Module or Class**  \n- Move database operations into a dedicated module (e.g., `database_repository.py`) or class:  \n  - Encapsulate database interactions (e.g., `save_to_db`, `query_db`) to decouple persistence from the main function.  \n  - Use a repository pattern or ORM to abstract database-specific details.  \n  - Add transaction management, error handling, and logging for robustness.  \n- Update the main function to call the repository\u2019s methods, reducing its complexity to a simple orchestration of the three steps.  \n\n--- \n\n**Outcome**: A modular, maintainable codebase with clear separation of concerns, improved testability, and easier debugging.",
+      "elapsed_s": 8.1,
+      "auto_checks": {
+        "must_have_hits": [],
+        "must_have_misses": [
+          "1.",
+          "2.",
+          "3."
+        ],
+        "must_not_have_violations": [
+          "function "
+        ]
+      }
+    }
+  ]
+}

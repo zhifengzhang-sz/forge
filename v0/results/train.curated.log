@@ -1,0 +1,61 @@
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+Unsloth: Your Flash Attention 2 installation seems to be broken. Using Xformers instead. No performance changes will be seen.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.4.6: Fast Qwen3 patching. Transformers: 5.5.0.
+   \\   /|    NVIDIA GeForce RTX 5090. Num GPUs = 1. Max memory: 31.335 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.11.0+cu128. CUDA: 12.0. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = TRUE. FA [Xformers = None. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Loading weights:   0%|          | 0/443 [00:00<?, ?it/s]Loading weights:   0%|          | 1/443 [00:00<02:37,  2.81it/s]Loading weights:   0%|          | 2/443 [00:00<03:12,  2.29it/s]Loading weights:   3%|▎         | 12/443 [00:00<00:24, 17.60it/s]Loading weights:  10%|█         | 45/443 [00:01<00:05, 70.85it/s]Loading weights:  13%|█▎        | 58/443 [00:01<00:05, 65.13it/s]Loading weights:  20%|██        | 89/443 [00:01<00:03, 108.93it/s]Loading weights:  25%|██▌       | 112/443 [00:01<00:02, 130.50it/s]Loading weights:  29%|██▉       | 130/443 [00:01<00:02, 139.36it/s]Loading weights:  33%|███▎      | 148/443 [00:01<00:02, 125.88it/s]Loading weights:  37%|███▋      | 166/443 [00:01<00:02, 135.04it/s]Loading weights:  42%|████▏     | 186/443 [00:02<00:02, 111.01it/s]Loading weights:  45%|████▌     | 200/443 [00:02<00:02, 115.14it/s]Loading weights:  52%|█████▏    | 232/443 [00:02<00:01, 157.30it/s]Loading weights:  57%|█████▋    | 252/443 [00:02<00:01, 162.48it/s]Loading weights:  62%|██████▏   | 274/443 [00:02<00:00, 175.97it/s]Loading weights:  67%|██████▋   | 295/443 [00:02<00:00, 176.91it/s]Loading weights:  72%|███████▏  | 318/443 [00:02<00:00, 188.42it/s]Loading weights:  77%|███████▋  | 342/443 [00:02<00:00, 199.16it/s]Loading weights:  82%|████████▏ | 363/443 [00:03<00:00, 143.12it/s]Loading weights: 100%|██████████| 443/443 [00:03<00:00, 136.40it/s]
+Unsloth 2026.4.6 patched 40 layers with 40 QKV layers, 40 O layers and 40 MLP layers.
+unsloth/qwen3-14b-unsloth-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+Generating train split: 0 examples [00:00, ? examples/s]Generating train split: 43 examples [00:00, 7530.48 examples/s]
+Map:   0%|          | 0/43 [00:00<?, ? examples/s]Map: 100%|██████████| 43/43 [00:00<00:00, 6552.17 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=28):   0%|          | 0/43 [00:00<?, ? examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):   5%|▍         | 2/43 [00:01<00:23,  1.71 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):   9%|▉         | 4/43 [00:01<00:15,  2.59 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  14%|█▍        | 6/43 [00:02<00:11,  3.17 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  19%|█▊        | 8/43 [00:02<00:09,  3.51 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  23%|██▎       | 10/43 [00:03<00:08,  3.71 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  28%|██▊       | 12/43 [00:03<00:08,  3.83 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  33%|███▎      | 14/43 [00:04<00:07,  3.97 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  37%|███▋      | 16/43 [00:04<00:06,  4.04 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  42%|████▏     | 18/43 [00:05<00:06,  4.05 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  47%|████▋     | 20/43 [00:05<00:05,  4.10 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  51%|█████     | 22/43 [00:05<00:05,  4.12 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  56%|█████▌    | 24/43 [00:06<00:04,  4.16 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  60%|██████    | 26/43 [00:06<00:04,  4.11 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  65%|██████▌   | 28/43 [00:07<00:03,  4.20 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  70%|██████▉   | 30/43 [00:07<00:03,  4.17 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  72%|███████▏  | 31/43 [00:08<00:03,  3.56 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  74%|███████▍  | 32/43 [00:08<00:03,  3.12 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  77%|███████▋  | 33/43 [00:09<00:03,  2.84 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  79%|███████▉  | 34/43 [00:09<00:03,  2.59 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  81%|████████▏ | 35/43 [00:10<00:03,  2.44 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  84%|████████▎ | 36/43 [00:10<00:02,  2.34 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  86%|████████▌ | 37/43 [00:11<00:02,  2.28 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  88%|████████▊ | 38/43 [00:11<00:02,  2.22 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  91%|█████████ | 39/43 [00:12<00:01,  2.18 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  93%|█████████▎| 40/43 [00:12<00:01,  2.16 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  95%|█████████▌| 41/43 [00:13<00:00,  2.13 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28):  98%|█████████▊| 42/43 [00:13<00:00,  2.10 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28): 100%|██████████| 43/43 [00:14<00:00,  2.16 examples/s]Unsloth: Tokenizing ["text"] (num_proc=28): 100%|██████████| 43/43 [00:14<00:00,  3.03 examples/s]
+The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None}.
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 43 | Num Epochs = 2 | Total steps = 12
+O^O/ \_/ \    Batch size per device = 2 | Gradient accumulation steps = 4
+\        /    Data Parallel GPUs = 1 | Total batch size (2 x 4 x 1) = 8
+ "-____-"     Trainable parameters = 64,225,280 of 14,832,532,480 (0.43% trained)
+🦥 Unsloth: Padding-free auto-enabled, enabling faster training.
+  0%|          | 0/12 [00:00<?, ?it/s]`use_return_dict` is deprecated! Use `return_dict` instead!
+  8%|▊         | 1/12 [00:04<00:46,  4.20s/it] 17%|█▋        | 2/12 [00:05<00:27,  2.79s/it] 25%|██▌       | 3/12 [00:07<00:21,  2.39s/it] 33%|███▎      | 4/12 [00:09<00:16,  2.04s/it] 42%|████▏     | 5/12 [00:11<00:13,  1.95s/it]                                               42%|████▏     | 5/12 [00:11<00:13,  1.95s/it] 50%|█████     | 6/12 [00:11<00:09,  1.53s/it] 58%|█████▊    | 7/12 [00:13<00:08,  1.61s/it] 67%|██████▋   | 8/12 [00:15<00:06,  1.60s/it] 75%|███████▌  | 9/12 [00:16<00:04,  1.62s/it] 83%|████████▎ | 10/12 [00:18<00:03,  1.64s/it]                                                83%|████████▎ | 10/12 [00:18<00:03,  1.64s/it] 92%|█████████▏| 11/12 [00:20<00:01,  1.68s/it]100%|██████████| 12/12 [00:21<00:00,  1.38s/it]                                               100%|██████████| 12/12 [00:21<00:00,  1.38s/it]100%|██████████| 12/12 [00:21<00:00,  1.76s/it]
+Unsloth: Will smartly offload gradients to save VRAM!
+{'loss': '1.526', 'grad_norm': '0.8183', 'learning_rate': '8e-05', 'epoch': '0.9091'}
+{'loss': '1.244', 'grad_norm': '0.7458', 'learning_rate': '3e-05', 'epoch': '1.727'}
+{'train_runtime': '21.1', 'train_samples_per_second': '4.077', 'train_steps_per_second': '0.569', 'train_loss': '1.37', 'epoch': '2'}
+Unsloth: Merging model weights to 16-bit format...
+Found HuggingFace hub cache directory: /home/zzhang/.cache/huggingface/hub
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 14.37it/s]
+Checking cache directory for required files...
+Unsloth: Copying 6 files from cache to `v0/gguf/curated`:   0%|          | 0/6 [00:00<?, ?it/s]Unsloth: Copying 6 files from cache to `v0/gguf/curated`:  17%|█▋        | 1/6 [00:01<00:07,  1.52s/it]Unsloth: Copying 6 files from cache to `v0/gguf/curated`:  33%|███▎      | 2/6 [00:02<00:05,  1.48s/it]Unsloth: Copying 6 files from cache to `v0/gguf/curated`:  50%|█████     | 3/6 [00:05<00:05,  1.83s/it]Unsloth: Copying 6 files from cache to `v0/gguf/curated`:  67%|██████▋   | 4/6 [00:07<00:04,  2.10s/it]Unsloth: Copying 6 files from cache to `v0/gguf/curated`:  83%|████████▎ | 5/6 [00:10<00:02,  2.34s/it]Unsloth: Copying 6 files from cache to `v0/gguf/curated`: 100%|██████████| 6/6 [00:12<00:00,  2.34s/it]Unsloth: Copying 6 files from cache to `v0/gguf/curated`: 100%|██████████| 6/6 [00:12<00:00,  2.14s/it]
+Successfully copied all 6 files from cache to `v0/gguf/curated`
+Checking cache directory for required files...
+Cache check failed: tokenizer.model not found in local cache.
+Not all required files found in cache. Will proceed with downloading.
+Unsloth: Preparing safetensor model files:   0%|          | 0/6 [00:00<?, ?it/s]Unsloth: Preparing safetensor model files: 100%|██████████| 6/6 [00:00<00:00, 326828.88it/s]
+Unsloth: Merging weights into 16bit:   0%|          | 0/6 [00:00<?, ?it/s]Unsloth: Merging weights into 16bit:  17%|█▋        | 1/6 [00:04<00:23,  4.79s/it]Unsloth: Merging weights into 16bit:  33%|███▎      | 2/6 [00:10<00:20,  5.15s/it]Unsloth: Merging weights into 16bit:  50%|█████     | 3/6 [00:15<00:15,  5.23s/it]Unsloth: Merging weights into 16bit:  67%|██████▋   | 4/6 [00:20<00:10,  5.30s/it]Unsloth: Merging weights into 16bit:  83%|████████▎ | 5/6 [00:26<00:05,  5.30s/it]Unsloth: Merging weights into 16bit: 100%|██████████| 6/6 [00:30<00:00,  5.06s/it]Unsloth: Merging weights into 16bit: 100%|██████████| 6/6 [00:30<00:00,  5.14s/it]
+[unsloth_zoo.llama_cpp|WARNING]Unsloth: Qwen2MoE num_experts patch target not found.
+Unsloth: Merge process complete. Saved to `/home/zzhang/dev/ai/models/forge/v0/gguf/curated`
+Unsloth: Converting to GGUF format...
+==((====))==  Unsloth: Conversion from HF to GGUF information
+   \\   /|    [0] Installing llama.cpp might take 3 minutes.
+O^O/ \_/ \    [1] Converting HF to GGUF bf16 might take 3 minutes.
+\        /    [2] Converting GGUF bf16 to ['q4_k_m'] might take 10 minutes each.
+ "-____-"     In total, you will have to wait at least 16 minutes.
+
+Unsloth: llama.cpp found in the system. Skipping installation.
+Unsloth: Preparing converter script...
+Unsloth: [1] Converting model into bf16 GGUF format.
+This might take 3 minutes...
+Unsloth: Initial conversion completed! Files: ['v0/gguf/curated_gguf/qwen3-14b.BF16.gguf']
+Unsloth: [2] Converting GGUF bf16 into q4_k_m. This might take 10 minutes...
+Unsloth: Model files cleanup...
+Unsloth: All GGUF conversions completed successfully!
+Generated files: ['v0/gguf/curated_gguf/qwen3-14b.Q4_K_M.gguf']
+Unsloth: example usage for text only LLMs: /home/zzhang/.unsloth/llama.cpp/llama-cli --model v0/gguf/curated_gguf/qwen3-14b.Q4_K_M.gguf -p "why is the sky blue?"
+Unsloth: Saved Ollama Modelfile to v0/gguf/curated_gguf/Modelfile
+Unsloth: convert model to ollama format by running - ollama create model_name -f v0/gguf/curated_gguf/Modelfile
+Saved GGUF to v0/gguf/curated

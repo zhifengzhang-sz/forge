@@ -1,0 +1,36 @@
+{
+  "model": "ts-forge-v0-extracted",
+  "arm": "extracted",
+  "calls": [
+    {
+      "id": "tc-01",
+      "prompt": "What files are in /etc? Use the list_files tool to find out.",
+      "expected_tool": "list_files",
+      "tools_called": [
+        "list_files"
+      ],
+      "content": "<think>\nOkay, the user is asking what files are in the /etc directory and wants me to use the list_files tool. Let me check the available functions. There's list_files which takes a directory path. The /etc is a directory, so I should call list_files with directory set to \"/etc\". I need to make sure the path is absolute, which it is. Alright, I'll generate the tool call with that parameter.\n</think>\n\n",
+      "success": true
+    },
+    {
+      "id": "tc-02",
+      "prompt": "Please read /etc/hostname and tell me the result.",
+      "expected_tool": "read_file",
+      "tools_called": [
+        "read_file"
+      ],
+      "content": "<think>\nOkay, the user wants me to read the /etc/hostname file. Let me check what tools I have available. There's the read_file function which takes a path parameter. The path needs to be an absolute file path. Since /etc/hostname is an absolute path, I can use that function. I don't need to list files first because the user specifically mentioned reading the hostname file. So I'll call read_file with the path /etc/hostname.\n</think>\n\n",
+      "success": true
+    },
+    {
+      "id": "tc-03",
+      "prompt": "I need to see what's in the file at /tmp/notes.txt \u2014 please use your tools to do this.",
+      "expected_tool": "read_file",
+      "tools_called": [
+        "read_file"
+      ],
+      "content": "<think>\nOkay, the user wants to see the contents of the file at /tmp/notes.txt. Let me check the available tools. There's a function called read_file that takes a path argument. Since the user provided the absolute path, I should use that function. I need to make sure the path is correct. The function doesn't have any other parameters, so I just need to pass the path as a string. Let me structure the tool call with the name \"read_file\" and the arguments as {\"path\": \"/tmp/notes.txt\"}. That should do it.\n</think>\n\n",
+      "success": true
+    }
+  ]
+}

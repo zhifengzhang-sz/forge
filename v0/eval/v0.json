@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "grading_scale": "1=unusable, 2=bad, 3=acceptable, 4=good, 5=idiomatic+correct",
+  "thresholds": {
+    "high_domain_avg": 3.5,
+    "high_capability_avg": 3.5,
+    "stop_baseline": 4.0,
+    "different_strategy": 2.5
+  },
+  "notes": "must_have: at least one substring per item must appear in the response. must_not_have: NONE may appear. Auto-checks are advisory; final 1-5 grade is human judgment.",
+  "prompts": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "prompt": "Create an XState v5 machine using setup() for a multi-step signup form with steps 'email', 'password', 'confirm'. Include fromPromise for email-uniqueness validation against an API and typed events.",
+      "must_have": ["setup(", "fromPromise", "assign(", "types:"],
+      "must_not_have": [": any", "Machine.send(", "createMachine({"]
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "prompt": "Write an XState v5 machine for a download manager with states 'idle', 'downloading', 'paused', 'done', 'error'. Use assign() to track progress (0-100) and a guarded transition that only allows 'pause' while downloading.",
+      "must_have": ["setup(", "assign(", "guard"],
+      "must_not_have": [": any", "cond:", "in: '"]
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "prompt": "Show how to spawn a child actor in XState v5 using invoke + fromPromise that fetches a user profile, with onDone storing the result in context and onError moving to a 'failed' state.",
+      "must_have": ["invoke", "fromPromise", "onDone", "onError"],
+      "must_not_have": ["services:", "invoke: { src: (ctx,"]
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "prompt": "Use fromObservable in XState v5 to wrap a WebSocket stream and dispatch each message as an event into the parent machine's context.",
+      "must_have": ["fromObservable", "Observable"],
+      "must_not_have": ["services:"]
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "prompt": "This is XState v4 code. Convert it to idiomatic XState v5:\n\n```ts\nconst toggle = Machine({\n  id: 'toggle', initial: 'inactive',\n  context: { count: 0 },\n  states: {\n    inactive: { on: { TOGGLE: 'active' } },\n    active: {\n      on: { TOGGLE: { target: 'inactive', actions: assign({ count: ctx => ctx.count + 1 }) } }\n    }\n  }\n});\n```",
+      "must_have": ["setup(", "assign(", "({ context"],
+      "must_not_have": ["Machine(", "ctx =>", "(ctx,"]
+    },
+
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "prompt": "Using fp-ts pipe and Either, write a function validateEmail(s: string): Either<ValidationError, Email> that checks for non-empty, contains '@', and length < 254. Compose three validators with chain.",
+      "must_have": ["pipe(", "Either", "left", "right"],
+      "must_not_have": ["throw new", "try {", ": any"]
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "prompt": "Write an Effect program that reads a config from a Layer, fetches a user by id, and falls back to a default on the typed error UserNotFound. Use Effect.gen.",
+      "must_have": ["Effect.gen", "Layer", "yield*"],
+      "must_not_have": ["async function", "await ", "Promise<"]
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "prompt": "Given an Option<User>, write a function to extract the user's email and uppercase it, returning Option<string>. Use pipe and Option.map / Option.chain idiomatically.",
+      "must_have": ["pipe(", "Option", "map"],
+      "must_not_have": ["if (user", "user.email.toUpperCase", ": any"]
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "prompt": "Compose two TaskEither operations with pipe: fetchUser(id) then fetchOrders(user). Both can fail with FetchError. Return TaskEither<FetchError, Orders>.",
+      "must_have": ["pipe(", "TaskEither", "chain"],
+      "must_not_have": ["async ", "await ", ".then("]
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "prompt": "Build an Effect Layer that provides a Logger service with info(msg) and error(msg). Show how to compose it with a DatabaseLayer and inject both into a program.",
+      "must_have": ["Layer", "Context.Tag", "Layer.merge"],
+      "must_not_have": ["new Logger(", "class LoggerImpl"]
+    },
+
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "prompt": "Build a typeahead search Observable using RxJS: take an input$ Observable<string>, debounce 250ms, dropping duplicates, and use switchMap to call searchApi(query): Observable<Result[]>. Cancel in-flight requests on new input.",
+      "must_have": ["switchMap", "debounceTime", "distinctUntilChanged"],
+      "must_not_have": ["mergeMap", "subscribe(", ".then("]
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "prompt": "Combine three Observables — user$, settings$, theme$ — into a single Observable<ViewModel> that emits whenever any of them changes. Type the result with a ViewModel interface.",
+      "must_have": ["combineLatest", "map", "Observable"],
+      "must_not_have": ["forkJoin", "zip(", "subscribe("]
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "prompt": "Process a stream of file uploads with mergeMap, but cap concurrency at 3 simultaneous uploads. Each upload is uploadFile(f): Observable<Progress>.",
+      "must_have": ["mergeMap", "3"],
+      "must_not_have": ["concatMap", "switchMap", "Promise.all"]
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "prompt": "Explain the difference between Subject<T> and BehaviorSubject<T> with a concrete code example for a 'currentUser' state stream that late subscribers should immediately receive.",
+      "must_have": ["BehaviorSubject", "Subject"],
+      "must_not_have": ["ReplaySubject(0)"]
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "prompt": "Write a custom RxJS OperatorFunction<T, T> called logTap(label: string) that logs each emission with the label and passes values through unchanged. Type-safe.",
+      "must_have": ["OperatorFunction", "Observable", "subscribe"],
+      "must_not_have": [": any", "function logTap(source"]
+    },
+
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "prompt": "Define a ShoppingCart aggregate with evolve(state, event) handling 'CartCreated', 'ItemAdded', 'ItemRemoved'. Include the State and Event types and an initial state.",
+      "must_have": ["evolve", "State", "Event", "type "],
+      "must_not_have": ["class ShoppingCart", "this.state"]
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "prompt": "Implement the Decider pattern for a BankAccount: { decide(command, state): Event[], evolve(state, event): State, initial: State }. Commands: 'Deposit', 'Withdraw'. Reject withdrawals exceeding balance.",
+      "must_have": ["decide", "evolve", "initial"],
+      "must_not_have": ["class BankAccount", "this.balance"]
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "prompt": "Write a CommandHandler that loads an aggregate from EventStore via readStream, decides on the command, and appends the resulting events with appendToStream. Use optimistic concurrency by passing the expected version.",
+      "must_have": ["readStream", "appendToStream", "expectedRevision"],
+      "must_not_have": ["mutex", "lock(", "transaction"]
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "prompt": "Build a Projector that consumes ShoppingCartEvent and updates a CartSummary read model: { id, itemCount, totalCents }. Show the project(state, event) function.",
+      "must_have": ["project", "Event", "ReadModel"],
+      "must_not_have": ["INSERT INTO", "db.query"]
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "prompt": "What are the tradeoffs between snapshotting vs replaying full event streams when reconstructing aggregate state? Show a TypeScript signature for a snapshot-aware loadAggregate function.",
+      "must_have": ["snapshot", "version", "evolve"],
+      "must_not_have": []
+    },
+
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "prompt": "Write a Python function fib(n: int) -> int that computes the nth Fibonacci number iteratively. Include a brief docstring.",
+      "must_have": ["def fib", "return"],
+      "must_not_have": ["import ", "function fib", "const fib"]
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "prompt": "Use the Read tool to look at the file 'package.json' in the current directory, then summarize its dependencies in 2-3 sentences.",
+      "must_have": ["Read", "package.json"],
+      "must_not_have": []
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "prompt": "Explain the tradeoffs between REST and GraphQL for a public API. Cover: caching, over-fetching, schema evolution, and tooling. 4-6 sentences.",
+      "must_have": ["caching", "schema"],
+      "must_not_have": []
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "prompt": "I have a function that's 200 lines and does three things: parsing input, validating it, and persisting to a database. Outline a refactor in 3 steps. Don't write code yet — just the plan.",
+      "must_have": ["1.", "2.", "3."],
+      "must_not_have": ["function ", "const ", "def "]
+    }
+  ]
+}

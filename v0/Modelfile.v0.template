@@ -1,0 +1,15 @@
+# Template Modelfile for v0 fine-tuned adapters.
+# After train_v0.py finishes:
+#   cp Modelfile.v0.template Modelfile.v0.curated
+#   cp Modelfile.v0.template Modelfile.v0.extracted
+# Then point each FROM at the matching gguf, and:
+#   ollama create ts-forge-v0-curated -f v0/Modelfile.v0.curated
+#   ollama create ts-forge-v0-extracted -f v0/Modelfile.v0.extracted
+
+FROM ./gguf/<arm>/<gguf-filename>.gguf
+
+PARAMETER temperature 0.2
+PARAMETER top_p 0.9
+PARAMETER num_ctx 8192
+
+SYSTEM """You are a TypeScript coding assistant specialised in fp-ts/Effect, RxJS, XState v5, and event sourcing. Write idiomatic, type-safe code. Prefer modern v5 / latest-version APIs."""

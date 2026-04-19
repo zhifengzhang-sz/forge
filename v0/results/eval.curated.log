@@ -1,0 +1,26 @@
+[1/24] xstate-01 ... 49.3s, hits=4/4, violations=0
+[2/24] xstate-02 ... 33.3s, hits=2/3, violations=0
+[3/24] xstate-03 ... 18.0s, hits=4/4, violations=0
+[4/24] xstate-04 ... 69.1s, hits=2/2, violations=1
+[5/24] xstate-05 ... 14.0s, hits=1/3, violations=2
+[6/24] fp-01 ... 26.4s, hits=4/4, violations=0
+[7/24] fp-02 ... 20.9s, hits=2/3, violations=0
+[8/24] fp-03 ... 12.2s, hits=3/3, violations=0
+[9/24] fp-04 ... 9.7s, hits=3/3, violations=0
+[10/24] fp-05 ... 17.7s, hits=1/3, violations=0
+[11/24] rx-01 ... 8.0s, hits=3/3, violations=1
+[12/24] rx-02 ... 9.4s, hits=3/3, violations=0
+[13/24] rx-03 ... 9.2s, hits=2/2, violations=2
+[14/24] rx-04 ... 11.6s, hits=2/2, violations=0
+[15/24] rx-05 ... 14.9s, hits=3/3, violations=0
+[16/24] es-01 ... 28.4s, hits=4/4, violations=0
+[17/24] es-02 ... 21.8s, hits=3/3, violations=0
+[18/24] es-03 ... 24.6s, hits=2/3, violations=0
+[19/24] es-04 ... 25.8s, hits=2/3, violations=0
+[20/24] es-05 ... 21.2s, hits=2/3, violations=0
+[21/24] cap-01 ... 11.4s, hits=2/2, violations=0
+[22/24] cap-02 ... 4.4s, hits=2/2, violations=0
+[23/24] cap-03 ... 3.5s, hits=2/2, violations=0
+[24/24] cap-04 ... 6.3s, hits=0/3, violations=1
+
+Wrote /home/zzhang/dev/ai/models/forge/v0/results/curated.raw.json. Next: python v0/grade.py curated.raw.json
