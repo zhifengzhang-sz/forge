@@ -37,6 +37,9 @@ unsloth_compiled_cache/
 # v0.6 verifier probe dir (npm install target for tsc gate)
 v0.6/.verify-tmp/
 
+# v0.7 verifier probe dir (per-domain: xstate/, fp/, rx/)
+v0.7/.verify-tmp/
+
 # Model weight artifacts (reproducible from train.py + synth.verified.jsonl)
 # Modelfiles are small text and are kept for reproducibility.
 *.gguf
