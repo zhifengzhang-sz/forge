@@ -1,0 +1,6 @@
+[tc-01] expects 'list_files'... called=['list_files']  PASS
+[tc-02] expects 'read_file'... called=['read_file']  PASS
+[tc-03] expects 'read_file'... called=['read_file']  PASS
+
+Tool-call pass rate: 100% (3/3)
+Wrote /home/zzhang/dev/ai/models/forge/v0/results/v0.6.toolcall.json

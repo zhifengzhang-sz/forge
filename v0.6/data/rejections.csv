@@ -1,0 +1,2 @@
+index,reason,detail
+434,tsc,"probe-000434.ts(18,45): error TS2352: Conversion of type 'Ev' to type '{ output: unknown; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. probe-000434.ts(20,37): error TS2352: Conversion of type 'Ev' t"
