@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v0.7-r32",
+  "arm": "v0.7-r32",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "v5 setup with actors and fromPromise<Out,In>, typed events, destructured assign. But the confirm>SUBMIT transition uses v4 keyword `cond:` instead of `guard:` \u2014 v4/v5 mix."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5: setup, guards-in-setup, `guard:` keyword, structural isolation of PAUSE to downloading. Guard `isDownloading` keyed on progress<100 is semantically weak (should be state-based) but structure is right."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Full v5 idiom: setup with actors, fromPromise<User,{userId}> typed, invoke with input mapper, onDone/onError with destructured assign from event.output."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "fromObservable<WsEvent,{url}> properly typed, events forward to parent via assign. Returns a hand-rolled Subscribable object rather than rxjs Observable \u2014 works but not idiomatic; setup+actors+destructured assign all correct."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Perfect v4\u2192v5 conversion: setup({types}).createMachine, destructured ({context}) => context.count+1. Bonus: extracted action to setup.actions and referenced by string name."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean fp-ts: pipe + E.chain composition of three validators, ValidationError tagged type, branded Email-ish record. Correct namespace imports."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Effect.gen + Context.GenericTag + Layer.succeed + Layer.effect \u2014 good plumbing. But does NOT actually handle the UserNotFound fallback the prompt asks for \u2014 fetchUser always succeeds, no catchTag/orElse; the return type claims UserNotFound but the program never surfaces or handles it."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "pipe + Option.map + Option.chain composition. But Option is referenced un-namespaced (no `import * as O` \u2014 uses bare `Option.map`, `Option.some`, `Option.none`) which won't compile as written. Also the trim-and-check is extra scope the prompt didn't ask for."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean TE.chain composition via pipe. FetchError tagged class. Concrete example with tryCatch. Typed throughout."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Has Layer, Layer.merge, Context.GenericTag, Layer.effect. But DbLive depends on Logger (yield* Logger inside), yet Layer.merge does NOT wire Logger into Db \u2014 needs Layer.provide/provideMerge. Program type also says `Effect.Effect<void, never, Db>` but really requires Logger via Db."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "debounceTime + distinctUntilChanged + switchMap. Proper types. switchMap correctly noted for cancellation semantics."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object-form (v7+), strongly-typed ViewModel, map with typed destructuring. Good explanation."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with concurrency=3 second arg. Concise and correct."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Clear explanation of the difference. BehaviorSubject example shown. Light on the Subject side \u2014 just notes it 'would miss' rather than a parallel example."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "OperatorFunction<T,T> with pipe(tap({next,error,complete})) \u2014 the object form is idiomatic. Type-safe. Example usage shown."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Discriminated union State and Events, pure evolve. Bug: ItemRemoved case does `state.itemCount - event.sku` (number minus string) \u2014 clearly wrong; type system should have caught it."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider with decide/evolve/initial. Discriminated commands+events. Correct rejection logic. Emits an explicit 'InsufficientFunds' event rather than returning []; defensible design choice."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 2,
+      "rationale": "Made-up import `temporal-node`. Uses `expectedVersion` not the asked-for `expectedRevision`. No decide/aggregate loading pattern \u2014 handler is ad-hoc idempotency checks. More wrong than right."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state, event) with Math.max floor, discriminated event union. Uses CartSummary instead of generic ReadModel name (minor)."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clear tradeoffs. loadAggregate signature with Snapshot<T> + version + nextEventIndex. applyEvents is a placeholder, and doesn't name the reducer `evolve`."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib with type hints, docstring defining F(0)=0,F(1)=1, early return for n<2."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Did NOT use the Read tool \u2014 fabricated a React/TS/Tailwind dependency list. Claude Opus calibration 5 was honest tool use; this hallucinates."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "All four topics covered with specifics (ETags, Cache-Control, Apollo cache-control, @deprecated, OpenAPI, GraphiQL). Good comparative depth."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clean 3-step refactor plan: parse \u2192 validate \u2192 persist, each a pure function, wrap original as composition. No code as instructed."
+    }
+  ]
+}

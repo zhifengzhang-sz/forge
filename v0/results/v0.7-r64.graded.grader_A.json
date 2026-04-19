@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v0.7-r64",
+  "arm": "v0.7-r64",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Full v5 idiom: setup with actors, fromPromise<boolean,{email}>, typed discriminated events, destructured assign, invoke with input mapper, onDone/onError. Clean."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5: setup, guards-in-setup, `guard:` keyword, structural isolation of PAUSE. isDownloading/isPaused guards are progress-derived rather than state-derived, so slightly weaker semantically but structurally correct."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "v5 idiom throughout: setup with actors, fromPromise<User,{id}> typed, invoke with input mapper, onDone/onError with destructured assign."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Wrong abstraction inside fromObservable \u2014 returns a ReadableStream<WsEvent>, which is not a Subscribable/Observable. fromObservable expects an rxjs-style Observable. Would not work at runtime; machine shell is otherwise correct."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Perfect v4\u2192v5 conversion: setup({types}).createMachine, destructured ({context}) => context.count+1 in assign. Concise."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean fp-ts: pipe + E.chainW composition of three validators. Widening chain correctly explained. Tagged ValidationError, Email record, proper namespace imports."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect.gen + Context.GenericTag + Layer. Uses Effect.catchTag('UserNotFound', ...) for the typed-error fallback \u2014 correctly answers the prompt. Minor: UserNotFound is a hand-tagged interface rather than Data.TaggedError, so it works but isn't quite idiomatic."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "pipe + O.map + O.map \u2014 correct and clean. Prompt asked for map / chain idiomatically; this uses map twice where chain isn't strictly needed, which is actually the simpler idiom for this case. Minor: could chain through O.fromNullable for safety."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean pipe + TE.chainW composition of fetchUser \u2192 fetchOrders. FetchError tagged class. Typed throughout."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Layer, Layer.merge, Context.GenericTag, Layer.effect, Effect.gen. DbLive doesn't depend on Logger (simpler than calibration), so Layer.merge is appropriate; program uses both services and Effect.provide wires them. Slightly less ambitious than the calibration 5 but correct."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "debounceTime + distinctUntilChanged + switchMap. Proper types. switchMap cancellation noted."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object-form, typed ViewModel, map with typed destructuring. Clean."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with concurrency=3 second arg. Correct."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Clear explanation of BehaviorSubject vs Subject. Single-example format rather than parallel side-by-side. Late-subscriber semantics correctly described."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "OperatorFunction<T,T> expressed as `(source) => pipe(source, tap({next,error,complete}))`. Object-form tap, type-safe, example usage shown."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Discriminated State/Event types, pure evolve. Bug: hardcodes prices (`event.quantity*100` on add, `event.sku === 'A' ? 100 : 0` on remove) instead of carrying price through the event or storing per-item price in state. Poor modelling."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider with decide/evolve/initial, discriminated commands/events. Uses signed amount with single 'FundsApplied' event \u2014 clever but loses deposit/withdraw audit distinction. Correct rejection."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 1,
+      "rationale": "Category error: uses xstate's CommandHandler + assign pattern, not an event-store CommandHandler. No readStream, no appendToStream, no expectedRevision, no decide. Fundamentally wrong abstraction."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state, event) with Math.max floor; extends the event types with applyCoupon/checkout. Uses CartSummary name not generic ReadModel. Logic is reasonable."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Good tradeoffs table. But the loadAggregate signature `(id, upToVersion)` doesn't actually show snapshot-awareness \u2014 the `hydrate` function just returns the cached result if present, without snapshot+delta replay. No evolve. Half the ask is missing."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib with type hints and docstring."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Did NOT actually use the Read tool \u2014 showed a pseudo-call `Read('package.json')` and fabricated express/mongodb/jsonwebtoken deps. Calibration 5 was honest tool use; this hallucinates."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "All four topics (caching, over-fetching, schema evolution, tooling) covered with specific examples (ETags, Cache-Control, @deprecated, OpenAPI, GraphiQL). Concrete."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clean 3-step plan: parse \u2192 validate \u2192 persist as pure functions/adapter; original function becomes coordinator. No code as instructed."
+    }
+  ]
+}

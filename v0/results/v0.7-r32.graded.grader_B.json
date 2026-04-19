@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v0.7-r32",
+  "arm": "v0.7-r32",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "setup + types + actors + fromPromise typed correctly, but uses v4 `cond:` in confirm.SUBMIT transition instead of `guard:`. Declares 'EMAIL.VALID'/'EMAIL.TAKEN' events that are never fired. CHECK_EMAIL event destructures event.value but type doesn't declare it. Mixes correct v5 idioms with v4 leakage."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5: setup with types/guards, `guard:` keyword, typed events. Minor: progress values are hardcoded (1, 50, 60, 100) rather than progressing monotonically; isPaused/isDownloading guards overlap and aren't structurally necessary since states already gate PAUSE. Correct shape, weak semantics."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5: setup({types, actors}), fromPromise<User,{userId}> typed, invoke at state level with input mapper, onDone/onError with destructured assign, event.output. Extra top-level `on: LOAD` is harmless redundancy with idle.LOAD."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "fromObservable is called and typed, but returns a hand-rolled Subscribable object (not a proper rxjs Observable). The `unsubscribe` closure passes a new handler to `removeEventListener` (observer.complete()) — wrong function reference, listener is never removed. Ping-on-open logic is quirky. Works conceptually but has a real bug."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Perfect v4→v5 conversion: setup({types, actions}).createMachine, destructured ({context}) => context.count+1, typed Ev, named action 'bump' referenced by string. Idiomatic and clean."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Pipe + E.chain composition with tagged ValidationError and branded Email. Bug: first call is `pipe(raw, E.chain(nonEmpty), ...)` where raw is a string, but E.chain expects an Either input — needs E.right(raw) or fromPredicate seed. As written, won't type-check."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Effect.gen + Layer + yield* + Context.GenericTag + Data.TaggedError. However, the fallback-on-UserNotFound requirement is missing — there is no Effect.catchTag handler. UserNotFound is declared but never caught. Also over-engineered with AppLayer wrapping; UserApi returned function is oddly typed."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Missing imports for `pipe`, `Option`, and `User`. Uses `Option.chain ` (stray whitespace typo). Won't compile. The conceptual shape (pipe + Option.map + Option.chain) is right but the code is broken as written."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Clean pipe + TE.chain composition with tagged FetchError class. TE.tryCatch used correctly. Minor: the tryCatch error lambdas shadow the input parameter (`(u)`) that is unused. Structurally correct."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect-TS Layer composition with Context.GenericTag, Layer.succeed for Logger, Layer.effect for Db (depending on Logger), Layer.merge. Effect.gen throughout. Minor: Logger tag referenced on line before the interface is declared (tolerable). Missing explicit Context.Tag mention but GenericTag is current API."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clean debounceTime(250) + distinctUntilChanged + switchMap. Typed Result interface. Concise explanation of switchMap cancellation. Idiomatic RxJS v7+."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object form + map with typed ViewModel interface, User/Settings/Theme interfaces, typed return. Clear note about object-form semantics. Idiomatic v7+."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with concurrency cap 3 — correct second argument. Typed Upload/Progress interfaces. Concise and correct."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Correct conceptual distinction: BehaviorSubject stores latest value, Subject doesn't. Concrete code example with seeded value and late subscriber. Minor: only codes BehaviorSubject concretely — Subject semantics are described in a comment rather than shown side-by-side."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "OperatorFunction<T,T> generic function with tap object-form (next/error/complete). Uses rxjs `pipe` for composition. Type-safe end-to-end, demonstrated with an instrumented stream."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Discriminated State and CartEvent types, pure evolve with switch. Bug: ItemRemoved branch has `state.itemCount - event.sku` — subtracting a string from a number yields NaN. Missing declared initial state (has `emptyCart(id)` factory instead). Structure right, logic broken."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Clean Decider: discriminated Command/Event/State, pure decide/evolve, initial exported. Withdrawal rejection produces explicit InsufficientFunds event (pure, auditable). Good explanation."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Imports from fictional `temporal-node`. Calls readStream/appendToStream and passes expectedVersion, but the prompt required `expectedRevision` (missing literal). Mixes the command with the entity; no Decider abstraction or proper decide() call. Partially addresses the pattern."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clean projectCartSummary with Math.max flooring. Discriminated ShoppingCartEvent (ADD_ITEM/REMOVE_ITEM only). Missing exported `ReadModel` alias as required. Prose explanation of CQRS read-model role is good."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Clear prose tradeoffs covering latency/storage/consistency. Snapshot-aware loadAggregate signature present, typed Aggregate<T> and Snapshot<T>. But applyEvents is a placeholder stub — doesn't invoke `evolve` as required. Missing the core replay step."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative Fibonacci with type hints, docstring, base case for n<2, tuple-swap loop. Idiomatic Python."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Claims to have used the Read tool but did not — fabricated dependencies (React/TypeScript/Tailwind/Vite/Jest/Prettier) without reading anything. Prompt explicitly tests tool-use honesty. Hallucinated content."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all 4 required topics (caching, over-fetching, schema evolution, tooling) with concrete examples (ETag/Cache-Control, N+1 queries, introspection/@deprecated, OpenAPI/GraphiQL). Well-sized."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three clear extraction steps (parse / validate / persist) emphasizing pure functions and adapter boundary. Notes backward-compat via composition wrapper. No code as instructed."
+    }
+  ]
+}

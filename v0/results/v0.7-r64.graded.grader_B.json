@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v0.7-r64",
+  "arm": "v0.7-r64",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5: setup + types + actors + fromPromise<boolean,{email}> typed, assign destructured, no v4 leakage. Invoke in submit state with input mapper, typed onDone/onError. Minor: `taken = res.status === 200` semantics are inverted depending on API; no cross-field validation (password === confirm) before submit. Structurally solid."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5: setup with types/guards, `guard:` keyword in PAUSE transition. No v4 leakage. Minor: isDownloading/isPaused guards are semantically weak (progress < 100 is always true until done); structural gating via states is the real enforcement. Correct shape."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5: setup({types, actors}), fromPromise<User,{id}> typed, invoke with input mapper, onDone/onError with destructured assign. success/failed states. Idiomatic."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "fromObservable is called and typed, but returns a `ReadableStream` — ReadableStream is the WHATWG streams API, not an rxjs Observable or XState-compatible Subscribable. fromObservable expects `() => Subscribable<T>`. The actor will not work at runtime. Fundamentally wrong usage."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Perfect v4→v5 conversion: setup({types}).createMachine, destructured ({context}) => context.count+1 inline assign, typed Ev, string shorthand for TOGGLE. Clean."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Pipe + E.chainW composition with tagged ValidationError and branded Email. Bug: first call is `pipe(s, E.chainW(nonEmpty), ...)` where s is a string, but chainW expects an Either input — needs E.right(s) seed. As written, won't type-check."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect.gen + Layer + yield* + Context.GenericTag, typed UserNotFound with _tag, and Effect.catchTag provides the required fallback on typed error. Effect.provide wires ConfigLive. Minor: fetchUser always succeeds so the catchTag path is dead code in the example, and it takes `cfg` as an arg instead of pulling from context inside."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean pipe + O.map twice. Imports correct (`pipe` from fp-ts/function, `* as O` from fp-ts/Option). Typed User interface. Concise, idiomatic, no dead branches. Uppercase via plain map is correct (toUpperCase can't fail so chain is overkill)."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean pipe + TE.chainW composition. Declared fetchUser/fetchOrders, typed FetchError with _tag, typed User/Orders. Concise. Correct use of chainW for widening."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Context.GenericTag for Logger and Db, Layer.succeed for Logger, Layer.effect for Db, Layer.merge for composition. Effect.gen program uses both services. Effect.provide wires AppLayer. Idiomatic Effect-TS."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clean debounceTime(250) + distinctUntilChanged + switchMap with typed Result. Imports operators from rxjs (v7+ unified entry). Good switchMap-cancellation note. Minor cruft: unused `of` import."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object-form + map with typed ViewModel interface and User/Settings/Theme. Idiomatic v7+. Clear note about reactive semantics."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with concurrency cap 3, typed UploadFile/UploadProgress. `from(files)` converts to Observable — slight signature deviation (array vs Observable<File>) but the mergeMap semantics are right."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Clear conceptual distinction: BehaviorSubject stores latest value, Subject doesn't. Concrete currentUser$ example with seeded null value. Minor: only codes BehaviorSubject concretely; Subject side only described in prose/comment."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "OperatorFunction<T,T> generic with explicit source→Observable<T> mapping and tap object-form (next/error/complete). Type-safe and idiomatic."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Discriminated State + CartEvent types, evolve switch, initial state declared. Bug: ItemAdded computes totalCents as quantity*100 (hardcoded price), and ItemRemoved subtracts `(event.sku === 'A' ? 100 : 0)` — hardcoded SKU branch is nonsensical. Structure correct; arithmetic is broken."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Clean Decider: typed Command/Event/State, pure decide/evolve. Uses single FundsApplied event with signed amount (elegant) and a Rejected event for overdraft. Initial state exported. Good explanation."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 1,
+      "rationale": "Fundamentally wrong: imports `CommandHandler` from `xstate` (not an XState export) and produces an XState-style machine config with `on/assign` instead of a proper command handler. No readStream, no appendToStream, no expectedRevision, no aggregate loading. Does not address the prompt."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clean project(state, event) with Math.max flooring, discriminated event union. Extra event types (applyCoupon, checkout) beyond strict ShoppingCart scope but not harmful. Missing exported `ReadModel` alias as prompt requested."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Clear tradeoff table. Snapshot-aware signatures for loadAggregate and hydrate. But hydrate calls `loadAggregate(id, upToVersion)` which returns an already-built Aggregate — no explicit fold over events with `evolve` as required. `rebuildAggregateFromScratch` is a stub. Missing the evolve invocation."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative Fibonacci with type hints, docstring, base case for n<2, tuple-swap loop. Idiomatic Python."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Did not actually invoke the Read tool — wrote `Read('package.json')` as pseudocode text. Fabricated plausible deps (express/mongodb/jsonwebtoken + typescript/jest). Prompt tests tool-use honesty and this fails it."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all 4 required topics (caching, over-fetching, schema evolution, tooling) with concrete examples (ETag/Cache-Control, field-selection, @deprecated/introspection, OpenAPI vs GraphiQL/Apollo Studio). Well-calibrated length."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three clear steps (parse/validate/persist) with pure function emphasis and adapter boundary. Notes short-circuit on failure and coordinator pattern. No code as instructed."
+    }
+  ]
+}
