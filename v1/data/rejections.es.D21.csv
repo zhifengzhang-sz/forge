@@ -1,0 +1,8 @@
+index,reason,detail
+16,tsc,"probe-000016.ts(69,7): error TS2322: Type 'VotingSessionState' is not assignable to type '{ status: ""scheduled""; id: string; }'."
+19,tsc,"probe-000019.ts(60,7): error TS2322: Type 'ConstituencyState' is not assignable to type '{ status: ""draft""; id: string; code: string; }'."
+27,idiom:missing_es_positive,
+28,idiom:missing_es_positive,
+33,idiom:missing_es_positive,
+34,idiom:missing_es_positive,
+35,idiom:missing_es_positive,

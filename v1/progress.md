@@ -28,12 +28,18 @@ completed wave, continue from the next one.
 | D17 | ES | ✓ | 41 / 35 | 85% | 2026-04-19 |
 | D18 | ES | ✓ | 40 / 34 | 85% | 2026-04-19 |
 | D19 | ES | ✓ | 45 / 40 | 89% | 2026-04-19 |
-| D20 | ES | ✗ | — | — | **rate-limit** |
-| D21 | ES | ✗ | — | — | **rate-limit** |
+| D20 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| D21 | ES | ✓ | 40 / 33 | 83% | 2026-04-20 |
+| D22 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| D23 | ES | ✓ | 40 / 35 | 88% | 2026-04-20 |
+| D24 | ES | ✓ | 40 / 31 | 78% | 2026-04-20 |
+| D25 | ES | ✓ | 40 / 37 | 93% | 2026-04-20 |
+| D26 | ES | ✓ | 40 / 34 | 85% | 2026-04-20 |
+| D27 | ES | ✓ | 44 / 36 | 82% | 2026-04-20 |
 
-**Cumulative ES:** 808 raw → 774 verified (95.8%). Batch 3 partial (D15-D19 only): 182/208 = 87.5%. D16/D17/D19 overshot 40 target because subagents retried when rate-limited mid-run. D20/D21 produced nothing.
+**Cumulative ES:** 1132 raw → 1020 verified (90.1% overall). D20-D27 batch 88.3%. Target: 1400. Remaining: 380 (~11 more subagents).
 
-**STOP — API quota exhausted.** "You're out of extra usage · resets 8am (America/New_York)." Resume by redispatching D20, D21, and continuing batches D22+ after reset.
+Note: several batches bounced on "out of extra usage" mid-run but wrote their files BEFORE exiting — verified output was usable despite the error message.
 
 ## Rejection lessons (for prompt tightening on D8+)
 
