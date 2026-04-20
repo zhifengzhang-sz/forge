@@ -53,7 +53,7 @@ from pathlib import Path
 # Domains
 # ---------------------------------------------------------------------------
 
-DOMAINS = ("xstate", "fp", "rx")
+DOMAINS = ("xstate", "fp", "rx", "es")
 DEFAULT_DOMAIN = "xstate"
 
 
@@ -189,6 +189,39 @@ _RX_MUST_NOT_MATCH: list[tuple[str, re.Pattern[str]]] = [
     ("rxjs_do_operator", re.compile(r"\.do\(")),
 ]
 
+# ES: 18-token MUST-MATCH covering both Decider-style (evolve/decide) and
+# Oskar-style (when/aggregateStream/reduce<...>) idioms. Shape guards reject
+# XState leakage. Effect.gen is NOT blocked — Effect-wrapped event store
+# access is a valid ES pattern.
+_ES_MUST_MATCH: list[tuple[str, re.Pattern[str]]] = [
+    ("evolve", re.compile(r"evolve\(")),
+    ("decide", re.compile(r"decide\(")),
+    ("dotted_decide", re.compile(r"\.decide\(")),
+    ("Decider", re.compile(r"\bDecider\b")),
+    ("CommandHandler", re.compile(r"\bCommandHandler\b")),
+    ("EventStore", re.compile(r"\bEventStore\b")),
+    ("EventStoreDB", re.compile(r"\bEventStoreDB")),
+    ("Snapshot", re.compile(r"\bSnapshot\b")),
+    ("expectedRevision", re.compile(r"\bexpectedRevision\b")),
+    ("appendToStream", re.compile(r"\bappendToStream\b")),
+    ("readStream", re.compile(r"\breadStream\b")),
+    ("readFromStream", re.compile(r"\breadFromStream\b")),
+    ("when_fn", re.compile(r"\bwhen\(")),
+    ("aggregateStream", re.compile(r"\baggregateStream\(")),
+    ("reduce_typed", re.compile(r"\breduce<")),
+    ("projection", re.compile(r"\bprojection")),
+    ("aggregate", re.compile(r"\baggregate")),
+    ("project_fn", re.compile(r"\bproject\(")),
+]
+
+_ES_MUST_NOT_MATCH: list[tuple[str, re.Pattern[str]]] = [
+    # Shape guards against XState-leakage back into ES answers.
+    ("xstate_import_in_es", re.compile(r"from ['\"]xstate['\"]")),
+    ("setup_in_es", re.compile(r"setup\(")),
+    # NOTE: Effect.gen is intentionally NOT blocked — ES code may wrap the
+    # event-store IO boundary in Effect.gen, and that's a valid idiom.
+]
+
 
 # The per-domain bundles use two shapes:
 #
@@ -202,6 +235,7 @@ _IDIOMS: dict[str, tuple[str, list[tuple[str, re.Pattern[str]]], list[tuple[str,
     "xstate": ("missing_setup", _XSTATE_MUST_MATCH, _XSTATE_MUST_NOT_MATCH),
     "fp": ("missing_fp_positive", _FP_MUST_MATCH, _FP_MUST_NOT_MATCH),
     "rx": ("missing_rx_positive", _RX_MUST_MATCH, _RX_MUST_NOT_MATCH),
+    "es": ("missing_es_positive", _ES_MUST_MATCH, _ES_MUST_NOT_MATCH),
 }
 
 
@@ -293,6 +327,10 @@ def _package_json_for(domain: str) -> dict:
         deps["effect"] = "^3"
     elif domain == "rx":
         deps["rxjs"] = "^7"
+    elif domain == "es":
+        # ES probes are pure TypeScript — they declare any event-store
+        # interface locally rather than depending on a runtime client.
+        pass
     else:
         raise ValueError(f"unknown domain {domain!r}")
     return {
@@ -330,6 +368,10 @@ def _marker_package_for_domain(domain: str) -> str:
         return "effect"
     if domain == "rx":
         return "rxjs"
+    if domain == "es":
+        # ES has no domain-specific dep; the common `typescript` install
+        # proves the probe dir is ready.
+        return "typescript"
     raise ValueError(f"unknown domain {domain!r}")
 
 

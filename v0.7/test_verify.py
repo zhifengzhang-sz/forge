@@ -112,6 +112,146 @@ const sum$ = combineLatest([first$, second$]).pipe(
 );
 """
 
+GOOD_ES_DECIDER = """\
+// Decider-style event-sourcing: pure evolve + decide, no I/O.
+
+type State =
+  | { status: 'Empty' }
+  | { status: 'Active'; balance: number };
+
+type Command =
+  | { type: 'Open'; opening: number }
+  | { type: 'Credit'; amount: number };
+
+type Event =
+  | { type: 'Opened'; balance: number }
+  | { type: 'Credited'; amount: number };
+
+export const initial: State = { status: 'Empty' };
+
+export function evolve(state: State, event: Event): State {
+  switch (event.type) {
+    case 'Opened':
+      return { status: 'Active', balance: event.balance };
+    case 'Credited':
+      if (state.status !== 'Active') return state;
+      return { status: 'Active', balance: state.balance + event.amount };
+    default: {
+      const _: never = event;
+      return state;
+    }
+  }
+}
+
+export function decide(cmd: Command, state: State): Event[] {
+  switch (cmd.type) {
+    case 'Open':
+      if (state.status === 'Active') throw new Error('AlreadyOpen');
+      return [{ type: 'Opened', balance: cmd.opening }];
+    case 'Credit':
+      if (state.status !== 'Active') throw new Error('NotOpen');
+      return [{ type: 'Credited', amount: cmd.amount }];
+    default: {
+      const _: never = cmd;
+      return [];
+    }
+  }
+}
+"""
+
+GOOD_ES_OSKAR_WHEN = """\
+// Oskar-style: pure `when` reducer + generic aggregateStream helper.
+
+interface DomainEvent {
+  type: string;
+}
+
+interface Invoice {
+  id: string;
+  issued: boolean;
+  totalCents: number;
+}
+
+type InvoiceEvent =
+  | { type: 'Issued'; id: string }
+  | { type: 'LineAdded'; cents: number };
+
+export function when(state: Partial<Invoice>, event: InvoiceEvent): Partial<Invoice> {
+  switch (event.type) {
+    case 'Issued':
+      return { ...state, id: event.id, issued: true, totalCents: 0 };
+    case 'LineAdded':
+      return { ...state, totalCents: (state.totalCents ?? 0) + event.cents };
+    default:
+      return state;
+  }
+}
+
+export async function aggregateStream<Aggregate, E extends DomainEvent>(
+  stream: AsyncIterable<E>,
+  evolve: (s: Partial<Aggregate>, e: E) => Partial<Aggregate>,
+  initial: Partial<Aggregate> = {},
+): Promise<Partial<Aggregate>> {
+  let state = initial;
+  for await (const event of stream) {
+    state = evolve(state, event);
+  }
+  return state;
+}
+"""
+
+GOOD_ES_EFFECT_WRAPPED = """\
+// Effect-wrapped event-store access wrapping a pure Decider core.
+
+import { Effect } from 'effect';
+
+interface EventStore<E> {
+  readStream(name: string): Promise<E[]>;
+  appendToStream(name: string, events: E[], expectedRevision: bigint | 'no_stream'): Promise<bigint>;
+}
+
+type Event = { type: 'Opened' } | { type: 'Closed' };
+
+type State = { open: boolean };
+
+const initial: State = { open: false };
+
+const evolve = (s: State, e: Event): State =>
+  e.type === 'Opened' ? { open: true } : { open: false };
+
+const loadAggregate = <E, S>(
+  store: EventStore<E>,
+  streamName: string,
+  initialState: S,
+  step: (s: S, e: E) => S,
+): Effect.Effect<S, Error> =>
+  Effect.tryPromise({
+    try: () => store.readStream(streamName),
+    catch: (u) => new Error(String(u)),
+  }).pipe(Effect.map((events) => events.reduce(step, initialState)));
+
+export const load = (store: EventStore<Event>, name: string) =>
+  loadAggregate(store, name, initial, evolve);
+"""
+
+BAD_ES_XSTATE_LEAKAGE = """\
+// Has an ES positive token (evolve) but imports from xstate — must fail.
+import { setup } from 'xstate';
+
+export function evolve(state: unknown): unknown {
+  return state;
+}
+"""
+
+BAD_ES_SETUP_LEAKAGE = """\
+// Has an ES positive token (Decider) but uses setup() — must fail.
+interface Decider<C, E, S> {}
+
+const m = setup({ types: {} }).createMachine({ id: 'x' });
+
+export {};
+"""
+
 
 def _wrap_ts(body: str, tag: str = "typescript") -> str:
     return f"Here you go:\n\n```{tag}\n{body}\n```\n"
@@ -475,6 +615,62 @@ class CheckIdiomRXTests(unittest.TestCase):
             "const s = of(1).pipe(tap((n) => console.log(n)));\n"
         )
         ok, reason = check_idiom(code, domain="rx")
+        self.assertTrue(ok, f"got reason={reason!r}")
+
+
+# ---------------------------------------------------------------------------
+# check_idiom — es (new in v1)
+# ---------------------------------------------------------------------------
+
+
+class CheckIdiomESTests(unittest.TestCase):
+    def test_accepts_decider_style(self) -> None:
+        ok, reason = check_idiom(GOOD_ES_DECIDER, domain="es")
+        self.assertTrue(ok, f"expected pass, got reason={reason!r}")
+
+    def test_accepts_oskar_when_style(self) -> None:
+        ok, reason = check_idiom(GOOD_ES_OSKAR_WHEN, domain="es")
+        self.assertTrue(ok, f"expected pass, got reason={reason!r}")
+
+    def test_accepts_effect_wrapped_es(self) -> None:
+        # Effect.gen + ES is a valid idiom — ES gate does NOT block Effect.
+        ok, reason = check_idiom(GOOD_ES_EFFECT_WRAPPED, domain="es")
+        self.assertTrue(ok, f"expected pass, got reason={reason!r}")
+
+    def test_rejects_xstate_import_in_es(self) -> None:
+        ok, reason = check_idiom(BAD_ES_XSTATE_LEAKAGE, domain="es")
+        self.assertFalse(ok)
+        self.assertTrue(reason.startswith("idiom:xstate_import_in_es"), reason)
+
+    def test_rejects_setup_in_es(self) -> None:
+        ok, reason = check_idiom(BAD_ES_SETUP_LEAKAGE, domain="es")
+        self.assertFalse(ok)
+        self.assertTrue(reason.startswith("idiom:setup_in_es"), reason)
+
+    def test_rejects_es_missing_positive(self) -> None:
+        # Plain TS with no ES vocabulary and no XState leakage → must fail
+        # the missing_es_positive gate.
+        code = (
+            "const xs: number[] = [1, 2, 3];\n"
+            "const total = xs.reduce((a, b) => a + b, 0);\n"
+            "console.log(total);\n"
+        )
+        ok, reason = check_idiom(code, domain="es")
+        self.assertFalse(ok)
+        self.assertTrue(reason.startswith("idiom:missing_es_positive"), reason)
+
+    def test_accepts_es_in_jsdoc_setup_is_stripped(self) -> None:
+        # Comment mentioning setup() must not trip the setup_in_es guard.
+        code = (
+            "// Migrating away from `setup({...}).createMachine(...)` XState.\n"
+            "export const foldEvents = (events: unknown[]): unknown =>\n"
+            "  events.reduce((s, e) => evolve(s, e as never), {});\n"
+            "function evolve(state: unknown, _e: unknown): unknown { return state; }\n"
+        )
+        # Positive gate: `evolve(` appears twice (call-site + def). Shape
+        # guard: `setup(` only in a comment, which strip_comments removes
+        # before the negative gate runs.
+        ok, reason = check_idiom(code, domain="es")
         self.assertTrue(ok, f"got reason={reason!r}")
 
 
