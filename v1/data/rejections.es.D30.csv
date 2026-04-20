@@ -1,0 +1,10 @@
+index,reason,detail
+18,idiom:missing_es_positive,
+19,idiom:missing_es_positive,
+20,idiom:missing_es_positive,
+25,idiom:missing_es_positive,
+26,idiom:missing_es_positive,
+30,tsc,"probe-000030.ts(7,22): error TS2322: Type 'DiscoveryRequestEvent' is not assignable to type 'never'. probe-000030.ts(13,22): error TS2322: Type 'DiscoveryRequestCommand' is not assignable to type 'never'."
+31,idiom:missing_es_positive,
+32,idiom:missing_es_positive,
+36,tsc,"probe-000036.ts(8,22): error TS2322: Type 'SettlementOfferEvent' is not assignable to type 'never'. probe-000036.ts(14,22): error TS2322: Type 'SettlementOfferCommand' is not assignable to type 'never'."

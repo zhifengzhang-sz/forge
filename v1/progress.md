@@ -36,8 +36,15 @@ completed wave, continue from the next one.
 | D25 | ES | ✓ | 40 / 37 | 93% | 2026-04-20 |
 | D26 | ES | ✓ | 40 / 34 | 85% | 2026-04-20 |
 | D27 | ES | ✓ | 44 / 36 | 82% | 2026-04-20 |
+| D28 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| D29 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| D30 | ES | ✓ | 40 / 31 | 78% | 2026-04-20 |
+| D31 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| D32 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| D33 | ES | ✓ | 40 / 39 | 98% | 2026-04-20 |
+| D34 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
 
-**Cumulative ES:** 1132 raw → 1020 verified (90.1% overall). D20-D27 batch 88.3%. Target: 1400. Remaining: 380 (~11 more subagents).
+**Cumulative ES:** 1412 raw → 1290 verified (91.4% overall). D28-D34 batch 96.4% (6 of 7 at 100%). Target 1400. Remaining: 110 (~3 more subagents).
 
 Note: several batches bounced on "out of extra usage" mid-run but wrote their files BEFORE exiting — verified output was usable despite the error message.
 
