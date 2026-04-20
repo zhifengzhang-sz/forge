@@ -23,8 +23,17 @@ completed wave, continue from the next one.
 | D12 | ES | ✓ | 40 / 39 | 97% | 2026-04-19 |
 | D13 | ES | ✓ | 40 / 38 | 95% | 2026-04-19 |
 | D14 | ES | ✓ | 40 / 40 | 100% | 2026-04-19 |
+| D15 | ES | ✓ | 40 / 35 | 88% | 2026-04-19 |
+| D16 | ES | ✓ | 42 / 38 | 90% | 2026-04-19 |
+| D17 | ES | ✓ | 41 / 35 | 85% | 2026-04-19 |
+| D18 | ES | ✓ | 40 / 34 | 85% | 2026-04-19 |
+| D19 | ES | ✓ | 45 / 40 | 89% | 2026-04-19 |
+| D20 | ES | ✗ | — | — | **rate-limit** |
+| D21 | ES | ✗ | — | — | **rate-limit** |
 
-**Cumulative ES:** 600 raw → 592 verified (98.7% on this recent batch, 93.8% overall). Batch 2 survival (94%) ~6pts higher than batch 1 (88%) — prompt tightening worked. Target: 1400.
+**Cumulative ES:** 808 raw → 774 verified (95.8%). Batch 3 partial (D15-D19 only): 182/208 = 87.5%. D16/D17/D19 overshot 40 target because subagents retried when rate-limited mid-run. D20/D21 produced nothing.
+
+**STOP — API quota exhausted.** "You're out of extra usage · resets 8am (America/New_York)." Resume by redispatching D20, D21, and continuing batches D22+ after reset.
 
 ## Rejection lessons (for prompt tightening on D8+)
 
