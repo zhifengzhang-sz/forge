@@ -328,9 +328,11 @@ def _package_json_for(domain: str) -> dict:
     elif domain == "rx":
         deps["rxjs"] = "^7"
     elif domain == "es":
-        # ES probes are pure TypeScript — they declare any event-store
-        # interface locally rather than depending on a runtime client.
-        pass
+        # ES probes declare their event-store interface locally (no client
+        # dep needed). `effect` IS included because the ES idiom gate
+        # explicitly allows Effect-wrapped event store access, and those
+        # probes need `effect` at compile time.
+        deps["effect"] = "^3"
     else:
         raise ValueError(f"unknown domain {domain!r}")
     return {
