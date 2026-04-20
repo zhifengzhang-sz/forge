@@ -1,0 +1,8 @@
+index,reason,detail
+20,tsc,"probe-000020.ts(28,7): error TS2322: Type 'V' is not assignable to type 'Awaited<V>'."
+27,idiom:missing_es_positive,
+28,idiom:missing_es_positive,
+33,idiom:missing_es_positive,
+34,idiom:missing_es_positive,
+35,idiom:missing_es_positive,
+36,idiom:missing_es_positive,

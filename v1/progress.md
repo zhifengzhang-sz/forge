@@ -16,8 +16,15 @@ completed wave, continue from the next one.
 | D5 | ES | ✓ | 40 / 34 | 85% | 2026-04-19 |
 | D6 | ES | ✓ | 40 / 40 | 100% | 2026-04-19 |
 | D7 | ES | ✓ | 40 / 40 | 100% | 2026-04-19 |
+| D8 | ES | ✓ | 40 / 33 | 82% | 2026-04-19 |
+| D9 | ES | ✓ | 40 / 36 | 90% | 2026-04-19 |
+| D10 | ES | ✓ | 40 / 38 | 95% | 2026-04-19 |
+| D11 | ES | ✓ | 40 / 40 | 100% | 2026-04-19 |
+| D12 | ES | ✓ | 40 / 39 | 97% | 2026-04-19 |
+| D13 | ES | ✓ | 40 / 38 | 95% | 2026-04-19 |
+| D14 | ES | ✓ | 40 / 40 | 100% | 2026-04-19 |
 
-**Cumulative ES:** 320 raw → 288 verified (90%). Target: 1400.
+**Cumulative ES:** 600 raw → 592 verified (98.7% on this recent batch, 93.8% overall). Batch 2 survival (94%) ~6pts higher than batch 1 (88%) — prompt tightening worked. Target: 1400.
 
 ## Rejection lessons (for prompt tightening on D8+)
 

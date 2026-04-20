@@ -1,0 +1,5 @@
+index,reason,detail
+20,idiom:missing_es_positive,
+27,tsc,"probe-000027.ts(27,42): error TS2339: Property 'type' does not exist on type 'never'. probe-000027.ts(27,59): error TS2339: Property 'version' does not exist on type 'never'."
+28,tsc,"probe-000028.ts(35,53): error TS2339: Property 'type' does not exist on type 'never'. probe-000028.ts(35,72): error TS2339: Property 'version' does not exist on type 'never'."
+31,tsc,"probe-000031.ts(59,58): error TS2554: Expected 1 arguments, but got 2."

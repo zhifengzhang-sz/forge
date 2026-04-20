@@ -1,0 +1,15 @@
+[verify] pre-gate 40/40 ...
+[setup] installing npm deps in v1/.verify-tmp/es ...
+[verify] running batched tsc on 34 es candidates ...
+[verify] tsc[es] wall time: 0.76s (timeout=no)
+
+Total input records: 40
+Survived:            33
+Rejected:            7
+Batched tsc runtime: 0.76s
+Rejection breakdown:
+  idiom:missing_es_positive        6
+  tsc                              1
+
+Wrote survivors  -> v1/data/synth.es.batch-D8.verified.jsonl
+Wrote rejections -> v1/data/rejections.es.D8.csv
