@@ -1,0 +1,7 @@
+index,reason,detail
+16,tsc,"probe-000016.ts(21,22): error TS2322: Type '{ type: ""originate""; id: string; principal: number; }' is not assignable to type 'never'. probe-000016.ts(29,22): error TS2322: Type '{ type: ""LoanOriginated""; id: string; principal: number; }' is not assignable to type 'never'."
+17,tsc,"probe-000017.ts(20,22): error TS2322: Type 'MortgageCommand' is not assignable to type 'never'. probe-000017.ts(28,22): error TS2322: Type 'MortgageEvent' is not assignable to type 'never'."
+20,tsc,"probe-000020.ts(44,9): error TS1103: 'for await' loops are only allowed within async functions and at the top levels of modules."
+22,tsc,"probe-000022.ts(41,9): error TS1103: 'for await' loops are only allowed within async functions and at the top levels of modules."
+31,tsc,"probe-000031.ts(17,22): error TS2322: Type 'PortfolioCommand' is not assignable to type 'never'. probe-000031.ts(25,22): error TS2322: Type 'PortfolioEvent' is not assignable to type 'never'."
+32,tsc,"probe-000032.ts(17,22): error TS2322: Type 'AssetCommand' is not assignable to type 'never'. probe-000032.ts(25,22): error TS2322: Type 'AssetEvent' is not assignable to type 'never'."

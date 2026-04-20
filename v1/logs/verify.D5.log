@@ -1,0 +1,13 @@
+[verify] pre-gate 40/40 ...
+[verify] running batched tsc on 40 es candidates ...
+[verify] tsc[es] wall time: 0.76s (timeout=no)
+
+Total input records: 40
+Survived:            34
+Rejected:            6
+Batched tsc runtime: 0.76s
+Rejection breakdown:
+  tsc                              6
+
+Wrote survivors  -> v1/data/synth.es.batch-D5.verified.jsonl
+Wrote rejections -> v1/data/rejections.es.D5.csv

@@ -6,19 +6,49 @@ completed wave, continue from the next one.
 
 ## Waves
 
-| Wave | Domain | Status | Input | Verified | Raw / Survived | Landed |
-|---|---|---|---|---|---|---|
-| D0 | ES canary | ✓ DONE | `v1/data/synth.es.batch-D0.jsonl` | `v1/data/synth.es.batch-D0.verified.jsonl` | 40 / 40 | 2026-04-19 |
+| Wave | Domain | Status | Raw / Survived | % | Landed |
+|---|---|---|---|---|---|
+| D0 | ES canary | ✓ | 40 / 40 | 100% | 2026-04-19 |
+| D1 | ES | ✓ | 40 / 35 | 88% | 2026-04-19 |
+| D2 | ES | ✓ | 40 / 38 | 95% | 2026-04-19 |
+| D3 | ES | ✓ | 40 / 29 | 73% | 2026-04-19 |
+| D4 | ES | ✓ | 40 / 32 | 80% | 2026-04-19 |
+| D5 | ES | ✓ | 40 / 34 | 85% | 2026-04-19 |
+| D6 | ES | ✓ | 40 / 40 | 100% | 2026-04-19 |
+| D7 | ES | ✓ | 40 / 40 | 100% | 2026-04-19 |
+
+**Cumulative ES:** 320 raw → 288 verified (90%). Target: 1400.
+
+## Rejection lessons (for prompt tightening on D8+)
+
+1. **prose inside `typescript` fence** — D3 especially. "Explain-then-
+   implement" phrasing caused prose to land inside the fence, which
+   tsc then sees as TS1434. Fix: prompt now says "prose goes BEFORE
+   the fence; only compile-clean TS inside."
+2. **missing_es_positive** — D1/D2/D3 have records that define `when`
+   as an arrow variable and pass it to `reduce(when, {})` — regex
+   only matches `when(` call sites. Fix: prompt requires at least one
+   direct call-form idiom token in the code body.
+3. **length:short** — D4 had 4 records under 150 chars (one at 147).
+   Fix: prompt requires ≥200 char code body for margin.
+4. **tsc DU `never` narrowing** — D5 records exhausted the DU via `if`
+   early and then the fallthrough was typed `never`. Fix: prompt adds
+   a test "if the fallthrough branch is reachable, don't assign to
+   `never` there."
+5. **tsc top-level `for await`** — D5. Fix: prompt says wrap in
+   `async function main() { ... }` or inside an exported async.
 
 ## Pending
 
+- Wave D8-D14 (ES fresh, 7 subagents, ~280 pairs with ~90% survival → ~250 verified)
+- Wave D15-D21
+- Wave D22-D28
+- Wave D29-D34 + possibly D35-D37 if cumulative ES falls short of 1400
 - Wave A (XState depth, 19 subagents, 760 pairs target)
 - Wave B (FP expand, 22 subagents, 880 pairs target)
 - Wave C (RX expand, 9 subagents, 360 pairs target)
-- Wave D1-D34 (ES fresh, 34 subagents, 1360 pairs target) — gated on
-  D0 spot-check go/no-go
-- Anchor expansion (18 new anchor prompts × 20 reps → 600 anchor
-  records; author once, replicate in dataset build)
+- Anchor expansion (600 anchor records = 30 unique × 20 reps, mixed
+  in at train time)
 
 ## Verifier config notes
 

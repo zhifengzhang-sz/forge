@@ -1,0 +1,12 @@
+index,reason,detail
+2,tsc,"probe-000002.ts(1,1): error TS1434: Unexpected keyword or identifier. probe-000002.ts(1,3): error TS1434: Unexpected keyword or identifier. probe-000002.ts(1,11): error TS1228: A type predicate is only allowed in return type position for functions and methods. probe-000002.ts(1,14): error TS1434: Un"
+5,tsc,"probe-000005.ts(1,1): error TS1434: Unexpected keyword or identifier. probe-000005.ts(1,3): error TS1434: Unexpected keyword or identifier. probe-000005.ts(1,11): error TS1434: Unexpected keyword or identifier. probe-000005.ts(1,19): error TS1434: Unexpected keyword or identifier. probe-000005.ts(1,"
+9,tsc,"probe-000009.ts(1,10): error TS1005: ';' expected. probe-000009.ts(1,23): error TS1434: Unexpected keyword or identifier. probe-000009.ts(1,27): error TS1434: Unexpected keyword or identifier. probe-000009.ts(1,257): error TS1002: Unterminated string literal."
+17,tsc,"probe-000017.ts(1,1): error TS1434: Unexpected keyword or identifier. probe-000017.ts(1,3): error TS1434: Unexpected keyword or identifier. probe-000017.ts(1,18): error TS1228: A type predicate is only allowed in return type position for functions and methods. probe-000017.ts(1,21): error TS1434: Un"
+21,tsc,"probe-000021.ts(1,1): error TS1434: Unexpected keyword or identifier. probe-000021.ts(1,5): error TS1434: Unexpected keyword or identifier. probe-000021.ts(1,16): error TS1228: A type predicate is only allowed in return type position for functions and methods. probe-000021.ts(1,19): error TS1434: Un"
+22,idiom:missing_es_positive,
+27,idiom:missing_es_positive,
+28,idiom:missing_es_positive,
+33,idiom:missing_es_positive,
+34,idiom:missing_es_positive,
+35,idiom:missing_es_positive,
