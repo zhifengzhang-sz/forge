@@ -1,0 +1,5 @@
+index,reason,detail
+18,tsc,"probe-000018.ts(14,20): error TS2339: Property 'next' does not exist on type '((value: ProgressEv) => void) | Observer<ProgressEv>'. probe-000018.ts(17,20): error TS2339: Property 'next' does not exist on type '((value: ProgressEv) => void) | Observer<ProgressEv>'."
+20,tsc,"probe-000020.ts(14,17): error TS2345: Argument of type 'string' is not assignable to parameter of type 'GuardPredicate<Ctx, { type: ""TICK""; value: number; } | { type: ""RESET""; }, undefined, never>'."
+32,tsc,"probe-000032.ts(15,46): error TS2345: Argument of type 'string' is not assignable to parameter of type 'GuardPredicate<Ctx, { type: ""OPEN""; } | { type: ""CLOSE""; } | { type: ""KEY""; key: ""ArrowUp"" | ""ArrowDown"" | ""Enter"" | ""Escape""; }, undefined, never>'. probe-000032.ts(17,51): error TS2345: Argument"
+38,tsc,"probe-000038.ts(18,17): error TS2345: Argument of type 'string' is not assignable to parameter of type 'GuardPredicate<Ctx, Ev, undefined, never>'."

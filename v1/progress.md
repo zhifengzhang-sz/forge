@@ -49,6 +49,20 @@ completed wave, continue from the next one.
 
 **Cumulative ES:** 1493 raw → 1364 verified (91.4%). **97.4% of 1400 target** — calling ES complete. D35 retry deferred post-XState to avoid burning another quota cycle on marginal gain.
 
+## XState Wave A
+
+| Wave | Domain | Status | Raw / Survived | % | Landed |
+|---|---|---|---|---|---|
+| A1 | XState | ✓ | 40 / 36 | 90% | 2026-04-20 |
+| A2 | XState | ✓ | 40 / 39 | 98% | 2026-04-20 |
+| A3 | XState | ✓ | 40 / 36 | 90% | 2026-04-20 |
+| A4 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| A5 | XState | ✓ | 40 / 37 | 93% | 2026-04-20 |
+| A6 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| A7 | XState | ✓ | 40 / 39 | 98% | 2026-04-20 |
+
+**Cumulative XState new:** 280 raw → 267 verified (95.4%). Target 760 new (+ 440 v0.6 reused = 1200 total). Need ~490 more.
+
 Note: several batches bounced on "out of extra usage" mid-run but wrote their files BEFORE exiting — verified output was usable despite the error message.
 
 ## Rejection lessons (for prompt tightening on D8+)

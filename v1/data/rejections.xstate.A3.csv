@@ -1,0 +1,5 @@
+index,reason,detail
+12,tsc,"probe-000012.ts(17,61): error TS2352: Conversion of type 'Ev' to type '{ output: string; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. probe-000012.ts(20,61): error TS2352: Conversion of type 'Ev' to"
+13,tsc,"probe-000013.ts(15,31): error TS2352: Conversion of type 'Ev' to type '{ output: string; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first."
+14,tsc,"probe-000014.ts(16,30): error TS2352: Conversion of type 'Ev' to type '{ output: TabData; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first."
+15,tsc,"probe-000015.ts(15,37): error TS2352: Conversion of type '{ type: ""SELECT_A""; } | { type: ""SELECT_B""; } | { type: ""SELECT_C""; } | { type: ""RETRY""; }' to type '{ error: unknown; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the express"

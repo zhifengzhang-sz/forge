@@ -1,0 +1,4 @@
+index,reason,detail
+11,tsc,"probe-000011.ts(33,60): error TS2352: Conversion of type '{ type: ""POINTER_DOWN""; point: Point; } | { type: ""POINTER_MOVE""; point: Point; } | { type: ""POINTER_UP""; } | { type: ""COMPLETE""; }' to type '{ input: { target: HTMLElement; }; }' may be a mistake because neither type sufficiently overlaps wi"
+12,tsc,"probe-000012.ts(24,56): error TS2352: Conversion of type '{ type: ""DOWN""; x: number; y: number; } | { type: ""UP""; }' to type '{ input: { el: HTMLElement; }; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' fir"
+15,tsc,"probe-000015.ts(19,60): error TS2352: Conversion of type 'Ev' to type '{ input: { canvas: HTMLCanvasElement; }; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first."

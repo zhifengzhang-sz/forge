@@ -1,0 +1,2 @@
+index,reason,detail
+16,tsc,"probe-000016.ts(20,37): error TS2339: Property 'next' does not exist on type '((value: Tick) => void) | Observer<Tick>'."
