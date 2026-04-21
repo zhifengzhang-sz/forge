@@ -1,0 +1,11 @@
+[verify] pre-gate 40/40 ...
+[verify] running batched tsc on 40 xstate candidates ...
+[verify] tsc[xstate] wall time: 0.78s (timeout=no)
+
+Total input records: 40
+Survived:            40
+Rejected:            0
+Batched tsc runtime: 0.78s
+
+Wrote survivors  -> v1/data/synth.xstate.batch-A11.verified.jsonl
+Wrote rejections -> v1/data/rejections.xstate.A11.csv

@@ -60,8 +60,15 @@ completed wave, continue from the next one.
 | A5 | XState | ✓ | 40 / 37 | 93% | 2026-04-20 |
 | A6 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
 | A7 | XState | ✓ | 40 / 39 | 98% | 2026-04-20 |
+| A8 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| A9 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| A10 | XState | ✓ | 40 / 33 | 83% | 2026-04-20 |
+| A11 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| A12 | XState | ✓ | 40 / 39 | 98% | 2026-04-20 |
+| A13 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| A14 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
 
-**Cumulative XState new:** 280 raw → 267 verified (95.4%). Target 760 new (+ 440 v0.6 reused = 1200 total). Need ~490 more.
+**Cumulative XState new:** 560 raw → 539 verified (96.3%). Target 760 new. Need ~221 more (~6 subagents).
 
 Note: several batches bounced on "out of extra usage" mid-run but wrote their files BEFORE exiting — verified output was usable despite the error message.
 

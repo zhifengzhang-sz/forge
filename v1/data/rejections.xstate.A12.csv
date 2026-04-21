@@ -1,0 +1,2 @@
+index,reason,detail
+15,tsc,"probe-000015.ts(10,5): error TS2322: Type '(ActionFunction<MachineContext, AnyEventObject, EventObject, NonReducibleUnknown, ProvidedActor, never, never, never, never> | ActionFunction<...>)[]' is not assignable to type 'ActionFunction<{ entries: string[]; }, { type: ""ADD_LOG""; msg: string; }, { typ"

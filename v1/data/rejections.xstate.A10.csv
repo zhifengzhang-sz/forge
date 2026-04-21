@@ -1,0 +1,8 @@
+index,reason,detail
+14,tsc,"probe-000014.ts(14,25): error TS2352: Conversion of type '{ type: ""ENTER""; code: string; } | { type: ""RETRY""; }' to type '{ output: VerifyOut; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first."
+15,tsc,"probe-000015.ts(13,27): error TS2352: Conversion of type '{ type: ""REQUEST""; } | { type: ""ENTER""; code: string; }' to type '{ output: boolean; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first."
+18,tsc,"probe-000018.ts(2,31): error TS2307: Cannot find module 'rxjs' or its corresponding type declarations. probe-000018.ts(16,14): error TS7006: Parameter 'n' implicitly has an 'any' type."
+19,tsc,"probe-000019.ts(2,31): error TS2307: Cannot find module 'rxjs' or its corresponding type declarations. probe-000019.ts(11,31): error TS7006: Parameter 'n' implicitly has an 'any' type."
+20,tsc,"probe-000020.ts(2,28): error TS2307: Cannot find module 'rxjs' or its corresponding type declarations. probe-000020.ts(12,26): error TS7006: Parameter 'sub' implicitly has an 'any' type."
+21,tsc,"probe-000021.ts(2,28): error TS2307: Cannot find module 'rxjs' or its corresponding type declarations."
+22,tsc,"probe-000022.ts(2,28): error TS2307: Cannot find module 'rxjs' or its corresponding type declarations."
