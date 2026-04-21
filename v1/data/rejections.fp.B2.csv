@@ -1,0 +1,14 @@
+index,reason,detail
+3,tsc,"probe-000003.ts(26,17): error TS2322: Type 'true' is not assignable to type 'false'."
+18,idiom:missing_fp_positive,
+19,idiom:missing_fp_positive,
+20,idiom:missing_fp_positive,
+22,idiom:missing_fp_positive,
+23,idiom:missing_fp_positive,
+24,idiom:missing_fp_positive,
+33,tsc,"probe-000033.ts(10,7): error TS2322: Type '[Effect<never, OverCap, never>, number] | [Effect<number, never, never>, number]' is not assignable to type 'readonly [Effect<never, OverCap, never>, number]'. probe-000033.ts(13,12): error TS2345: Argument of type '<A, E1, R1, E, R>(self: Effect<Effect<A, "
+35,idiom:missing_fp_positive,
+36,idiom:missing_fp_positive,
+37,idiom:missing_fp_positive,
+38,idiom:missing_fp_positive,
+39,idiom:missing_fp_positive,

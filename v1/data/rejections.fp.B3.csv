@@ -1,0 +1,4 @@
+index,reason,detail
+1,tsc,"probe-000001.ts(15,27): error TS2322: Type '{ readonly _tag: ""Some""; readonly value: User; } | { readonly _tag: ""None""; readonly value?: undefined; }' is not assignable to type 'Option<User | undefined>'. probe-000001.ts(16,24): error TS18046: 'opt' is of type 'unknown'. probe-000001.ts(16,46): erro"
+11,tsc,"probe-000011.ts(7,7): error TS2322: Type 'Effect<Result, TimeoutException, never>' is not assignable to type 'Effect<Option<Result>, never, never>'."
+14,tsc,"probe-000014.ts(8,52): error TS2345: Argument of type '{}' is not assignable to parameter of type 'void'."

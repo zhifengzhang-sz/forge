@@ -1,0 +1,3 @@
+index,reason,detail
+25,tsc,"probe-000025.ts(15,3): error TS2322: Type '(elements: Iterable<unknown>) => Effect<unknown[], [unknown, ...unknown[]], unknown>' is not assignable to type 'Effect<readonly string[], readonly InvalidField[], never>'. probe-000025.ts(15,22): error TS2345: Argument of type 'Effect<string, InvalidField,"
+27,tsc,"probe-000027.ts(23,3): error TS2322: Type '(elements: Iterable<unknown>) => Effect<unknown[], [unknown, ...unknown[]], unknown>' is not assignable to type 'Effect<readonly string[], readonly FieldError[], never>'. probe-000027.ts(23,22): error TS2345: Argument of type '(Effect<string, NameInvalid, n"

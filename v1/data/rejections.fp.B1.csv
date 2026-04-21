@@ -1,0 +1,2 @@
+index,reason,detail
+22,tsc,"probe-000022.ts(10,22): error TS2345: Argument of type '<Out, In, R>(self: Schedule<Out, In, R>) => Schedule<Out, In, R>' is not assignable to parameter of type 'Schedule<unknown, unknown, unknown>'. probe-000022.ts(13,14): error TS2322: Type 'Effect<void, DbConnError, unknown>' is not assignable to"

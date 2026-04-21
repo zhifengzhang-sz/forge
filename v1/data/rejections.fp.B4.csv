@@ -1,0 +1,4 @@
+index,reason,detail
+14,idiom:missing_fp_positive,
+24,idiom:missing_fp_positive,
+25,tsc,"probe-000025.ts(9,3): error TS2322: Type 'Effect<unknown, never, never>' is not assignable to type 'Effect<Result<A, E>, never, never>'. probe-000025.ts(11,23): error TS2558: Expected 4 type arguments, but got 3."

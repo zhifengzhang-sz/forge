@@ -1,0 +1,9 @@
+index,reason,detail
+4,idiom:missing_fp_positive,
+15,tsc,"probe-000015.ts(21,14): error TS2322: Type 'Layer<Config, Missing, never>' is not assignable to type 'Layer<Config, never, never>'."
+19,tsc,"probe-000019.ts(13,14): error TS2322: Type '<A, R>(self: Effect<A, unknown, R>) => Effect<A, unknown, R>' is not assignable to type 'Effect<number, Exhausted, never>'. probe-000019.ts(15,5): error TS2769: No overload matches this call."
+20,tsc,"probe-000020.ts(30,64): error TS2345: Argument of type '<Out, In, R>(self: Schedule<Out, In, R>) => Schedule<Out, In, R>' is not assignable to parameter of type '(a: Schedule<Duration, unknown, never>) => never'."
+24,idiom:missing_fp_positive,
+25,idiom:missing_fp_positive,
+28,idiom:missing_fp_positive,
+31,idiom:missing_fp_positive,
