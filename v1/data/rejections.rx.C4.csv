@@ -1,0 +1,6 @@
+index,reason,detail
+29,tsc,"probe-000029.ts(10,43): error TS2344: Type 'string' does not satisfy the constraint 'readonly unknown[]'."
+30,tsc,"probe-000030.ts(6,40): error TS2344: Type 'number' does not satisfy the constraint 'readonly unknown[]'."
+31,tsc,"probe-000031.ts(9,46): error TS2344: Type 'string' does not satisfy the constraint 'readonly unknown[]'."
+32,tsc,"probe-000032.ts(11,31): error TS2344: Type 'Coord' does not satisfy the constraint 'readonly unknown[]'."
+33,tsc,"probe-000033.ts(18,48): error TS2344: Type 'Config' does not satisfy the constraint 'readonly unknown[]'."
