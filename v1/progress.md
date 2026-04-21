@@ -67,8 +67,22 @@ completed wave, continue from the next one.
 | A12 | XState | ✓ | 40 / 39 | 98% | 2026-04-20 |
 | A13 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
 | A14 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| A15 | XState | ✓ | 41 / 41 | 100% | 2026-04-20 |
+| A16 | XState | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| A17 | XState | ✓ | 40 / 39 | 98% | 2026-04-20 |
+| A18 | XState | ✗ | — | — | **rate-limit 1am NY** |
+| A19 | XState | ✓ | 43 / 43 | 100% | 2026-04-20 |
+| A20 | XState | ✗ | — | — | **rate-limit 1am NY** |
 
-**Cumulative XState new:** 560 raw → 539 verified (96.3%). Target 760 new. Need ~221 more (~6 subagents).
+**Cumulative XState new:** 724 raw → 702 verified (97%). **92% of 760 target.** A18 and A20 bounced; retry after 1am NY reset.
+
+**Overall dataset verified so far:**
+- XState: 440 (v0.6) + 702 (new) = **1142 / 1200 target (95%)**
+- FP: 320 (v0.7) + 0 (new, pending Wave B) = **320 / 1200 target (27%)**
+- RX: 240 (v0.7) + 0 (new, pending Wave C) = **240 / 600 target (40%)**
+- ES: **1364 / 1400 target (97%)**
+- Anchor records: 600 (will be mixed in at train time from 30 unique × 20 reps)
+- **Total: 3066 / 4400 training pairs (70%)**. FP + RX are the real remaining work.
 
 Note: several batches bounced on "out of extra usage" mid-run but wrote their files BEFORE exiting — verified output was usable despite the error message.
 

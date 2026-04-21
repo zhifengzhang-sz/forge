@@ -1,0 +1,2 @@
+index,reason,detail
+10,tsc,"probe-000010.ts(14,11): error TS2367: This comparison appears to be unintentional because the types '""NOOP""' and '""xstate.done.actor.load""' have no overlap."
