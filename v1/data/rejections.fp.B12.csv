@@ -1,0 +1,2 @@
+index,reason,detail
+30,tsc,"probe-000030.ts(8,7): error TS2322: Type 'Effect<string, never, never>' is not assignable to type 'Es'. probe-000030.ts(9,7): error TS2322: Type 'Effect<number, never, never>' is not assignable to type 'Es'. probe-000030.ts(10,24): error TS2345: Argument of type 'Es' is not assignable to parameter o"

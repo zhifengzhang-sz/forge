@@ -1,0 +1,6 @@
+index,reason,detail
+18,tsc,"probe-000018.ts(14,10): error TS2339: Property 'fromEither' does not exist on type 'typeof import(""/home/zzhang/dev/ai/models/forge/v1/.verify-tmp/fp/node_modules/effect/dist/dts/Effect"")'."
+22,tsc,"probe-000022.ts(19,10): error TS2339: Property 'fromEither' does not exist on type 'typeof import(""/home/zzhang/dev/ai/models/forge/v1/.verify-tmp/fp/node_modules/effect/dist/dts/Effect"")'. probe-000022.ts(20,34): error TS2339: Property 'fromEither' does not exist on type 'typeof import(""/home/zzhan"
+23,tsc,"probe-000023.ts(10,14): error TS2322: Type 'Effect<any, unknown, unknown>' is not assignable to type 'Effect<number, Missing | Invalid, never>'. probe-000023.ts(11,27): error TS2339: Property 'fromEither' does not exist on type 'typeof import(""/home/zzhang/dev/ai/models/forge/v1/.verify-tmp/fp/node_"
+37,tsc,"probe-000037.ts(27,23): error TS2339: Property 'toUpperCase' does not exist on type 'string | number'."
+38,tsc,"probe-000038.ts(25,14): error TS2322: Type 'Effect<string | number, never, never>' is not assignable to type 'Effect<string, never, never>'."

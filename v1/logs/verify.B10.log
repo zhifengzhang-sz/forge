@@ -1,0 +1,11 @@
+[verify] pre-gate 40/40 ...
+[verify] running batched tsc on 40 fp candidates ...
+[verify] tsc[fp] wall time: 0.86s (timeout=no)
+
+Total input records: 40
+Survived:            40
+Rejected:            0
+Batched tsc runtime: 0.86s
+
+Wrote survivors  -> v1/data/synth.fp.batch-B10.verified.jsonl
+Wrote rejections -> v1/data/rejections.fp.B10.csv
