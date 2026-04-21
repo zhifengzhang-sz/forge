@@ -1,0 +1,5 @@
+index,reason,detail
+6,tsc,"probe-000006.ts(5,14): error TS2322: Type 'Effect<unknown[], unknown, unknown>' is not assignable to type 'Effect<readonly (readonly [string, number])[], never, never>'. probe-000006.ts(13,14): error TS2339: Property 'asStream' does not exist on type 'typeof import(""/home/zzhang/dev/ai/models/forge/"
+7,tsc,"probe-000007.ts(13,14): error TS2322: Type 'Effect<unknown[], unknown, unknown>' is not assignable to type 'Effect<readonly (readonly [string, number])[], never, never>'. probe-000007.ts(21,14): error TS2339: Property 'asStream' does not exist on type 'typeof import(""/home/zzhang/dev/ai/models/forge"
+11,tsc,"probe-000011.ts(10,14): error TS2322: Type 'Effect<Exit<string, never>[], never, never>' is not assignable to type 'Effect<readonly string[], never, never>'."
+20,tsc,"probe-000020.ts(12,14): error TS2322: Type 'Effect<unknown[], never, unknown>' is not assignable to type 'Effect<readonly (readonly [""a"" | ""b"", number])[], never, never>'. probe-000020.ts(20,14): error TS2339: Property 'asStream' does not exist on type 'typeof import(""/home/zzhang/dev/ai/models/forg"

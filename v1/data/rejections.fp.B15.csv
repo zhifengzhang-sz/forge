@@ -1,0 +1,2 @@
+index,reason,detail
+34,tsc,"probe-000034.ts(10,3): error TS2322: Type 'Effect<number, never, never>' is not assignable to type 'Effect<Status, never, never>'."
