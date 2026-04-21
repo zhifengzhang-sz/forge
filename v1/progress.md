@@ -43,8 +43,11 @@ completed wave, continue from the next one.
 | D32 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
 | D33 | ES | ✓ | 40 / 39 | 98% | 2026-04-20 |
 | D34 | ES | ✓ | 40 / 40 | 100% | 2026-04-20 |
+| D35 | ES | ✗ | — | — | **rate-limit 7pm NY** |
+| D36 | ES | ✓ | 40 / 39 | 98% | 2026-04-20 |
+| D37 | ES | ✓ | 41 / 35 | 85% | 2026-04-20 |
 
-**Cumulative ES:** 1412 raw → 1290 verified (91.4% overall). D28-D34 batch 96.4% (6 of 7 at 100%). Target 1400. Remaining: 110 (~3 more subagents).
+**Cumulative ES:** 1493 raw → 1364 verified (91.4%). **97.4% of 1400 target** — calling ES complete. D35 retry deferred post-XState to avoid burning another quota cycle on marginal gain.
 
 Note: several batches bounced on "out of extra usage" mid-run but wrote their files BEFORE exiting — verified output was usable despite the error message.
 

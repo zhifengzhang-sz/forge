@@ -1,0 +1,2 @@
+index,reason,detail
+17,tsc,"probe-000017.ts(13,22): error TS2322: Type 'FleetVehicleEvent' is not assignable to type 'never'. probe-000017.ts(22,22): error TS2322: Type 'FleetVehicleCommand' is not assignable to type 'never'."
