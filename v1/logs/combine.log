@@ -1,0 +1,23 @@
+
+=== v1-r64 ===
+domain                 v1   v0.7    delta   gate
+--------------------------------------------------
+xstate               4.20   4.10    +0.10     ok
+fp                   4.00   4.40    -0.40   halt
+reactive             4.50   4.80    -0.30   halt
+eventsourcing        4.50   3.10    +1.40    n/a
+capability           4.00   4.25    -0.25    n/a
+
+capability breakdown:
+  Cap_old12: (no records)
+  Cap_new18: 4.00
+
+grader agreement (within 1 pt): 24/24
+overall mean disagreement: 0.33
+
+=== Regression gate ===
+HALT — trained domain regression detected:
+  - fp: v1 4.00 vs v0.7 4.40 (delta -0.40, tolerance -0.30) — REGRESSION
+  - reactive: v1 4.50 vs v0.7 4.80 (delta -0.30, tolerance -0.20) — REGRESSION
+
+Phase H (decision.md) will NOT be written.

@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v1",
+  "arm": "v1-r64",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Full v5 idiom: setup+actors, fromPromise<boolean,{email}>, typed events, invoke with input mapper, onDone array with guard. Extra 'checking' state and redundant 'available' flag are minor deductions."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5: setup, guards-in-setup, guard keyword, PAUSE structurally isolated to downloading state. isDownloading guard is progress-derived rather than state-derived — slightly weaker semantics but correct."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "v5 idiom throughout: setup+actors, typed fromPromise<Profile,{userId}>, invoke input mapper, onDone/onError with destructured assign. Matches Opus calibration closely."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "fromObservable with correct type parameters and parent-forwarded MESSAGE event. But the WebSocket is stubbed with setTimeout and a hand-rolled Subscribable — the prompt's WebSocket stream is never actually wired. Structural but not functional."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Perfect v4→v5 conversion: setup({types}).createMachine, destructured ({context}) => in assign. Concise and correct."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean fp-ts: pipe with three E.chain'd validators, tagged ValidationError, Email type alias. Fail-fast semantics. Matches Opus pattern."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Effect.gen + Data.TaggedError + Context.GenericTag + Layer.merge + Layer.effect. Effect.catchTag('UserNotFound', ...) for the typed fallback. More idiomatic than v0.7 (uses Data.TaggedError)."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "pipe + O.fromNullable (inside helper) + O.map. Correct and clean, but the prompt asked to demonstrate both map and chain; only map is shown at the top level. Opus used chain for the fromNullable step directly."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Structurally right (pipe + TE.chainW). But `pipeline` is typed as TaskEither<FetchError,Orders> while the value is an arrow function `(id)=>pipe(...)` — type mismatch. `class NetworkDown extends FetchError` extends an interface. Won't compile as written."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Layer.succeed + Layer.merge + Effect.gen + Data.TaggedError. DbLive doesn't depend on Logger so Layer.merge is appropriate. Uses Context.GenericTag (current API) — must_have 'Context.Tag' miss is nominal; content is idiomatic."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "debounceTime+distinctUntilChanged+filter+switchMap with proper types. switchMap cancellation semantics correct. Matches Opus."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object-form, typed ViewModel with semantic derived fields (greeting/isDark). Explains why combineLatest over mergeMap. Excellent."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with concurrency cap 3 as second arg. Correct and explained."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Clear explanation of Subject vs BehaviorSubject memory semantics. Late-subscriber example shown for both. Slightly less pedagogical than Opus's parallel WRONG/RIGHT framing but correct."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "OperatorFunction<T,T> with pipe(tap(...)) shorthand — valid and concise. Missing explicit Observable type annotation on source and no subscribe example; Opus shows the full `(source: Observable<T>) => source.pipe(...)` idiom."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated State/Event types, pure evolve with proper status guards, price carried through event (priceCents on ItemAdded/Removed). Clear improvement over v0.7's hardcoded prices. Exhaustiveness check."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Decider interface with decide/evolve/initial. Separate Deposited/Withdrawn events (preserves audit). Proper rejection of overdraft + invalid amounts. Discriminated types throughout. Clean."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Correct pattern: readStream → reduce(evolve) → decide → appendToStream with expectedRevision. Uses 'no_stream' sentinel properly. Missing retry-on-conflict and no translated ConcurrencyError — otherwise idiomatic. Dramatic improvement over v0.7's xstate miscategorization."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clean project(state,event), discriminated ShoppingCartEvent with priceCents, itemCount floored at 0. Exhaustiveness via never. Missing literal 'ReadModel' type name (used CartSummary) — minor terminology gap."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clear tradeoff paragraph. loadAggregate takes both events and snapshots as AsyncIterables, applies snapshot then replays events past snapshot revision. Includes evolve. Unusual signature (AsyncIterable for snapshots) but snapshot-aware logic is present."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib with type hints and docstring. O(n)/O(1) noted."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Did not use the Read tool — fabricated express/pg/dotenv dependencies. Opus calibration correctly noted no package.json exists (Python project). v1 hallucinates like v0.7."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 4,
+      "rationale": "All four topics covered with concrete examples (ETags, Cache-Control, @deprecated, graphiql). Slightly denser than Opus but equivalent content. 'schema' substring miss is nominal (uses 'Schema evolution')."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clean 3-step plan: extract parse → validate → persist as pure pieces composed into the original function. Clear rationale per step. No code as instructed."
+    }
+  ]
+}

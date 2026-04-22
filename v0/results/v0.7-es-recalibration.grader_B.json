@@ -1,0 +1,37 @@
+{
+  "model": "ts-forge-v0.7-r64",
+  "arm": "v0.7-r64-es-recalibration",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Discriminated CartEvent union, evolve switch, initial declared. Bug: ItemAdded sets totalCents += quantity*100 (hardcoded price), and ItemRemoved subtracts only if event.sku === 'A' ? 100 : 0 — hardcoded SKU branch is nonsensical. Structure correct; arithmetic broken."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Clean Decider: typed Command/Event/State, pure decide/evolve, elegant signed-amount FundsApplied event, Rejected event for overdraft. initial state exported. Well-explained."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 1,
+      "rationale": "Fundamentally wrong: imports `CommandHandler` from 'xstate' (not an xstate export) and builds an XState-style machine config with on/assign instead of a command handler. No readStream, appendToStream, expectedRevision, or aggregate loading. Does not address the prompt."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clean project(state,event) with Math.max flooring. Discriminated event union (though single interface with type-string is weaker than tagged-union). Extra event types (applyCoupon/checkout) beyond strict scope but not harmful. Missing exported ReadModel alias per rubric."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Clear tradeoff table. Snapshot-aware signatures for loadAggregate/hydrate exist. But hydrate calls loadAggregate which returns an already-built Aggregate — no explicit fold over events with evolve as required. rebuildAggregateFromScratch is a stub. Missing evolve invocation."
+    }
+  ]
+}

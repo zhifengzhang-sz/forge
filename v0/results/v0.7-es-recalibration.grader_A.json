@@ -1,0 +1,37 @@
+{
+  "model": "ts-forge-v0.7-r64",
+  "arm": "v0.7-r64-es-recalibration",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Discriminated State/Event types and pure evolve. Bug: hardcodes prices (event.quantity*100 on add, sku==='A'?100:0 on remove) instead of carrying price in the event. Structural correctness but poor modelling."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider with decide/evolve/initial, discriminated commands/events. Collapses deposit/withdraw into a signed FundsApplied event — clever but loses audit distinction. Correct rejection of overdraft."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 1,
+      "rationale": "Category error: uses xstate's CommandHandler + assign, not an event-store CommandHandler. No readStream, no appendToStream, no expectedRevision, no decide. Fundamentally wrong abstraction."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state,event) with itemCount floor; extends event shape to include applyCoupon/checkout. Uses CartSummary name (not generic ReadModel). Logic reasonable; default branch returns state unchanged."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Good tradeoffs table. loadAggregate signature is (id, upToVersion) and hydrate merely returns cached if present — no snapshot+delta replay, no evolve. Half the ask is missing."
+    }
+  ]
+}

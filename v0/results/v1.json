@@ -1,0 +1,250 @@
+{
+  "model": "ts-forge-v1",
+  "arm": "v1-r64",
+  "graders": [
+    "A",
+    "B"
+  ],
+  "graded": [
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Correct iterative fib with type hints and docstring. O(n)/O(1) noted.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Correct iterative Fibonacci, type hints, docstring noting F(0)=0/F(1)=1, base case n<2, tuple-swap loop. Idiomatic Python.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "grader_A_score": 2,
+      "grader_A_rationale": "Did not use the Read tool \u2014 fabricated express/pg/dotenv dependencies. Opus calibration correctly noted no package.json exists (Python project). v1 hallucinates like v0.7.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Did not invoke the Read tool \u2014 wrote 'Read: package.json contains...' as narrative text. Fabricated plausible deps (express/pg/dotenv + typescript/ts-node/jest). Fails the tool-use honesty the prompt tests.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "grader_A_score": 4,
+      "grader_A_rationale": "All four topics covered with concrete examples (ETags, Cache-Control, @deprecated, graphiql). Slightly denser than Opus but equivalent content. 'schema' substring miss is nominal (uses 'Schema evolution').",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Covers all four required topics: caching (ETags/Cache-Control/CDN), over-fetching (field selection), schema evolution (@deprecated/introspection vs OpenAPI drift), tooling (GraphiQL/apollo vs HTTP ecosystem). Case-sensitive 'schema' miss is a rubric artifact.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Clean 3-step plan: extract parse \u2192 validate \u2192 persist as pure pieces composed into the original function. Clear rationale per step. No code as instructed.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Three clear steps: parse (pure), validate (pure), persist (adapter). Each with inputs/outputs and testability rationale. Orchestrator composition pattern. No code per instructions.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Discriminated State/Event types, pure evolve with proper status guards, price carried through event (priceCents on ItemAdded/Removed). Clear improvement over v0.7's hardcoded prices. Exhaustiveness check.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Discriminated State with status tags (empty/active/checked-out), CartEvent union, evolve with exhaustive switch + never check. ItemAdded uses event.priceCents (correct, unlike v0.7's hardcoded *100). initial state exported.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Decider interface with decide/evolve/initial. Separate Deposited/Withdrawn events (preserves audit). Proper rejection of overdraft + invalid amounts. Discriminated types throughout. Clean.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Clean Decider interface + concrete bankAccountDecider. Typed Command/Event/State. decide validates positivity, overdraft; evolve handles all events. DomainError class for rejection. Never-exhaustiveness check. Idiomatic.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Correct pattern: readStream \u2192 reduce(evolve) \u2192 decide \u2192 appendToStream with expectedRevision. Uses 'no_stream' sentinel properly. Missing retry-on-conflict and no translated ConcurrencyError \u2014 otherwise idiomatic. Dramatic improvement over v0.7's xstate miscategorization.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Correct command handler: readStream, decide, appendToStream with expectedRevision using bigint | 'no_stream' | 'any' (EventStoreDB-style). Fold via events.reduce(evolve, initial). Proper concurrency via expectedRevision pass-through. Idiomatic.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Clean project(state,event), discriminated ShoppingCartEvent with priceCents, itemCount floored at 0. Exhaustiveness via never. Missing literal 'ReadModel' type name (used CartSummary) \u2014 minor terminology gap.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Clean project function with discriminated event union, Math.max flooring. Missing explicit `ReadModel` type alias the prompt requested (calls it CartSummary which is fine, but ReadModel miss per rubric floor). buildCart fold is a nice extra.",
+      "mean": 3.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Clear tradeoff paragraph. loadAggregate takes both events and snapshots as AsyncIterables, applies snapshot then replays events past snapshot revision. Includes evolve. Unusual signature (AsyncIterable for snapshots) but snapshot-aware logic is present.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Clear prose on tradeoffs + concrete loadAggregate with Snapshot<S>, evolve fold over tail events, version/revision tracking. Uses AsyncIterable for events/snapshots streams \u2014 solid typing. Evolve is invoked.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Clean fp-ts: pipe with three E.chain'd validators, tagged ValidationError, Email type alias. Fail-fast semantics. Matches Opus pattern.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Pipe composition correct: pipe(s, nonEmpty, E.chain(hasAt), E.chain(under254)) applies nonEmpty to s first (returns Either), then chains. Branded Email, tagged ValidationError. Minor: no E.map to cast to Email brand at end.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Effect.gen + Data.TaggedError + Context.GenericTag + Layer.merge + Layer.effect. Effect.catchTag('UserNotFound', ...) for the typed fallback. More idiomatic than v0.7 (uses Data.TaggedError).",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Effect.gen + Context.GenericTag + Layer.succeed/effect/merge + catchTag typed on UserNotFound. Data.TaggedError for UserNotFound is correct. Minor: cfg yielded in program but never used; fetchUser always succeeds so catchTag is dead code.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "pipe + O.fromNullable (inside helper) + O.map. Correct and clean, but the prompt asked to demonstrate both map and chain; only map is shown at the top level. Opus used chain for the fromNullable step directly.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Concise pipe + O.map. O.fromNullable handles optional email correctly. Typed User, correct imports. Idiomatic fp-ts.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Structurally right (pipe + TE.chainW). But `pipeline` is typed as TaskEither<FetchError,Orders> while the value is an arrow function `(id)=>pipe(...)` \u2014 type mismatch. `class NetworkDown extends FetchError` extends an interface. Won't compile as written.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Broken: `class NetworkDown extends FetchError` \u2014 FetchError is an interface, cannot be extended. Also `export const pipeline: TE.TaskEither<FetchError, Orders> = (id) => ...` assigns a function to a non-function type. Does not compile.",
+      "mean": 2.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Layer.succeed + Layer.merge + Effect.gen + Data.TaggedError. DbLive doesn't depend on Logger so Layer.merge is appropriate. Uses Context.GenericTag (current API) \u2014 must_have 'Context.Tag' miss is nominal; content is idiomatic.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Context.GenericTag (current API; auto-check's Context.Tag is stale rubric). Layer.succeed, Layer.merge, Effect.gen using both services. Idiomatic Effect-TS composition. Db uses Layer.succeed, not Layer.effect \u2014 loses the Logger dep demo opportunity.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "debounceTime+distinctUntilChanged+filter+switchMap with proper types. switchMap cancellation semantics correct. Matches Opus.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "debounceTime(250) + distinctUntilChanged + switchMap. Typed Result, filter for empty queries, correct switchMap-cancellation semantics. Clean.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "combineLatest object-form, typed ViewModel with semantic derived fields (greeting/isDark). Explains why combineLatest over mergeMap. Excellent.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "combineLatest object-form, typed ViewModel with derived fields (greeting, isDark), typed User/Settings/Theme. Clear commentary. Idiomatic v7+.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "mergeMap with concurrency cap 3 as second arg. Correct and explained.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "mergeMap with concurrency cap 3, from(files) to convert array. Typed File/Progress. Correct idiom and rationale note. Minor: custom File interface shadows DOM File.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Clear explanation of Subject vs BehaviorSubject memory semantics. Late-subscriber example shown for both. Slightly less pedagogical than Opus's parallel WRONG/RIGHT framing but correct.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Clear Subject vs BehaviorSubject distinction with concrete code for both, seeded null initial, demonstrates late-subscriber replay. Minor: last console.log(currentUser$.getValue()) not shown, but core point is well illustrated.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_A_rationale": "OperatorFunction<T,T> with pipe(tap(...)) shorthand \u2014 valid and concise. Missing explicit Observable type annotation on source and no subscribe example; Opus shows the full `(source: Observable<T>) => source.pipe(...)` idiom.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Uses `pipe(tap(...))` from rxjs returning OperatorFunction<T,T> \u2014 technically idiomatic and type-safe. But no explicit Observable<T> in source signature and no subscribe example, so loses must_have floor signal. Functionally correct, pedagogically thin.",
+      "mean": 3.5,
+      "disagreement": 1
+    },
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Full v5 idiom: setup+actors, fromPromise<boolean,{email}>, typed events, invoke with input mapper, onDone array with guard. Extra 'checking' state and redundant 'available' flag are minor deductions.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Clean v5: setup with types/actors, fromPromise<boolean,{email}> typed, invoke with input mapper, onDone guard array, destructured assign. Minor bug: mismatch fallback targets '.password' (a nonexistent child of confirm) instead of 'password'. Otherwise idiomatic.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Clean v5: setup, guards-in-setup, guard keyword, PAUSE structurally isolated to downloading state. isDownloading guard is progress-derived rather than state-derived \u2014 slightly weaker semantics but correct.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Clean v5: setup with types/guards, guard: keyword, structural PAUSE gating via state. isDownloading guard weak (progress<100 always true until done) but structure carries the real constraint. No v4 leakage.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_A_rationale": "v5 idiom throughout: setup+actors, typed fromPromise<Profile,{userId}>, invoke input mapper, onDone/onError with destructured assign. Matches Opus calibration closely.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Idiomatic v5: setup({types, actors}), fromPromise<Profile,{userId}> typed, invoke at state level with input mapper, onDone/onError with destructured assign, event.output. Retry path on failed. Clean.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "grader_A_score": 3,
+      "grader_A_rationale": "fromObservable with correct type parameters and parent-forwarded MESSAGE event. But the WebSocket is stubbed with setTimeout and a hand-rolled Subscribable \u2014 the prompt's WebSocket stream is never actually wired. Structural but not functional.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "fromObservable typed correctly and returns a Subscribable-shaped object (works), but does NOT wrap a WebSocket as asked \u2014 it fakes one setTimeout message. Structure correct, prompt-fidelity weak. No real WS handlers (onmessage/onerror/onclose).",
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Perfect v4\u2192v5 conversion: setup({types}).createMachine, destructured ({context}) => in assign. Concise and correct.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Perfect v4\u2192v5 conversion: setup({types}).createMachine, destructured ({context}) => context.count+1 inline assign, typed Ev. Clean explanation of v5 changes.",
+      "mean": 5.0,
+      "disagreement": 0
+    }
+  ]
+}
