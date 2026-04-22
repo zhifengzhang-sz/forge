@@ -1,0 +1,12 @@
+index,reason,detail
+6,tsc,"probe-000006.ts(7,13): error TS2345: Argument of type 'OperatorFunction<number, never>' is not assignable to parameter of type 'OperatorFunction<Observable<number>, never>'. probe-000006.ts(7,23): error TS2344: Type 'number' does not satisfy the constraint 'ObservableInput<any>'."
+7,tsc,"probe-000007.ts(7,15): error TS2345: Argument of type 'OperatorFunction<string, string>' is not assignable to parameter of type 'OperatorFunction<Observable<string>, string>'."
+8,tsc,"probe-000008.ts(4,47): error TS2345: Argument of type 'OperatorFunction<number, never>' is not assignable to parameter of type 'OperatorFunction<Observable<number>, never>'. probe-000008.ts(4,57): error TS2344: Type 'number' does not satisfy the constraint 'ObservableInput<any>'."
+9,tsc,"probe-000009.ts(10,13): error TS2344: Type 'Order' does not satisfy the constraint 'readonly unknown[]'. probe-000009.ts(20,14): error TS2345: Argument of type 'OperatorFunction<Order, never>' is not assignable to parameter of type 'OperatorFunction<Observable<Order>, never>'. probe-000009.ts(20,23)"
+10,tsc,"probe-000010.ts(16,13): error TS2345: Argument of type 'OperatorFunction<TaskResult, never>' is not assignable to parameter of type 'OperatorFunction<Observable<TaskResult>, never>'. probe-000010.ts(16,23): error TS2344: Type 'TaskResult' does not satisfy the constraint 'ObservableInput<any>'."
+11,tsc,"probe-000011.ts(17,45): error TS2345: Argument of type 'OperatorFunction<User, never>' is not assignable to parameter of type 'OperatorFunction<Observable<User>, never>'. probe-000011.ts(17,55): error TS2344: Type 'User' does not satisfy the constraint 'ObservableInput<any>'."
+18,tsc,"probe-000018.ts(8,37): error TS2344: Type 'User' does not satisfy the constraint 'readonly unknown[]'."
+19,tsc,"probe-000019.ts(8,36): error TS2344: Type 'Point' does not satisfy the constraint 'readonly unknown[]'."
+21,tsc,"probe-000021.ts(8,36): error TS2344: Type 'Form' does not satisfy the constraint 'readonly unknown[]'."
+23,tsc,"probe-000023.ts(8,34): error TS2344: Type 'Evt' does not satisfy the constraint 'readonly unknown[]'."
+33,tsc,"probe-000033.ts(10,12): error TS2769: No overload matches this call."

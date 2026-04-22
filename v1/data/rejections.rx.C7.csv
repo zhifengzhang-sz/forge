@@ -1,0 +1,2 @@
+index,reason,detail
+4,tsc,"probe-000004.ts(12,31): error TS2339: Property 'subscriptions' does not exist on type 'Observable<string>'."

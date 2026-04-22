@@ -1,0 +1,2 @@
+index,reason,detail
+6,tsc,"probe-000006.ts(8,37): error TS2345: Argument of type '() => Promise<{ ok: boolean; }>' is not assignable to parameter of type '() => Observable<Payload>'."
