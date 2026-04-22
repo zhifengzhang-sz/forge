@@ -1,0 +1,98 @@
+{
+  "model": "ts-forge-v1",
+  "arm": "v1-r64-tiebreak",
+  "grader": "C",
+  "scope": "xstate+fp+reactive tiebreaker per plan",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "setup + fromPromise + typed events + guarded onDone branches. Flat states (no hierarchical email.editing/validating like opus). Correct and idiomatic; slightly less structured."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean setup with guards and typed events. isDownloading guard redundant since PAUSE only handled in downloading state. No named actions, minimal error context. Correct but lean."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5: setup + actors + invoke + fromPromise typed Input/Output, onDone/onError with destructured assign, event.output, retry state. Matches anchor closely."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Correct fromObservable shape with typed generics, but implementation fakes a Subscribable with setTimeout instead of actual WebSocket. Structure OK; content doesn't wrap a WebSocket."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4 to v5 conversion: setup, typed context/events, destructured assign callback. Brief accurate explanatory sentence. Matches anchor."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Correct pipe + E.chain composition with three validators. Email type is raw string alias (no brand), weakening the return-type guarantee. Otherwise idiomatic."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Idiomatic Effect: Effect.gen, Layer.succeed, Context.GenericTag, Data.TaggedError, Effect.catchTag. Unused cfg binding; fetchUser never actually fails with UserNotFound so fallback path untested."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Signature takes User not Option<User> as prompt required. Uses O.map only, no O.chain despite prompt asking for both. Logic shape reasonable but misreads the input type."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Broken code: class extends interface FetchError; pipeline typed as TaskEither<...> but written as arrow function taking id. Will not compile. Chain structure is right but surrounding code is wrong."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Idiomatic Layer.succeed + Layer.merge + Effect.gen. Uses GenericTag (misses Context.Tag must_have literal but semantically equivalent). Db does not depend on Logger as opus shows; simpler composition."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clean pipe: debounceTime + distinctUntilChanged + filter + switchMap, properly typed. Matches anchor exactly."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with object form, typed ViewModel, mapped fields (greeting, isDark) adding real composition. Explanatory note about semantics. Idiomatic."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with concurrency 3 over from(files). Concise, typed, with correct note on bounded parallelism semantics."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Clear distinction, concrete code showing both Subject and BehaviorSubject with asObservable. Lacks getValue or ReplaySubject bonus. Good but not maximal."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "OperatorFunction<T,T> typed correctly with tap. Uses pipe helper unnecessarily (could return tap directly). Misses explicit Observable/subscribe mention but code is idiomatic and type-safe."
+    }
+  ]
+}
