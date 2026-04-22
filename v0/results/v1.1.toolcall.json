@@ -1,0 +1,36 @@
+{
+  "model": "ts-forge-v1.1",
+  "arm": "v1.1",
+  "calls": [
+    {
+      "id": "tc-01",
+      "prompt": "What files are in /etc? Use the list_files tool to find out.",
+      "expected_tool": "list_files",
+      "tools_called": [
+        "list_files"
+      ],
+      "content": "<think>\n\n",
+      "success": true
+    },
+    {
+      "id": "tc-02",
+      "prompt": "Please read /etc/hostname and tell me the result.",
+      "expected_tool": "read_file",
+      "tools_called": [
+        "read_file"
+      ],
+      "content": "<think>\n\n</think>\n\n",
+      "success": true
+    },
+    {
+      "id": "tc-03",
+      "prompt": "I need to see what's in the file at /tmp/notes.txt \u2014 please use your tools to do this.",
+      "expected_tool": "read_file",
+      "tools_called": [
+        "read_file"
+      ],
+      "content": "<think>\n\n</think>\n\n",
+      "success": true
+    }
+  ]
+}

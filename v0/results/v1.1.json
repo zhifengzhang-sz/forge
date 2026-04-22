@@ -1,0 +1,250 @@
+{
+  "model": "ts-forge-v1.1",
+  "arm": "v1.1-r64",
+  "graders": [
+    "A",
+    "B"
+  ],
+  "graded": [
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Clean iterative fib(n:int)->int with F(0)=0,F(1)=1 base cases, docstring, correct loop using tuple swap. Exactly what was asked.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Correct iterative Fibonacci, F(0)=0/F(1)=1 base case, tuple swap for state, typed signature, docstring. Idiomatic Python.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "grader_A_score": 1,
+      "grader_A_rationale": "Does not use the Read tool; fabricates a Deno snippet importing non-existent `read` from deno.land/std, and the dev-dep filter is nonsense (dev deps aren't prefixed 'dev-'). Also misses the required task of producing 2-3 sentences summarizing real dependencies.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "Ignored the instruction to use the Read tool. Wrote Deno code importing a non-existent `read` from deno_std/fs plus a fictional `dev-` prefix filter (dev deps live in devDependencies, not name-prefixed). Neither runs nor addresses the prompt.",
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Covers all four axes: caching (HTTP/ETag vs single endpoint), over-fetching (fixed shape vs field selection), schema evolution (deprecation directives vs versioning), tooling (REST breadth vs GraphQL ecosystem rough edges). Reasonable, within length bounds.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Covers caching, over-fetching, schema evolution (via deprecation directives), and tooling in 4 sentences with concrete detail. Minor: ETags claim for GraphQL is a simplification (persisted queries / CDN tricks exist), but the tradeoff framing is accurate.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Content is sensible \u2014 pure parser, pure validator, thin persistence adapter, three-line pipeline. But format miss: used 'Step 1/2/3' instead of the requested '1./2./3.' bullets, and mentions a concrete `save` function despite 'don't write code yet \u2014 just the plan.'",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Solid refactor plan (pure parse \u2192 pure validate \u2192 thin persist adapter, composed into a pipeline). But the prompt explicitly required `1.`, `2.`, `3.` numbering and the response uses `Step 1:` / `Step 2:` / `Step 3:` instead. Content good, format off.",
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Discriminated State union with empty/open/checked-out statuses, Event union, pure evolve with status guards and never-exhaustiveness check, explicit initialShoppingCart. Textbook.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Discriminated State union with status field, discriminated Event union, pure evolve with status guards, exhaustive `never` check. Adds CartCheckedOut which is a sensible extension but stays idiomatic.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Full Decider<C,E,S> interface, discriminated Command/Event unions, pure decide returns Event[], status-guarded evolve, exhaustive never checks, INSUFFICIENT_FUNDS guard. Throwing DomainError inside decide is a common pragmatic choice.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Full Decider interface with discriminated commands/events/state, exhaustive never checks on both decide and evolve, InsufficientFunds rejection. Uses thrown DomainError rather than a Result \u2014 acceptable Decider-pattern idiom but less FP-pure than returning Either/Result.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Has readStream/appendToStream/expectedRevision plumbing and uses the returned revision for optimistic concurrency. But bug: `loaded.events.reduce(handler.evolve, handler.load.initial)` \u2014 `load` is a function, it has no `.initial` property; the reducer seed is undefined. Also wraps decide in Promise needlessly.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Has readStream+appendToStream+expectedRevision shape, but `handler.load.initial` is nonsensical \u2014 `load` is a function with no `.initial` property, so reduce has no seed. Also `handler.load` redundantly takes the store. Would not compile.",
+      "mean": 2.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Pure project(state,event) function over a discriminated ShoppingCartEvent union producing CartSummary, with exhaustive never check and non-negative clamps on decrements. ReadModel substring is missing but CartSummary fulfills the role.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Clean project(state, event) with discriminated ShoppingCartEvent, CartSummary read model, exhaustive never check. Doesn't use the literal `ReadModel` name but CartSummary fills the role.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Clear tradeoff framing (O(n) replay vs O(k) tail; latency vs storage). Signature carries Snapshot<S> with version+revision+state and a tail of events plus an evolve+initial. Minor: `Event<S>.data: unknown` is loose \u2014 a typed E<S> would be tighter; also does not fall back to initial when no snapshot (returns an error instead).",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Explains latency-vs-storage tradeoff correctly and provides a typed loadAggregate<S> signature taking snapshots, tail, evolve, initial and returning a tagged LoadResult. Passing snapshots+tail pre-loaded rather than fetching them is a slight abstraction-leak; otherwise solid.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Idiomatic fp-ts: tagged ValidationError, three small validators returning E.Either, composed via pipe + E.chain. No throw/try, clean types. Exactly as requested.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Idiomatic fp-ts: three Either-returning validators composed with pipe+E.chain, tagged ValidationError, no throws. Clean, minimal, correct.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "grader_A_score": 2,
+      "grader_A_rationale": "Uses Effect.gen + Context.GenericTag + Layer.succeed, but the program is broken: wraps `fetchUser` (already returns Effect) in Effect.tryPromise (expects a Promise factory), then treats the result as Option<User> via Option.isSome \u2014 the function returns User, not Option<User>. The typed UserNotFound fallback is not caught via Effect.catchTag/Effect.catchAll. Types would not compile.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Broken types: fetchUser returns an Effect but is wrapped in Effect.tryPromise (which expects a Promise-returning thunk), and the result is then treated as Option<User> via Option.isSome on a User value. Has Effect.gen and Layer shapes but wouldn't compile.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Textbook fp-ts Option composition: pipe + O.chain(O.fromNullable(u.email)) + O.map(toUpperCase). Handles optional email field precisely.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Clean pipe with O.chain+O.fromNullable+O.map for the optional email field, uppercased. Slight scope divergence (treats email as an optional sub-object rather than a plain string), but the idiom is textbook.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "pipe(fetchUser(id), TE.chainW(fetchOrders)) is correct and idiomatic \u2014 chainW widens error types appropriately. Minimal but technically complete. A single chain is barely a composition story.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Correct TaskEither composition: pipe(fetchUser, TE.chainW(fetchOrders)) with tagged FetchError and typed signature. chainW handles error-channel widening idiomatically.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Context.GenericTag for Logger and DB, Layer.merge to compose, Effect.gen program consuming both, Effect.provide at the end. Minor: Layer.effect(DB, Effect.succeed({...})) is awkward \u2014 Layer.succeed would be idiomatic; the service methods returning Effect.sync/Effect.succeed work.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Context.GenericTag for Logger+DB, LoggerLive via Layer.succeed, Layer.merge, Effect.gen consumer, Effect.provide. Minor: DBLive uses Layer.effect(DB, Effect.succeed({...})) which is awkward \u2014 Layer.succeed would be cleaner. Uses GenericTag, not literal Context.Tag token.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Textbook typeahead: debounceTime(250) \u2192 distinctUntilChanged() \u2192 switchMap(searchApi). Typed Observable<Result[]> end-to-end. Cancellation semantics via switchMap correct.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Canonical typeahead: input$.pipe(debounceTime(250), distinctUntilChanged(), switchMap(searchApi)). Typed Observable<Result[]> return. switchMap ensures cancellation.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "combineLatest with the v7+ object form + typed map to ViewModel. Correct semantics (re-emits on any source). Explanatory comment is accurate.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "combineLatest with object-form sources, typed ViewModel interface, map projects to VM. Typed signature and accurate comment on late-subscriber semantics.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Core concurrency cap is right: mergeMap(fn, 3) on from(uploads). But uploadFile$ body has a bug \u2014 `scan((p) => ..., p)` references `p` as the seed before any binding exists (undefined reference). The actual uploadAll$ export is fine; demo helper is broken.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Correct top-level: from(u).pipe(mergeMap(uploadFile$, 3)) \u2014 the concurrency cap is right. But uploadFile$'s scan has a bug: `scan((p) => ..., p)` references an undeclared `p` as the seed, which wouldn't compile. Implementation detail, but flagged.",
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Correct plain-English distinction (no memory vs. cached latest) and a BehaviorSubject<User|null>.asObservable() example matching 'late subscribers receive current value'. Subject is imported but not exemplified side-by-side \u2014 a minor omission.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Clear explanation of the Subject vs BehaviorSubject distinction with a concrete currentUser$ example exposing .asObservable() and a setUser mutator. Good use of `new BehaviorSubject<User|null>(null)` as initial state.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Type-safe OperatorFunction<T,T> returning pipe(tap({next,error,complete})). Generic T preserved, unchanged passthrough. Doesn't explicitly use Observable<T> in the body, but the type signature via OperatorFunction is the idiomatic form.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Generic OperatorFunction<T,T> implemented via pipe+tap with typed next/error/complete handlers. No `: any`, no `subscribe` inside the operator (only in the example usage comment). Textbook.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Full v5 scaffolding (setup+actors+types, guard:, destructured assign, event.output). But fromPromise body is broken: `res.ok && res.json() as Promise<{available: boolean}>` returns boolean or Promise, not boolean as declared. Also invoke on the 'email' state fires immediately with an empty email (no guard/trigger). No explicit 'confirm' state despite the prompt.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Full v5 idiom (setup+types+actors+guards, destructured assign, event.output, fromPromise with typed input). But fetchUser body is broken: `res.ok && res.json()` returns boolean false or unawaited Promise<{available}>, not the declared boolean output. Also collapses password+confirm into one state instead of three.",
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Clean v5: setup with typed guards block, guard: 'isDownloading', destructured assign, discriminated events. The guard proxy (progress<100) is a weak stand-in for 'state === downloading', and the ERROR event carries a reason that is ignored. Minor but solid.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Clean v5: setup+types+guards block, guard: keyword, destructured assign, proper state graph. Named `isDownloading` guard checks progress<100 rather than the current state, which is a weak semantic match but technically functional.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Idiomatic v5: setup+actors, typed fromPromise<User,{userId}>, destructured assign with event.output on onDone, error captured on onError to 'failed' with RETRY. Exactly the asked pattern.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Textbook v5: setup with actors, typed fromPromise, invoke with input thunk, onDone uses event.output, onError transitions to failed. Readonly types and retry affordance are idiomatic extras.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "grader_A_score": 2,
+      "grader_A_rationale": "Uses fromObservable name but the implementation body uses `sendBack`-style callback and setTimeout \u2014 that's fromCallback semantics, not an Observable. `self.input.url` at invoke time is not the v5 input access pattern. Events of type 'quote' are sent via sendBack but the kind:'quote' field is not how XState routes event types. Multiple idiom errors.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Misuses fromObservable: the callback uses sendBack with setTimeout instead of returning an Observable/subscription, and no `Observable` from rxjs is imported. Also `self.input.url` is not how machine input is accessed inside invoke. Idiom is only partially correct.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Exemplary v4->v5 conversion: setup with types, actions registered by name ('bump'), destructured ({context}) in assign, no Machine() or ctx=> positional handlers. Clean.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Clean v4\u2192v5 conversion: setup with typed context+events, named `bump` action via destructured assign({context}), referenced by string. Removed Machine() and `ctx =>` as required.",
+      "mean": 5.0,
+      "disagreement": 0
+    }
+  ]
+}

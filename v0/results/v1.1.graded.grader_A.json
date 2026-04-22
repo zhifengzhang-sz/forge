@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v1.1",
+  "arm": "v1.1-r64",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Full v5 scaffolding (setup+actors+types, guard:, destructured assign, event.output). But fromPromise body is broken: `res.ok && res.json() as Promise<{available: boolean}>` returns boolean or Promise, not boolean as declared. Also invoke on the 'email' state fires immediately with an empty email (no guard/trigger). No explicit 'confirm' state despite the prompt."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5: setup with typed guards block, guard: 'isDownloading', destructured assign, discriminated events. The guard proxy (progress<100) is a weak stand-in for 'state === downloading', and the ERROR event carries a reason that is ignored. Minor but solid."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5: setup+actors, typed fromPromise<User,{userId}>, destructured assign with event.output on onDone, error captured on onError to 'failed' with RETRY. Exactly the asked pattern."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Uses fromObservable name but the implementation body uses `sendBack`-style callback and setTimeout — that's fromCallback semantics, not an Observable. `self.input.url` at invoke time is not the v5 input access pattern. Events of type 'quote' are sent via sendBack but the kind:'quote' field is not how XState routes event types. Multiple idiom errors."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Exemplary v4->v5 conversion: setup with types, actions registered by name ('bump'), destructured ({context}) in assign, no Machine() or ctx=> positional handlers. Clean."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: tagged ValidationError, three small validators returning E.Either, composed via pipe + E.chain. No throw/try, clean types. Exactly as requested."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Uses Effect.gen + Context.GenericTag + Layer.succeed, but the program is broken: wraps `fetchUser` (already returns Effect) in Effect.tryPromise (expects a Promise factory), then treats the result as Option<User> via Option.isSome — the function returns User, not Option<User>. The typed UserNotFound fallback is not caught via Effect.catchTag/Effect.catchAll. Types would not compile."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Textbook fp-ts Option composition: pipe + O.chain(O.fromNullable(u.email)) + O.map(toUpperCase). Handles optional email field precisely."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "pipe(fetchUser(id), TE.chainW(fetchOrders)) is correct and idiomatic — chainW widens error types appropriately. Minimal but technically complete. A single chain is barely a composition story."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Context.GenericTag for Logger and DB, Layer.merge to compose, Effect.gen program consuming both, Effect.provide at the end. Minor: Layer.effect(DB, Effect.succeed({...})) is awkward — Layer.succeed would be idiomatic; the service methods returning Effect.sync/Effect.succeed work."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Textbook typeahead: debounceTime(250) → distinctUntilChanged() → switchMap(searchApi). Typed Observable<Result[]> end-to-end. Cancellation semantics via switchMap correct."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with the v7+ object form + typed map to ViewModel. Correct semantics (re-emits on any source). Explanatory comment is accurate."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 3,
+      "rationale": "Core concurrency cap is right: mergeMap(fn, 3) on from(uploads). But uploadFile$ body has a bug — `scan((p) => ..., p)` references `p` as the seed before any binding exists (undefined reference). The actual uploadAll$ export is fine; demo helper is broken."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Correct plain-English distinction (no memory vs. cached latest) and a BehaviorSubject<User|null>.asObservable() example matching 'late subscribers receive current value'. Subject is imported but not exemplified side-by-side — a minor omission."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Type-safe OperatorFunction<T,T> returning pipe(tap({next,error,complete})). Generic T preserved, unchanged passthrough. Doesn't explicitly use Observable<T> in the body, but the type signature via OperatorFunction is the idiomatic form."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated State union with empty/open/checked-out statuses, Event union, pure evolve with status guards and never-exhaustiveness check, explicit initialShoppingCart. Textbook."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Full Decider<C,E,S> interface, discriminated Command/Event unions, pure decide returns Event[], status-guarded evolve, exhaustive never checks, INSUFFICIENT_FUNDS guard. Throwing DomainError inside decide is a common pragmatic choice."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Has readStream/appendToStream/expectedRevision plumbing and uses the returned revision for optimistic concurrency. But bug: `loaded.events.reduce(handler.evolve, handler.load.initial)` — `load` is a function, it has no `.initial` property; the reducer seed is undefined. Also wraps decide in Promise needlessly."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Pure project(state,event) function over a discriminated ShoppingCartEvent union producing CartSummary, with exhaustive never check and non-negative clamps on decrements. ReadModel substring is missing but CartSummary fulfills the role."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clear tradeoff framing (O(n) replay vs O(k) tail; latency vs storage). Signature carries Snapshot<S> with version+revision+state and a tail of events plus an evolve+initial. Minor: `Event<S>.data: unknown` is loose — a typed E<S> would be tighter; also does not fall back to initial when no snapshot (returns an error instead)."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clean iterative fib(n:int)->int with F(0)=0,F(1)=1 base cases, docstring, correct loop using tuple swap. Exactly what was asked."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Does not use the Read tool; fabricates a Deno snippet importing non-existent `read` from deno.land/std, and the dev-dep filter is nonsense (dev deps aren't prefixed 'dev-'). Also misses the required task of producing 2-3 sentences summarizing real dependencies."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 4,
+      "rationale": "Covers all four axes: caching (HTTP/ETag vs single endpoint), over-fetching (fixed shape vs field selection), schema evolution (deprecation directives vs versioning), tooling (REST breadth vs GraphQL ecosystem rough edges). Reasonable, within length bounds."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 3,
+      "rationale": "Content is sensible — pure parser, pure validator, thin persistence adapter, three-line pipeline. But format miss: used 'Step 1/2/3' instead of the requested '1./2./3.' bullets, and mentions a concrete `save` function despite 'don't write code yet — just the plan.'"
+    }
+  ]
+}
