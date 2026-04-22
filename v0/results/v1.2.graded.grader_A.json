@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v1.2",
+  "arm": "v1.2-r64",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Proper v5 idiom: setup with types/actors, fromPromise with typed input, destructured assigners, input: ({context}) mapping, event.output in onDone. Minor: checkingEmail success unconditionally returns to 'email' without gating on result; CHECK_EMAIL only from email state with no guard. Overall solidly idiomatic v5."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5: setup({types,guards}), guard: 'isDownloading' string reference, destructured assigners, no cond:. The guard semantics are slightly off (guards that progress<100 rather than 'is downloading') but the structural idiom is correct. PAUSE is correctly gated on the downloading state."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5 invoke + fromPromise: typed actor in setup.actors, input mapper, onDone with event.output, onError with target 'failed' and error handling. Destructured signatures throughout, no v4 patterns."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Correct fromObservable pattern with subscriber.next and cleanup, actor registered in setup, invoke uses string src. Gap: it invokes a self-emitting observable but doesn't actually forward those events into the parent machine; the on: { WS_MESSAGE } relies on external dispatch. Functional but the wiring to 'dispatch each message as an event into the parent' is implicit rather than using sendTo/enqueueActions."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4-to-v5 conversion: setup with types, destructured ({context}) assigner, no Machine(), no ctx positional. Minimal and idiomatic."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe chains three validators via E.chain, each returns Either<ValidationError, string>, final E.map wraps into Email branded-ish type. No throws, no any, clean composition."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Major idiom violations: throws UserNotFound inside Effect.gen instead of using Effect.fail or tagged error, Effect.catchTag cast 'as never' is a code smell indicating types don't line up, no Layer used (prompt explicitly required Layer), no Context.GenericTag, direct Promise passthrough. Does not fulfill 'reads a config from a Layer'."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 1,
+      "rationale": "The prompt asks for fp-ts Option/map/chain. Instead it reinvents Option as an inline module with wrong-shape map (takes (s,f) positional instead of curried f => s), pipe is used but the inlined functions won't compose with pipe as written, and the email path doesn't uppercase anything. Unusable."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Prompt asked for TaskEither with chain; response uses Effect from 'effect' instead, plus a spurious unused import from fp-ts/pipeable. Effect.tryPromise catch returns FetchError but try returns User|null without handling null, and Effect.flatMap composition is fine but wrong library entirely. Doesn't match the requested API surface."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "No Layer, no Context.GenericTag/Tag, no Layer.merge — instead defines Effect.gen blocks returning service instances directly and wraps logger.info in Effect.promise (logger.info returns void, not a Promise). Fundamental misunderstanding of Effect service/Layer injection. Doesn't compose as an Effect program properly."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Textbook typeahead: debounceTime(250), distinctUntilChanged, switchMap to cancel in-flight. Typed Observable<Result[]> in and out, clean function signature."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic: combineLatest with named-object form (v7+ idiom), map to typed ViewModel, no subscribe/forkJoin/zip. Clean typed interfaces."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Exactly the mergeMap concurrency idiom: from(items).pipe(mergeMap(f => uploadFile$(f), 3)). Correct, concise, type-safe."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Correct explanation of BehaviorSubject vs Subject with late-subscriber semantics, uses getValue(). Minor: doesn't show a plain Subject side-by-side for contrast, and subscribeCurrentUser returns void (loses Subscription handle). But the explanation is accurate and the code is idiomatic."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Correct OperatorFunction<T,T> signature, uses tap with next/error/complete handlers, type-safe generic. Slight noise: the sample$/logged$ demonstration code adds unrelated WeatherSample surface, and .subscribe isn't called (the auto-check misses 'subscribe' which is fine for a pure operator). Idiomatic pass-through tap."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated State/Event unions, initial state, exhaustive switch with never check, status guards on active-state mutations. Adds a CartClosed beyond the prompt but doesn't hurt. Pure, idiomatic."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider pattern with decide/evolve/initial, discriminated commands and events, rejects overdraft and non-positive amounts, state-status guards in evolve. Minor: throws Errors from decide rather than returning a Result; the never returns (return _) in exhaustive branches would type as BankAccountEvent[] via never which compiles but is slightly awkward. Overall solid."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Correct optimistic-concurrency flow: readStream to fold state+revision, decide, appendToStream with expectedRevision. Typed EventStore interface with bigint|'no_stream'|'any' union. Minor: uses a trivial Greenhouse example rather than a richer aggregate; the never check on event.type rather than event is fine. Structurally idiomatic."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clean projector: typed events, CartSummary read model (the interface is there, just not named ReadModel — must_have miss is superficial), pure project function, exhaustive switch with never check. Good idiom."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Prose tradeoffs are reasonable. Code has issues: loadAggregate ignores the 'id' parameter, doesn't accept a snapshot version to feed readStream(from) correctly for a given stream, the evolve for PayoutRequested-from-pending returns 'approved' state (wrong — should be a pending-request state), and it takes a snapshots array rather than a snapshot loader. Signature is there but semantics are muddled."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative Fibonacci with base case, proper docstring, clean Python. Loop bound and return value are correct for all n>=0."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Completely misinterprets the prompt. Invents a nonexistent '@aws-sdk/util-filesystem' import, fabricates a Read.read API and Summary.DepsSummary type, uses a bogus heuristic (keys ending in '^') to split 'direct' vs 'transitive' deps — package.json caret versioning is on values, not keys. Does not use the actual Read tool or summarize anything."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 4,
+      "rationale": "Covers caching, over-fetching, schema evolution, and tooling in roughly 5-6 sentences with correct claims. Minor: the 'gate fields by role at the route level more cheaply' claim is arguable, and REST caching isn't only ETags (CDN/Cache-Control). But overall accurate and concise."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 3,
+      "rationale": "Plan is reasonable (extract responsibilities, make pure, compose) but doesn't use the 1./2./3. numbered format explicitly (uses 'Step one/two/three'), and step two contradicts itself: calling persist pure then adding 'I/O into a thin command-runner'. Content is acceptable; the structure drifts from the ask."
+    }
+  ]
+}

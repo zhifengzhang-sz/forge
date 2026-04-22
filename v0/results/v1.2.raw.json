@@ -1,0 +1,402 @@
+{
+  "model": "ts-forge-v1.2",
+  "arm": "v1.2",
+  "responses": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "prompt": "Create an XState v5 machine using setup() for a multi-step signup form with steps 'email', 'password', 'confirm'. Include fromPromise for email-uniqueness validation against an API and typed events.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { setup, assign, fromPromise } from 'xstate';\n\ntype EmailCtx = { email: string; available: boolean | null; error: string | null };\ntype PasswordCtx = { password: string; strength: number };\ntype ConfirmCtx = { password: string; match: boolean };\n\ntype SignupCtx = {\n  email: EmailCtx;\n  password: PasswordCtx;\n  confirm: ConfirmCtx;\n};\n\ntype SignupEv =\n  | { type: 'SET_EMAIL'; value: string }\n  | { type: 'CHECK_EMAIL' }\n  | { type: 'SET_PASSWORD'; value: string }\n  | { type: 'SET_CONFIRM'; value: string }\n  | { type: 'NEXT' }\n  | { type: 'BACK' };\n\nconst checkEmail = fromPromise<boolean, { email: string }>(async ({ input }) => {\n  const r = await fetch(`/api/users/${encodeURIComponent(input.email)}/exists`);\n  return r.json();\n});\n\nexport const signupMachine = setup({\n  types: {\n    context: {} as SignupCtx,\n    events: {} as SignupEv,\n  },\n  actors: { checkEmail },\n  delays: { CHECK: 400 },\n}).createMachine({\n  id: 'signup',\n  initial: 'email',\n  context: {\n    email: { email: '', available: null, error: null },\n    password: { password: '', strength: 0 },\n    confirm: { password: '', match: false },\n  },\n  states: {\n    email: {\n      on: {\n        SET_EMAIL: {\n          actions: assign({\n            email: ({ context, event }) => ({ ...context.email, email: event.value }),\n          }),\n        },\n        CHECK_EMAIL: {\n          target: 'checkingEmail',\n          actions: assign({\n            email: ({ context }) => ({ ...context.email, error: null }),\n          }),\n        },\n      },\n    },\n    checkingEmail: {\n      invoke: {\n        src: 'checkEmail',\n        input: ({ context }) => ({ email: context.email.email }),\n        onDone: {\n          target: 'email',\n          actions: assign({\n            email: ({ context, event }) => ({\n              ...context.email,\n              available: event.output,\n            }),\n          }),\n        },\n        onError: {\n          target: 'email',\n          actions: assign({\n            email: ({ context }) => ({ ...context.email, error: 'check failed' }),\n          }),\n        },\n      },\n    },\n    password: {\n      on: {\n        SET_PASSWORD: {\n          actions: assign({\n            password: ({ context, event }) => ({ ...context.password, password: event.value }),\n          }),\n        },\n        NEXT: 'confirm',\n        BACK: 'email',\n      },\n    },\n    confirm: {\n      on: {\n        SET_CONFIRM: {\n          actions: assign({\n            confirm: ({ context, event }) => ({ ...context.confirm, password: event.value }),\n          }),\n        },\n        NEXT: 'done',\n        BACK: 'password',\n      },\n    },\n    done: { type: 'final' },\n  },\n});\n```",
+      "elapsed_s": 4.6,
+      "auto_checks": {
+        "must_have_hits": [
+          "setup(",
+          "fromPromise",
+          "assign(",
+          "types:"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": [
+          "createMachine({"
+        ]
+      }
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "prompt": "Write an XState v5 machine for a download manager with states 'idle', 'downloading', 'paused', 'done', 'error'. Use assign() to track progress (0-100) and a guarded transition that only allows 'pause' while downloading.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { setup, assign } from 'xstate';\n\ninterface Ctx { progress: number }\n\ntype Ev =\n  | { type: 'START' }\n  | { type: 'PAUSE' }\n  | { type: 'RESUME' }\n  | { type: 'PROGRESS'; value: number }\n  | { type: 'DONE' }\n  | { type: 'ERROR' };\n\nexport const dlMachine = setup({\n  types: { context: {} as Ctx, events: {} as Ev },\n  guards: { isDownloading: ({ context }) => context.progress < 100 }\n}).createMachine({\n  id: 'dl',\n  context: { progress: 0 },\n  initial: 'idle',\n  states: {\n    idle: { on: { START: 'downloading' } },\n    downloading: {\n      on: {\n        PROGRESS: { actions: assign({ progress: ({ event }) => event.value }) },\n        DONE: 'done',\n        ERROR: 'error',\n        PAUSE: { guard: 'isDownloading', target: 'paused' }\n      }\n    },\n    paused: { on: { RESUME: 'downloading' } },\n    done: { type: 'final' },\n    error: { on: { START: 'idle' } }\n  }\n});\n```",
+      "elapsed_s": 2.1,
+      "auto_checks": {
+        "must_have_hits": [
+          "setup(",
+          "assign(",
+          "guard"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "prompt": "Show how to spawn a child actor in XState v5 using invoke + fromPromise that fetches a user profile, with onDone storing the result in context and onError moving to a 'failed' state.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { setup, assign, fromPromise } from 'xstate';\n\ninterface Profile { readonly name: string; readonly email: string }\n\nexport const loader = setup({\n  types: {\n    context: {} as { profile: Profile | null; error: string | null },\n    events: {} as { type: 'REFETCH' },\n  },\n  actors: {\n    fetchProfile: fromPromise<Profile, { id: string }>(async ({ input }) => ({\n      name: `user-${input.id}`,\n      email: `user-${input.id}@example.com`,\n    })),\n  },\n}).createMachine({\n  id: 'loader',\n  initial: 'idle',\n  context: { profile: null, error: null },\n  states: {\n    idle: {\n      on: { REFETCH: 'loading' },\n    },\n    loading: {\n      invoke: {\n        src: 'fetchProfile',\n        input: ({ context }) => ({ id: 'u1' }),\n        onDone: {\n          target: 'idle',\n          actions: assign({ profile: ({ event }) => event.output, error: () => null }),\n        },\n        onError: {\n          target: 'failed',\n          actions: assign({\n            error: ({ event }) => (event.error instanceof Error ? event.error.message : 'unknown'),\n          }),\n        },\n      },\n    },\n    failed: { on: { REFETCH: 'loading' } },\n  },\n});\n```",
+      "elapsed_s": 2.2,
+      "auto_checks": {
+        "must_have_hits": [
+          "invoke",
+          "fromPromise",
+          "onDone",
+          "onError"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "prompt": "Use fromObservable in XState v5 to wrap a WebSocket stream and dispatch each message as an event into the parent machine's context.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { setup, assign, fromObservable } from 'xstate';\n\ntype WsEvent = { type: 'WS_OPEN' } | { type: 'WS_MESSAGE'; payload: string };\ntype Ctx = { messages: string[] };\ntype Ev = WsEvent | { type: 'DISCONNECT' };\n\nexport const socketMachine = setup({\n  types: { context: {} as Ctx, events: {} as Ev },\n  actors: {\n    wsFeed: fromObservable<WsEvent, void>((subscriber) => {\n      const id = setInterval(() => {\n        subscriber.next({ type: 'WS_MESSAGE', payload: 'ping' });\n      }, 1000);\n      return () => clearInterval(id);\n    }),\n  },\n}).createMachine({\n  id: 'socket',\n  context: { messages: [] },\n  initial: 'open',\n  states: {\n    open: {\n      invoke: { src: 'wsFeed' },\n      on: {\n        WS_MESSAGE: {\n          actions: assign({ messages: ({ context, event }) => [...context.messages, event.payload] }),\n        },\n        DISCONNECT: 'closed',\n      },\n    },\n    closed: { type: 'final' },\n  },\n});\n```",
+      "elapsed_s": 1.9,
+      "auto_checks": {
+        "must_have_hits": [
+          "fromObservable",
+          "Observable"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "prompt": "This is XState v4 code. Convert it to idiomatic XState v5:\n\n```ts\nconst toggle = Machine({\n  id: 'toggle', initial: 'inactive',\n  context: { count: 0 },\n  states: {\n    inactive: { on: { TOGGLE: 'active' } },\n    active: {\n      on: { TOGGLE: { target: 'inactive', actions: assign({ count: ctx => ctx.count + 1 }) } }\n    }\n  }\n});\n```",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { setup, assign } from 'xstate';\n\ninterface Ctx { count: number }\n\ntype Ev = { type: 'TOGGLE' };\n\nexport const toggleV5 = setup({\n  types: { context: {} as Ctx, events: {} as Ev }\n}).createMachine({\n  id: 'toggle',\n  context: { count: 0 },\n  initial: 'inactive',\n  states: {\n    inactive: { on: { TOGGLE: 'active' } },\n    active: {\n      on: { TOGGLE: { target: 'inactive', actions: assign({ count: ({ context }) => context.count + 1 }) } }\n    }\n  }\n});\n```",
+      "elapsed_s": 1.1,
+      "auto_checks": {
+        "must_have_hits": [
+          "setup(",
+          "assign(",
+          "({ context"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": [
+          "Machine("
+        ]
+      }
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "prompt": "Using fp-ts pipe and Either, write a function validateEmail(s: string): Either<ValidationError, Email> that checks for non-empty, contains '@', and length < 254. Compose three validators with chain.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { pipe } from 'fp-ts/function';\nimport * as E from 'fp-ts/Either';\n\nexport type ValidationError = { kind: 'invalid' };\n\nexport type Email = { readonly value: string };\n\nfunction nonEmpty(s: string): E.Either<ValidationError, string> {\n  return s.length === 0 ? E.left({ kind: 'invalid' }) : E.right(s);\n}\n\nfunction hasAt(s: string): E.Either<ValidationError, string> {\n  return s.includes('@') ? E.right(s) : E.left({ kind: 'invalid' });\n}\n\nfunction under254(s: string): E.Either<ValidationError, string> {\n  return s.length < 254 ? E.right(s) : E.left({ kind: 'invalid' });\n}\n\nexport function validateEmail(s: string): E.Either<ValidationError, Email> {\n  return pipe(\n    s,\n    nonEmpty,\n    E.chain(hasAt),\n    E.chain(under254),\n    E.map((value) => ({ value })),\n  );\n}\n\n```",
+      "elapsed_s": 1.7,
+      "auto_checks": {
+        "must_have_hits": [
+          "pipe(",
+          "Either",
+          "left",
+          "right"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "prompt": "Write an Effect program that reads a config from a Layer, fetches a user by id, and falls back to a default on the typed error UserNotFound. Use Effect.gen.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { Effect } from \"effect\";\n\ntype User = { id: string; name: string };\n\ninterface UserStore {\n  read(id: string): Promise<User | null>;\n}\n\nclass UserNotFound extends Error {\n  constructor(public readonly id: string) {\n    super(`user not found: ${id}`);\n    this.name = \"UserNotFound\";\n  }\n}\n\nconst userStore = (u: User | null) => ({\n  read: (id: string) => Promise.resolve(u),\n});\n\nconst program = (id: string, store: UserStore) =>\n  Effect.gen(function* () {\n    const raw = yield* Effect.promise(() => store.read(id));\n    if (!raw) throw new UserNotFound(id);\n    return raw.name;\n  });\n\nexport const run = (id: string) =>\n  program(id, userStore(null)).pipe(\n    Effect.catchTag(\"UserNotFound\" as never, () => Effect.succeed(\"default\")),\n  );\n```",
+      "elapsed_s": 1.5,
+      "auto_checks": {
+        "must_have_hits": [
+          "Effect.gen",
+          "yield*"
+        ],
+        "must_have_misses": [
+          "Layer"
+        ],
+        "must_not_have_violations": [
+          "Promise<"
+        ]
+      }
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "prompt": "Given an Option<User>, write a function to extract the user's email and uppercase it, returning Option<string>. Use pipe and Option.map / Option.chain idiomatically.",
+      "response": "<think>\n\n</think>\n\n```typescript\nexport interface User { readonly id: string; readonly email: string | null; }\n\nexport const getEmailUpper = (u: Option<User>): Option<string> =>\n  pipe(u, option.map((usr) => usr.email), option.chain((e) => option.from(e)));\n\nexport module option {\n  export type Option<T> = { readonly tag: \"some\"; readonly value: T } | { readonly tag: \"none\" };\n\n  export const some = <T>(v: T): Option<T> => ({ tag: \"some\", value: v });\n  export const none: Option<never> = { tag: \"none\" };\n  export const from = <T>(v: T | null): Option<T> => (v === null ? (none as Option<T>) : some(v));\n  export const map = <T, U>(s: Option<T>, f: (t: T) => U): Option<U> =>\n    s.tag === \"some\" ? some(f(s.value)) : none;\n  export const chain = <T, U>(s: Option<T>, f: (t: T) => Option<U>): Option<U> =>\n    s.tag === \"some\" ? f(s.value) : none;\n}\n```",
+      "elapsed_s": 2.0,
+      "auto_checks": {
+        "must_have_hits": [
+          "pipe(",
+          "Option",
+          "map"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "prompt": "Compose two TaskEither operations with pipe: fetchUser(id) then fetchOrders(user). Both can fail with FetchError. Return TaskEither<FetchError, Orders>.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport * as E from 'fp-ts/pipeable';\nimport { Effect, pipe } from 'effect';\n\nexport class FetchError {\n  readonly _tag = 'FetchError' as const;\n  constructor(readonly cause: string) {}\n}\n\nexport type User = { readonly id: string; readonly name: string };\nexport type Order = { readonly id: string; readonly amount: number };\nexport type Users = ReadonlyArray<User>;\nexport type Orders = ReadonlyArray<Order>;\n\nexport interface UserStore {\n  get(id: string): Promise<User | null>;\n}\n\nexport interface OrderStore {\n  listByUser(id: string): Promise<Orders>;\n}\n\nexport const fetchUser = (store: UserStore, id: string): Effect.Effect<User, FetchError> =>\n  Effect.tryPromise({\n    try: () => store.get(id),\n    catch: () => new FetchError('USER_NOT_FOUND'),\n  });\n\nexport const fetchOrders = (store: OrderStore, id: string): Effect.Effect<Orders, FetchError> =>\n  Effect.tryPromise({\n    try: () => store.listByUser(id),\n    catch: () => new FetchError('ORDERS_NOT_FOUND'),\n  });\n\nexport const loadUserAndOrders = (\n  store: { readonly user: UserStore; readonly order: OrderStore },\n  id: string,\n) =>\n  pipe(\n    fetchUser(store.user, id),\n    Effect.flatMap((user) => fetchOrders(store.order, user.id)),\n  );\n```",
+      "elapsed_s": 2.3,
+      "auto_checks": {
+        "must_have_hits": [
+          "pipe("
+        ],
+        "must_have_misses": [
+          "TaskEither",
+          "chain"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "prompt": "Build an Effect Layer that provides a Logger service with info(msg) and error(msg). Show how to compose it with a DatabaseLayer and inject both into a program.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { Effect } from \"effect\";\n\nexport type Logger = { info: (msg: string) => void; error: (msg: string) => void };\n\nexport const LoggerLive = Effect.gen(function* () {\n  const sink: Logger = {\n    info: (m) => console.log(`INFO ${m}`),\n    error: (m) => console.error(`ERROR ${m}`),\n  };\n  return sink;\n});\n\nexport type Db = { get: (id: string) => Promise<string | null> };\n\nexport const DbLive = Effect.gen(function* () {\n  return {\n    get: async (id: string) => id === \"k\" ? \"v\" : null,\n  };\n});\n\nexport interface Env { readonly LOG_TO_CONSOLE: boolean }\nconst env: Env = { LOG_TO_CONSOLE: true };\n\nexport const program = Effect.gen(function* () {\n  const logger = yield* LoggerLive;\n  const db = yield* DbLive;\n  const value = yield* Effect.promise(() => db.get(\"k\"));\n  if (value === null) yield* Effect.promise(() => logger.error(\"NOT_FOUND\"));\n  else yield* Effect.promise(() => logger.info(value));\n  return value ?? \"\";\n});\n\nexport const main = Effect.runPromise(program);\n```",
+      "elapsed_s": 2.0,
+      "auto_checks": {
+        "must_have_hits": [],
+        "must_have_misses": [
+          "Layer",
+          "Context.Tag",
+          "Layer.merge"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "prompt": "Build a typeahead search Observable using RxJS: take an input$ Observable<string>, debounce 250ms, dropping duplicates, and use switchMap to call searchApi(query): Observable<Result[]>. Cancel in-flight requests on new input.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { Observable, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';\n\ninterface Result {\n  readonly id: string;\n  readonly label: string;\n}\n\ninterface SearchApi {\n  search(query: string): Observable<Result[]>;\n}\n\nexport function buildTypeahead(\n  input$: Observable<string>,\n  api: SearchApi,\n): Observable<Result[]> {\n  return input$.pipe(\n    debounceTime(250),\n    distinctUntilChanged(),\n    switchMap((q) => api.search(q)),\n  );\n}\n```",
+      "elapsed_s": 0.9,
+      "auto_checks": {
+        "must_have_hits": [
+          "switchMap",
+          "debounceTime",
+          "distinctUntilChanged"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "prompt": "Combine three Observables \u2014 user$, settings$, theme$ \u2014 into a single Observable<ViewModel> that emits whenever any of them changes. Type the result with a ViewModel interface.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { Observable, combineLatest } from 'rxjs';\nimport { map } from 'rxjs/operators';\n\ninterface User { readonly id: string; readonly name: string }\ninterface Settings { readonly lang: string; readonly tz: string }\ninterface Theme { readonly mode: 'light' | 'dark'; readonly primary: string }\n\ninterface ViewModel {\n  readonly displayName: string;\n  readonly localeHint: string;\n  readonly primaryColor: string;\n}\n\nexport function viewModel$(\n  user$: Observable<User>,\n  settings$: Observable<Settings>,\n  theme$: Observable<Theme>,\n): Observable<ViewModel> {\n  return combineLatest({ user: user$, s: settings$, t: theme$ }).pipe(\n    map(({ user, s, t }): ViewModel => ({\n      displayName: user.name,\n      localeHint: `${s.lang} (${s.tz})`,\n      primaryColor: t.primary,\n    })),\n  );\n}\n```",
+      "elapsed_s": 1.5,
+      "auto_checks": {
+        "must_have_hits": [
+          "combineLatest",
+          "map",
+          "Observable"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "prompt": "Process a stream of file uploads with mergeMap, but cap concurrency at 3 simultaneous uploads. Each upload is uploadFile(f): Observable<Progress>.",
+      "response": "<think>\n\n</think>\n\n```ts\nimport { Observable, from } from 'rxjs';\nimport { mergeMap } from 'rxjs/operators';\n\ninterface FileItem {\n  readonly name: string;\n  readonly blob: Blob;\n}\n\ninterface Progress {\n  readonly name: string;\n  readonly pct: number;\n}\n\ndeclare function uploadFile$(f: FileItem): Observable<Progress>;\n\nexport function runUploads(\n  items: ReadonlyArray<FileItem>,\n): Observable<Progress> {\n  return from(items).pipe(\n    mergeMap((f) => uploadFile$(f), 3),\n  );\n}\n```",
+      "elapsed_s": 0.9,
+      "auto_checks": {
+        "must_have_hits": [
+          "mergeMap",
+          "3"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "prompt": "Explain the difference between Subject<T> and BehaviorSubject<T> with a concrete code example for a 'currentUser' state stream that late subscribers should immediately receive.",
+      "response": "<think>\n\n</think>\n\n`BehaviorSubject<T>` is like `Subject<T>` with a mandatory initial value and a `current` getter: every subscriber, even one attaching after the fact, receives the most recent value immediately. A plain `Subject<T>` has no initial value and subscribers arriving after the first event only see future events.\n\n```ts\nimport { BehaviorSubject, Observable } from 'rxjs';\n\ninterface User { readonly id: string; readonly name: string }\n\nexport const currentUser$ = new BehaviorSubject<User | null>(null);\n\nexport function setCurrent(user: User | null): void {\n  currentUser$.next(user);\n}\n\nexport function subscribeCurrentUser(cb: (user: User | null) => void): void {\n  // `cb` gets the currently-set user synchronously, then future changes.\n  currentUser$.subscribe(cb);\n}\n\nexport function readCurrent(): User | null {\n  return currentUser$.getValue();\n}\n```",
+      "elapsed_s": 1.4,
+      "auto_checks": {
+        "must_have_hits": [
+          "BehaviorSubject",
+          "Subject"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "prompt": "Write a custom RxJS OperatorFunction<T, T> called logTap(label: string) that logs each emission with the label and passes values through unchanged. Type-safe.",
+      "response": "<think>\n\n</think>\n\n```ts\nimport { Observable, OperatorFunction } from 'rxjs';\nimport { tap } from 'rxjs/operators';\n\nexport function logTap<T>(label: string): OperatorFunction<T, T> {\n  return (source$: Observable<T>): Observable<T> =>\n    source$.pipe(\n      tap<T>({\n        next: (value) => console.log(`[${label}] NEXT  `, value),\n        error: (err) => console.error(`[${label}] ERROR `, err),\n        complete: () => console.log(`[${label}] DONE`),\n      }),\n    );\n}\n\nexport interface WeatherSample {\n  readonly stationId: string;\n  readonly tempC: number;\n}\n\nexport const sample$: Observable<WeatherSample> = new Observable<WeatherSample>((sub) => {\n  sub.next({ stationId: 'A', tempC: 21 });\n});\n\nexport const logged$: Observable<WeatherSample> = sample$.pipe(logTap<WeatherSample>('WEATHER'));\n```",
+      "elapsed_s": 1.5,
+      "auto_checks": {
+        "must_have_hits": [
+          "OperatorFunction",
+          "Observable"
+        ],
+        "must_have_misses": [
+          "subscribe"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "prompt": "Define a ShoppingCart aggregate with evolve(state, event) handling 'CartCreated', 'ItemAdded', 'ItemRemoved'. Include the State and Event types and an initial state.",
+      "response": "<think>\n\n</think>\n\n```typescript\nexport type ShoppingCartState =\n  | { status: \"empty\" }\n  | { status: \"active\"; id: string; items: number; totalCents: number };\n\nexport type ShoppingCartEvent =\n  | { type: \"CartCreated\"; id: string }\n  | { type: \"ItemAdded\"; priceCents: number }\n  | { type: \"ItemRemoved\"; priceCents: number }\n  | { type: \"CartClosed\" };\n\nexport const initialShoppingCart: ShoppingCartState = { status: \"empty\" };\n\nexport function evolve(state: ShoppingCartState, event: ShoppingCartEvent): ShoppingCartState {\n  switch (event.type) {\n    case \"CartCreated\":\n      return { status: \"active\", id: event.id, items: 0, totalCents: 0 };\n    case \"ItemAdded\":\n      if (state.status !== \"active\") return state;\n      return {\n        ...state,\n        items: state.items + 1,\n        totalCents: state.totalCents + event.priceCents,\n      };\n    case \"ItemRemoved\":\n      if (state.status !== \"active\" || state.items === 0) return state;\n      return {\n        ...state,\n        items: state.items - 1,\n        totalCents: Math.max(0, state.totalCents - event.priceCents),\n      };\n    case \"CartClosed\":\n      if (state.status !== \"active\") return state;\n      return { status: \"empty\" };\n    default: {\n      const _never: never = event;\n      return state;\n    }\n  }\n}\n```",
+      "elapsed_s": 2.5,
+      "auto_checks": {
+        "must_have_hits": [
+          "evolve",
+          "State",
+          "Event",
+          "type "
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "prompt": "Implement the Decider pattern for a BankAccount: { decide(command, state): Event[], evolve(state, event): State, initial: State }. Commands: 'Deposit', 'Withdraw'. Reject withdrawals exceeding balance.",
+      "response": "<think>\n\n</think>\n\n```typescript\nexport type BankAccountState =\n  | { status: \"closed\" }\n  | { status: \"open\"; id: string; balanceCents: number };\n\nexport type BankAccountCommand =\n  | { type: \"open\"; id: string }\n  | { type: \"deposit\"; amountCents: number }\n  | { type: \"withdraw\"; amountCents: number };\n\nexport type BankAccountEvent =\n  | { type: \"opened\"; id: string }\n  | { type: \"funded\"; amountCents: number }\n  | { type: \"drawn\"; amountCents: number };\n\nexport class BankAccountError extends Error {}\n\nexport function decide(command: BankAccountCommand, state: BankAccountState): BankAccountEvent[] {\n  switch (command.type) {\n    case \"open\":\n      if (state.status === \"open\") throw new BankAccountError(\"already open\");\n      return [{ type: \"opened\", id: command.id }];\n    case \"deposit\":\n      if (state.status !== \"open\") throw new BankAccountError(\"not open\");\n      if (command.amountCents <= 0) throw new BankAccountError(\"amount must be positive\");\n      return [{ type: \"funded\", amountCents: command.amountCents }];\n    case \"withdraw\":\n      if (state.status !== \"open\") throw new BankAccountError(\"not open\");\n      if (command.amountCents > state.balanceCents) throw new BankAccountError(\"insufficient funds\");\n      if (command.amountCents <= 0) throw new BankAccountError(\"amount must be positive\");\n      return [{ type: \"drawn\", amountCents: command.amountCents }];\n    default: {\n      const _: never = command;\n      return _;\n    }\n  }\n}\n\nexport function evolve(state: BankAccountState, event: BankAccountEvent): BankAccountState {\n  switch (event.type) {\n    case \"opened\":\n      return { status: \"open\", id: event.id, balanceCents: 0 };\n    case \"funded\":\n      if (state.status !== \"open\") return state;\n      return { ...state, balanceCents: state.balanceCents + event.amountCents };\n    case \"drawn\":\n      if (state.status !== \"open\") return state;\n      return { ...state, balanceCents: state.balanceCents - event.amountCents };\n    default: {\n      const _: never = event;\n      return _;\n    }\n  }\n}\n\nexport const initialBankAccount: BankAccountState = { status: \"closed\" };\n```",
+      "elapsed_s": 4.0,
+      "auto_checks": {
+        "must_have_hits": [
+          "decide",
+          "evolve",
+          "initial"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": [
+          "class BankAccount"
+        ]
+      }
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "prompt": "Write a CommandHandler that loads an aggregate from EventStore via readStream, decides on the command, and appends the resulting events with appendToStream. Use optimistic concurrency by passing the expected version.",
+      "response": "<think>\n\n</think>\n\n```typescript\nexport type GreenhouseState = { status: \"closed\" } | { status: \"open\"; id: string };\nexport type GreenhouseCommand = { type: \"open\"; id: string };\nexport type GreenhouseEvent = { type: \"GreenhouseOpened\"; id: string };\n\nexport function evolve(state: GreenhouseState, event: GreenhouseEvent): GreenhouseState {\n  switch (event.type) {\n    case \"GreenhouseOpened\": return { status: \"open\", id: event.id };\n    default: { const _n: never = event.type; return state; }\n  }\n}\n\nexport function decide(cmd: GreenhouseCommand, state: GreenhouseState): GreenhouseEvent[] {\n  if (state.status === \"open\") throw new Error(\"already open\");\n  return [{ type: \"GreenhouseOpened\", id: cmd.id }];\n}\n\nexport interface EventStore {\n  readStream(s: string): AsyncIterable<{ revision: bigint; event: GreenhouseEvent }>;\n  appendToStream(s: string, e: GreenhouseEvent[], o: { expectedRevision: bigint | \"no_stream\" | \"any\" }): Promise<void>;\n}\n\nexport async function handle(cmd: GreenhouseCommand, ctx: { streamName: string; eventStore: EventStore }): Promise<void> {\n  let state: GreenhouseState = { status: \"closed\" };\n  let revision: bigint | \"no_stream\" = \"no_stream\";\n  for await (const { revision: r, event } of ctx.eventStore.readStream(ctx.streamName)) {\n    state = evolve(state, event);\n    revision = r;\n  }\n  await ctx.eventStore.appendToStream(ctx.streamName, decide(cmd, state), { expectedRevision: revision });\n}\n```",
+      "elapsed_s": 2.7,
+      "auto_checks": {
+        "must_have_hits": [
+          "readStream",
+          "appendToStream",
+          "expectedRevision"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "prompt": "Build a Projector that consumes ShoppingCartEvent and updates a CartSummary read model: { id, itemCount, totalCents }. Show the project(state, event) function.",
+      "response": "<think>\n\n</think>\n\n```typescript\nexport type ShoppingCartEvent =\n  | { type: \"ShoppingCartOpened\"; id: string }\n  | { type: \"ShoppingCartLineAdded\"; sku: string; priceCents: number }\n  | { type: \"ShoppingCartLineRemoved\"; sku: string; priceCents: number }\n  | { type: \"ShoppingCartFinalised\"; at: string };\n\nexport interface CartSummary {\n  readonly id: string;\n  readonly itemCount: number;\n  readonly totalCents: number;\n  readonly finalisedAt: string | null;\n}\n\nexport const emptyCartSummary: CartSummary = {\n  id: \"\",\n  itemCount: 0,\n  totalCents: 0,\n  finalisedAt: null,\n};\n\nexport function project(state: CartSummary, event: ShoppingCartEvent): CartSummary {\n  switch (event.type) {\n    case \"ShoppingCartOpened\":\n      return { ...state, id: event.id };\n    case \"ShoppingCartLineAdded\":\n      return {\n        ...state,\n        itemCount: state.itemCount + 1,\n        totalCents: state.totalCents + event.priceCents,\n      };\n    case \"ShoppingCartLineRemoved\":\n      return {\n        ...state,\n        itemCount: Math.max(0, state.itemCount - 1),\n        totalCents: Math.max(0, state.totalCents - event.priceCents),\n      };\n    case \"ShoppingCartFinalised\":\n      return { ...state, finalisedAt: event.at };\n    default: {\n      const _n: never = event;\n      return state;\n    }\n  }\n}\n```",
+      "elapsed_s": 2.5,
+      "auto_checks": {
+        "must_have_hits": [
+          "project",
+          "Event"
+        ],
+        "must_have_misses": [
+          "ReadModel"
+        ],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "prompt": "What are the tradeoffs between snapshotting vs replaying full event streams when reconstructing aggregate state? Show a TypeScript signature for a snapshot-aware loadAggregate function.",
+      "response": "<think>\n\n</think>\n\nSnapshots trade storage cost for rebuild time: replaying 10k events on every boot is expensive, while reading one snapshot plus the tail is cheaper. The tradeoff is that snapshots add moving parts \u2014 you have to version them and write them at a higher frequency, which can be harder to audit than an append-only stream.\n\n```typescript\nexport type PayoutState =\n  | { status: \"pending\" }\n  | { status: \"approved\"; id: string; amount: number }\n  | { status: \"paid\"; id: string; amount: number; at: string };\n\nexport type PayoutEvent =\n  | { type: \"PayoutRequested\"; id: string; amount: number }\n  | { type: \"PayoutApproved\"; at: string }\n  | { type: \"PayoutPaid\"; at: string };\n\nexport const initialState: PayoutState = { status: \"pending\" };\n\nexport function evolve(state: PayoutState, event: PayoutEvent): PayoutState {\n  switch (event.type) {\n    case \"PayoutRequested\":\n      return { status: \"approved\", id: event.id, amount: event.amount };\n    case \"PayoutApproved\":\n      if (state.status !== \"approved\") return state;\n      return { status: \"paid\", id: state.id, amount: state.amount, at: event.at };\n    case \"PayoutPaid\":\n      return state;\n    default: {\n      const _n: never = event;\n      return state;\n    }\n  }\n}\n\nexport interface Snapshot<S> {\n  readonly version: number;\n  readonly from: bigint;\n  readonly state: S;\n}\n\nexport interface EventStore<E> {\n  readStream(from: bigint): AsyncIterable<{ revision: bigint; event: E }>;\n}\n\nexport async function loadAggregate(\n  store: EventStore<PayoutEvent>,\n  id: string,\n  snapshots: Snapshot<PayoutState>[],\n): Promise<PayoutState> {\n  const last = snapshots.slice(-1)[0];\n  if (!last) return initialState;\n  let state = last.state;\n  const iter = store.readStream(last.from);\n  for await (const { revision, event } of iter) {\n    state = evolve(state, event);\n  }\n  return state;\n}\n```",
+      "elapsed_s": 3.5,
+      "auto_checks": {
+        "must_have_hits": [
+          "snapshot",
+          "version",
+          "evolve"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "prompt": "Write a Python function fib(n: int) -> int that computes the nth Fibonacci number iteratively. Include a brief docstring.",
+      "response": "<think>\n\n</think>\n\n```python\ndef fib(n: int) -> int:\n    \"\"\"Return the nth Fibonacci number iteratively.\n\n    Defined with F(0) = 0, F(1) = 1, and F(n) = F(n-2) + F(n-1) for n >= 2.\n    \"\"\"\n    if n < 2:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```",
+      "elapsed_s": 0.9,
+      "auto_checks": {
+        "must_have_hits": [
+          "def fib",
+          "return"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "prompt": "Use the Read tool to look at the file 'package.json' in the current directory, then summarize its dependencies in 2-3 sentences.",
+      "response": "<think>\n\n</think>\n\n```typescript\nimport { Read, Summary } from '@aws-sdk/util-filesystem';\n\nexport const describePackage = async (): Promise<Summary.DepsSummary> => {\n  const raw = await Read.read('package.json');\n  const deps = JSON.parse(raw.contents).dependencies ?? {};\n  const direct = Object.keys(deps).filter((k) => !k.endsWith('^'));\n  const transitive = Object.keys(deps).filter((k) => k.endsWith('^'));\n  return { direct, transitive };\n};\n```",
+      "elapsed_s": 0.9,
+      "auto_checks": {
+        "must_have_hits": [
+          "Read",
+          "package.json"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "prompt": "Explain the tradeoffs between REST and GraphQL for a public API. Cover: caching, over-fetching, schema evolution, and tooling. 4-6 sentences.",
+      "response": "<think>\n\n</think>\n\nREST maps well to HTTP caching: versioned endpoints with ETags or last-modified stamps let proxies cache effectively, whereas GraphQL's single /graphql endpoint requires careful stale-while-revalidate engineering. REST's resource-verb convention avoids the over-fetching GraphQL exposes when clients ask for too many fields; the server can gate fields by role at the route level more cheaply than inside a resolver. Schema evolution is cleaner in GraphQL \u2014 deprecating a field carries across clients without a breaking deploy, while REST version bumps lock you in. GraphQL has excellent tooling for client-side types (gql, codegen) but REST's maturity means production libraries are battle-tested for retries, rate limits, and credential handling. Pick REST when your payloads are uniform per endpoint and caching is critical; pick GraphQL when clients need arbitrary subsets of a resource's data and schema drift is a concern.",
+      "elapsed_s": 1.4,
+      "auto_checks": {
+        "must_have_hits": [
+          "caching",
+          "schema"
+        ],
+        "must_have_misses": [],
+        "must_not_have_violations": []
+      }
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "prompt": "I have a function that's 200 lines and does three things: parsing input, validating it, and persisting to a database. Outline a refactor in 3 steps. Don't write code yet \u2014 just the plan.",
+      "response": "<think>\n\n</think>\n\nStep one: extract each responsibility into its own function and give it a single, descriptive name. `parse` returns a typed raw shape, `validate` returns a list of errors (or an empty array on success), and `persist` accepts the validated value and returns the persisted ID. The original function becomes a thin wrapper that calls them in order and propagates errors.\n\nStep two: make each function pure and deterministic. `parse` and `validate` take only values; `persist` takes the connection pool as a parameter but still returns the same ID for the same input. Move any I/O into a thin command-runner that wraps `persist` and surfaces failures as typed errors.\n\nStep three: write a small orchestration function that composes the three pure steps. It accepts the raw input, runs the parser, runs the validator, and on success calls `persist`. The orchestration function is the only thing left that touches I/O, and it's trivial to test with different combinations of malformed input and persisted results.",
+      "elapsed_s": 1.6,
+      "auto_checks": {
+        "must_have_hits": [],
+        "must_have_misses": [
+          "1.",
+          "2.",
+          "3."
+        ],
+        "must_not_have_violations": [
+          "function "
+        ]
+      }
+    }
+  ]
+}

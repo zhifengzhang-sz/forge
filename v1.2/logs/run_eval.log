@@ -1,0 +1,26 @@
+[1/24] xstate-01 ... 4.6s, hits=4/4, violations=1
+[2/24] xstate-02 ... 2.1s, hits=3/3, violations=0
+[3/24] xstate-03 ... 2.2s, hits=4/4, violations=0
+[4/24] xstate-04 ... 1.9s, hits=2/2, violations=0
+[5/24] xstate-05 ... 1.1s, hits=3/3, violations=1
+[6/24] fp-01 ... 1.7s, hits=4/4, violations=0
+[7/24] fp-02 ... 1.5s, hits=2/3, violations=1
+[8/24] fp-03 ... 2.0s, hits=3/3, violations=0
+[9/24] fp-04 ... 2.3s, hits=1/3, violations=0
+[10/24] fp-05 ... 2.0s, hits=0/3, violations=0
+[11/24] rx-01 ... 0.9s, hits=3/3, violations=0
+[12/24] rx-02 ... 1.5s, hits=3/3, violations=0
+[13/24] rx-03 ... 0.9s, hits=2/2, violations=0
+[14/24] rx-04 ... 1.4s, hits=2/2, violations=0
+[15/24] rx-05 ... 1.5s, hits=2/3, violations=0
+[16/24] es-01 ... 2.5s, hits=4/4, violations=0
+[17/24] es-02 ... 4.0s, hits=3/3, violations=1
+[18/24] es-03 ... 2.7s, hits=3/3, violations=0
+[19/24] es-04 ... 2.5s, hits=2/3, violations=0
+[20/24] es-05 ... 3.5s, hits=3/3, violations=0
+[21/24] cap-01 ... 0.9s, hits=2/2, violations=0
+[22/24] cap-02 ... 0.9s, hits=2/2, violations=0
+[23/24] cap-03 ... 1.4s, hits=2/2, violations=0
+[24/24] cap-04 ... 1.6s, hits=0/3, violations=1
+
+Wrote /home/zzhang/dev/ai/models/forge/v0/results/v1.2.raw.json. Next: python v0/grade.py v1.2.raw.json
