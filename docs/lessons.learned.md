@@ -205,7 +205,7 @@ This isn't hindsight bias — it was the obvious right choice and we missed it f
 
 v1's decision proposed that warm-starting from v0.7's merged weights would preserve prior capabilities (see prior section). **v1.1 and v1.2 falsified this.**
 
-- **v1.1** (warm-start from v0.7 + same 4885-record data): FP 4.00 (vs v0.7's 4.40, -0.40), RX 4.40 (-0.40), XState 3.80 (-0.30). Gate halted on FP and RX, same pattern as fresh-base v1. Warm-start infrastructure worked (loss opened at 0.38 instead of 1.5, confirming the merged base is loaded correctly) but prior capability was not preserved.
+- **v1.1** (warm-start from v0.7 + same 4885-record data): FP 4.00 (vs v0.7's 4.40, -0.40), RX 4.40 (-0.40), XState 3.80 (-0.30). Gate halted on FP and RX, same pattern as fresh-base v1. Warm-start infrastructure worked — opening loss at epoch 0.008 was 0.79 (`v1.1/logs/train.log`) vs v1's fresh-base 1.64 at the same step (`v1/logs/train.log`), confirming the merged base is loaded correctly — but prior capability was not preserved.
 - **v1.2** (warm-start + delta-only data, dropping FP/RX entirely): FP **collapsed to 2.20** — worse than the untrained Qwen3-14B base (2.60). Both independent graders flagged "library confusion": model produced AWS SDK imports, broken `Option` usage, missing `Layer.succeed`/`Context.Tag` in Effect answers.
 
 The reasoning error in v1's prediction: we conflated **"the merged base encodes prior capabilities"** (true — v0.7's LoRA is merged into the base weights) with **"prior capabilities are protected during new training"** (false — the new LoRA modifies those same weights).
@@ -244,15 +244,15 @@ Both independent graders on v1.2 flagged this as "library confusion" without pro
 
 ### Verifier calibration is not a substitute for synthesis discipline
 
-v0.7's verifier gate was loose (`any of 21 tokens`) — same gate v1 used. v0.7's FP shipped at 4.40 because the upstream synthesis was disciplined (pattern spec + house rules + atomic drilling). v1's FP dropped to 3.80 despite the identical verifier because the upstream synthesis chose scenarios over patterns.
+v0.7's verifier gate was loose (`any of 20 tokens`, per `v0.7/verify.py` `_FP_MUST_MATCH`) — same gate v1 used. v0.7's FP shipped at 4.40 because the upstream synthesis was disciplined (pattern spec + house rules + atomic drilling). v1's FP dropped to 3.80 despite the identical verifier because the upstream synthesis chose scenarios over patterns.
 
 Tightening the verifier gate retroactively (Phase 3 of training.process.md) is a band-aid on a synthesis-discipline problem. The real fix is upstream: pick atomic patterns, drill them, then let a simple gate catch the obvious misses.
 
-### Experimental design: one variable per arm
+### Experimental design: interpret before iterating
 
-v1.1 changed warm-start AND kept full data. v1.2 changed warm-start AND stripped data. Neither isolated a single variable, so the cross-arm comparison couldn't discriminate between (a) data composition, (b) base initialization, (c) cross-domain interference. Three runs at ~60-75 min each produced compounded signal instead of independent tests.
+Chained vs v1, each subsequent arm did change one variable: v1.1 added warm-start (vs v1's fresh-base, same data); v1.2 dropped FP/RX data (vs v1.1, same warm-start). The flaw was in **timing**, not variable count: v1.2 was designed and launched before v1.1's partial signal (FP +0.20 vs v1, but still below the gate) was interpreted. The three arms ran 73/69/42 min respectively — total wall time ~3h of training — but the signal compounded instead of resolving cleanly.
 
-Going forward: **each arm changes exactly one variable vs the prior arm.** If two things must change, run two arms.
+Going forward: **wait for each arm's result to resolve before designing the next.** v1.1's "partial FP recovery but still halted" ambiguity should have triggered a re-plan, not a next arm on the same architecture.
 
 ### Negative-result discipline: trust prior diagnostic notes
 
@@ -268,7 +268,7 @@ Rule: when a prior decision.md flags a root-cause hypothesis with evidence, addr
 
 15. **Syntactic interference is a real constraint on multi-domain training.** Domains that share surface patterns (XState + Effect both use `setup`/generator-like composition) will compete for the same attention capacity. Domains that don't (RxJS vs XState) coexist cleanly. Factor this into data-mix design.
 
-16. **Isolate one variable per experimental arm.** Changing base + data + gate together makes the signal uninterpretable. Prefer more arms with single-variable changes over fewer arms with multi-variable changes — each arm is ~1.5h, and interpretability compounds.
+16. **Interpret each arm's result before designing the next.** v1.1 halted with partial FP recovery; v1.2 was already in planning before that signal was parsed. Running the next arm on an uninterpreted partial result compounds confounds. Each arm takes ~1-2h end-to-end; budget a real pause for analysis between runs instead of chaining directly.
 
 17. **Act on documented negative signals before running new experiments on top of them.** If `decision.md` flags a root cause with evidence, fix it first. Running more experiments on known-contaminated inputs wastes compute and adds confounds.
 
