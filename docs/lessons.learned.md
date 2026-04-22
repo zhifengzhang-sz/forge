@@ -134,3 +134,65 @@ The model clearly learned domain patterns from the training data. Quality assess
 8. **Never run third-party requirements.txt in your venv.** llama.cpp's requirements.txt downgraded torch from CUDA to CPU-only and broke everything. Always isolate or only install the specific package you need (e.g. `pip install gguf`).
 
 9. **Non-interactive mode breaks interactive prompts.** Background processes can't answer `input()` prompts. Unsloth's export prompts to install cmake. Pipe empty input or pre-install dependencies.
+
+## Training Methodology — v1 findings
+
+### Every version trained fresh from raw base. This was a mistake.
+
+All four forge versions (v0, v0.6, v0.7, v1) load the same raw model in `train.py`:
+
+```python
+MODEL = "unsloth/qwen3-14b-unsloth-bnb-4bit"
+model = FastLanguageModel.get_peft_model(model, r=..., ...)  # fresh zero-initialized LoRA
+```
+
+`get_peft_model` initializes a new LoRA with all-zero adapter weights. Each version's LoRA has never seen any prior version's weights. Every training run re-learns the whole surface from scratch.
+
+This decision was never made — it was inherited from the v0 starter script and never questioned across four iterations. The stated justifications are real:
+- Clean ablations (r=32 vs r=64, or v0.6 vs v0.7 vs v1 comparison) are unambiguous when all share a common base.
+- Full reproducibility: any version can be rebuilt from committed data alone; no prior artifact dependency.
+- No compounding of subtle biases from prior runs.
+
+**But the cost is real and v1 exposed it.** v0.7-r64 hit RX=4.80 and FP=4.40 on 240 and 320 training pairs respectively. v1 had *more* data for both domains (345 new RX + 240 v0.7 reused = 585 total; 874 new FP + 320 v0.7 reused = 1194 total) and scored *lower*: RX=4.53 and FP=3.80. v1 burned previously-proven capability and had to re-learn it badly. The `fp-04` eval prompt regressed from clean `pipe(fetchUser(id), TE.chainW(fetchOrders))` in v0.7 to a non-compiling `class NetworkDown extends FetchError` hybrid in v1 — a strict regression despite having all of v0.7's FP training data available.
+
+**The fix is sequential LoRA / continue-from-prior training.** Unsloth's `save_pretrained_gguf` merges the LoRA into the base weights and emits merged safetensors (see `v0.7/gguf/r64/model-0000N-of-0006.safetensors`). For v1.1 and beyond, load that merged artifact as the base model instead of raw `unsloth/qwen3-14b-unsloth-bnb-4bit`, then apply a fresh LoRA on top. This preserves prior capabilities in the frozen merged weights while letting new LoRA training target only the delta (ES patterns, anchor expansion, etc.).
+
+Concretely for v1.1:
+
+```python
+# OLD (v1 and earlier): fresh from raw base
+MODEL = "unsloth/qwen3-14b-unsloth-bnb-4bit"
+
+# NEW (v1.1): warm-start from v0.7-r64's proven capabilities
+MODEL = "v0.7/gguf/r64"  # merged safetensors, already contains v0.7's LoRA
+model, tok = FastLanguageModel.from_pretrained(MODEL, ...)
+model = FastLanguageModel.get_peft_model(model, r=64, ...)  # fresh LoRA on top
+```
+
+Tradeoffs of warm-starting:
+- **Loses clean ablation**: you can't directly compare v1.1-on-v0.7 vs v0.6 because the bases differ. You can still compare v1.1-on-v0.7 vs v0.7-original to measure the v1 delta.
+- **Compounds bias**: if v0.7 had a subtle quirk, v1.1 inherits it. Trade this off against not burning 4.40→3.80 FP every iteration.
+- **Harder to reproduce**: now v1.1 requires v0.7's committed safetensors; the dependency chain is longer.
+- **Reduces training cost**: less to re-learn → can train fewer epochs or focus the new LoRA on just the delta domain (ES).
+
+For a project where the whole point is "each version should be at least as good as the last on trained domains", the clean-ablation benefit isn't worth the capability loss. **v1.1 should start from v0.7-r64**, and every future run should default to warm-starting from the last shipped version unless there's a specific experimental reason not to.
+
+### n=5 per domain is too small when thresholds claim tight precision
+
+v1's predeclared thresholds (XState≥4.5, FP≥4.0, Reactive≥4.60, ES≥3.8) are tighter than the instrument measuring them. At n=5, a single response scored 2 drops the domain mean by 0.40 — enough to flip "pass" to "regression" on a single prompt. FP's regression in v1 is driven almost entirely by one prompt (fp-04) where v1 produced compile-broken code. If that single prompt had scored 4 instead of 2, FP would be 4.20, only borderline vs 4.0.
+
+The regression signal is real, but its magnitude is amplified by small-n volatility. Eval expansion to n=10 was deferred in the v1 plan ("don't change the yardstick and the experiment in the same release") — that was correct for v1, but **v1.1 should expand eval before predicting threshold behavior, not after.**
+
+### Warm-start would have prevented the v1 halt
+
+If v1 had warm-started from v0.7-r64, the LoRA initialization would already encode the RX=4.80 and FP=4.40 capabilities. Training on v1's data would *add* ES + XState-depth + new-anchors on top, not reset + re-learn + get-worse-at-FP. Projected outcome: ES up (3.10 → ~4.50), XState modest gain, FP/RX held at v0.7 levels. No regression. No halt.
+
+This isn't hindsight bias — it was the obvious right choice and we missed it for four versions in a row. v1's most valuable output is this realization, not the ES score.
+
+### Lessons added to "What We'd Do Differently"
+
+10. **Default to warm-start, not fresh-from-base.** Each training version should continue from the prior shipped version's merged weights, not re-initialize from raw base. Fresh-from-base is a research-mode choice for ablations; production iteration is sequential. Cost of ignoring this: v1 traded v0.7's proven FP=4.40 for v1's FP=3.80, despite having all of v0.7's FP data plus 874 new FP pairs. Three runs at ~75 min each were effectively wasted on relearning what the prior run already knew.
+
+11. **Predeclared thresholds must respect the eval's resolution.** At n=5 per domain, the noise floor is roughly ±0.40 on a single response. Predeclaring `≥4.60` or `≥4.50` thresholds is claiming precision the eval can't deliver. Either expand the eval (n=10 minimum) or soften the thresholds to ranges ("4.3-4.7") so single-response volatility doesn't flip binary ship/no-ship decisions.
+
+12. **"Don't regress" needs a per-domain absolute floor, not a flat delta.** A flat "0.3 drop from v0.7 halts" is fine for domains with room (FP at 4.40) but harsh for near-ceiling domains (RX at 4.80 has only 0.20 of headroom before 5.0). Better rule: halt if a domain falls below both (a) v0.7 minus 0.3 AND (b) an absolute floor that matches the domain's trained maturity (e.g. RX≥4.50 as an absolute floor independent of prior run).

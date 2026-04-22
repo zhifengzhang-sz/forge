@@ -5,6 +5,93 @@ context, dependencies.
 
 ---
 
+## v1.1 (top priority): warm-start from v0.7-r64
+
+**What:** Fork `v1/train.py` → `v1.1/train.py`. Change the base model
+load from `unsloth/qwen3-14b-unsloth-bnb-4bit` to `v0.7/gguf/r64/`
+(the merged safetensors from v0.7's winner run). Apply a fresh
+`r=64` LoRA on top of that warm-started base. Train on v1's same
+4885-record dataset (or a rebalanced variant — see v1.2 below).
+Re-run Phase F/G/H.
+
+**Why:** v1 scored FP=3.80 and RX=4.53, regressing from v0.7's
+FP=4.40 and RX=4.80. Root cause per `docs/lessons.learned.md`: v1
+trained a fresh LoRA from raw Qwen3-14B, so it had to re-learn
+domains v0.7 already nailed — and re-learned FP worse because the
+v1 data mix has subtler FP quality issues. Warm-starting from
+v0.7-r64 preserves v0.7's FP=4.40 and RX=4.80 capabilities in the
+frozen base weights; the new LoRA only needs to add ES + XState
+depth + anchor expansion on top.
+
+**Pros:**
+- No relearning cost — prior capabilities are baked in.
+- FP/RX regression should disappear (or at worst stay flat).
+- ES gain (3.10 → 4.50 in v1) should hold.
+- Training may be faster (less to learn) or allow fewer epochs.
+- Unlocks the "each version ≥ prior" guarantee the project has
+  implicitly been aiming for.
+
+**Cons:**
+- Loses clean ablation: can't compare v1.1 directly vs v0.6 because
+  the base differs. Can still measure v1.1 delta vs v0.7.
+- Compounds any subtle v0.7 quirks forward.
+- Dependency on `v0.7/gguf/r64/` being preserved (it is, committed
+  to the repo, ~28GB in safetensors).
+
+**Context:** See `docs/lessons.learned.md` "Training Methodology — v1
+findings" for the full analysis. This was the single most important
+lesson from v1.
+
+**Depends on:** Nothing new. `v0.7/gguf/r64/model-*.safetensors` is
+already on disk. Just change `MODEL` in train.py to that path.
+
+**Estimated cost:** ~75 min training + 15 min GGUF + 2 min eval + 10
+min grading. Total ~100 min for a complete v1.1 run.
+
+---
+
+## v1.2 (after v1.1 validates warm-start): rebalanced data mix + tighter FP gate
+
+**What:** If v1.1 confirms warm-start is the right architecture, v1.2
+investigates whether the v1 data mix itself has issues independent of
+the warm-start question. Specifically:
+- Drop FP volume to match v0.7's proportion (~30% of total, ~300
+  records) — remove the weaker v1 FP batches (B2 at 68% survival and
+  B22 at 70% were flagged).
+- Tighten FP verifier positive gate — require actual `Effect.gen`
+  usage, not just "contains `pipe(`".
+- Drop anchor ratio from 12% back to 8% (30 unique × 12 reps = 360,
+  not 600).
+- Train on warm-start base from v1.1.
+
+**Why:** v1's FP verifier gate is looser than XState's — 20 positive
+tokens satisfies the gate even if the code is structurally weak (e.g.
+`fp-04`'s `class extends interface`). Some v1 FP batches (B2, B22)
+let through records that teach the model subtler mistakes. A v1.2
+with tighter FP gate + trimmed FP set should separate "data mix was
+bad" from "fresh-start was bad."
+
+**Depends on:** v1.1 complete, FP still below baseline.
+
+---
+
+## v1.3: r=128 A/B ablation on 4885 dataset
+
+**What:** Run v1.1 or v1.2's winning recipe at r=128 as a single-
+variable ablation against r=64. Warm-started from v0.7-r64.
+
+**Why:** The v1 plan deferred r=128 because "validation loss didn't
+stagnate at r=64" in v0.7. v1 has now shown FP drift at r=64 on 5×
+data — some of that drift might be capacity starvation (4 domains,
+1194 FP records, r=64 rank may not have enough capacity to preserve
+all FP patterns). r=128 adds ~11% training time (~83 min vs 75 min)
+for a clean capacity answer.
+
+**Depends on:** v1.1 shows warm-start fixes the regression. If v1.1
+still regresses, capacity isn't the answer and skip this.
+
+---
+
 ## Production-in-the-loop validation (v1.5)
 
 **What:** Dogfood `ts-forge-v1:latest` against real Claude Code tasks with a

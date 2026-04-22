@@ -203,18 +203,72 @@ predicted. FP went the other way, opening from 8% gap to 21%.
    issues. For future runs, default to 2-grader with ad-hoc 3rd on
    ±0.3 borderline — exactly the policy the plan specified.
 
+## The bigger lesson v1 surfaced — warm-start, not fresh-from-base
+
+Before v1's concrete recommendations, there is a structural finding
+that dominates everything else: **every forge version trained from
+raw Qwen3-14B with a zero-initialized LoRA, and that was a mistake.**
+
+v0.7-r64 trained 1053 records and produced RX=4.80 and FP=4.40 —
+genuinely good numbers. v1 then discarded v0.7's learned weights, set
+the LoRA back to zero, and re-trained from scratch on a superset of
+the data. The model had to re-learn RX and FP from the combined
+corpus, and re-learned FP **worse** (3.80) than v0.7 had (4.40)
+despite having all of v0.7's FP data plus 874 more FP pairs on top.
+
+This pattern was silently baked into every version since v0:
+`MODEL = "unsloth/qwen3-14b-unsloth-bnb-4bit"` → fresh LoRA init.
+Four iterations in a row treated each training run as independent
+instead of sequential. Nobody questioned it. The cost compounds
+every run: v1 threw away ~75 min of proven training capability and
+ended up with a worse model.
+
+**The fix for v1.1 is mechanical and cheap.** Unsloth's
+`save_pretrained_gguf` already writes the merged safetensors to
+`v0.7/gguf/r64/model-0000N-of-0006.safetensors`. Change one line in
+`train.py`:
+
+```python
+# v1 (and earlier): MODEL = "unsloth/qwen3-14b-unsloth-bnb-4bit"
+MODEL = "v0.7/gguf/r64"  # warm-start from v0.7-r64's proven weights
+```
+
+Then apply a fresh LoRA on top. The frozen merged base already
+encodes v0.7's FP=4.40 and RX=4.80. The new LoRA only needs to
+learn the delta (ES patterns, XState depth, new anchors). **This
+should eliminate v1's entire regression**, because there's nothing to
+re-learn.
+
+**Cost of the oversight:** v1's full 18–20 h execution cost, minus
+the ~60 min of ES-specific capability it actually produced. Most of
+the run was spent teaching the model things it already knew, and
+some of it was spent teaching it things *worse* than it already knew.
+
+This is documented fully in `docs/lessons.learned.md` under
+"Training Methodology — v1 findings". It's the single most
+important takeaway from v1.
+
 ## Recommended next steps (v1.1 or v1 rework)
 
 Priority order:
 
-1. **Do NOT dogfood ts-forge-v1 as daily driver.** Keep ts-forge-v0.7-r64
-   as the recommended local model until the FP regression is
-   understood and fixed.
+1. **v1.1: warm-start from v0.7-r64.** Change one line in
+   `v1/train.py` (`MODEL = "v0.7/gguf/r64"`), keep everything else
+   the same, re-run the full train → eval → grade pipeline. Projected
+   outcome based on the warm-start hypothesis: FP holds at 4.40+, RX
+   holds at 4.80, ES holds at 4.50, XState modest gain. No regression,
+   no halt, Phase I ships. Cost ~100 min. **This should be done before
+   any data-mix tweaks.** If v1.1 still regresses, the data-mix
+   hypothesis is correct and we move to v1.2; if v1.1 clears the bar,
+   we've validated the warm-start fix and can dogfood.
 
-2. **v1.1 with rebalanced data mix.** Hypothesis: cut FP volume to
-   match v0.7's ratio (~30% of total), tighten FP verifier gate,
-   drop anchor ratio to 8%. Projected outcome: FP recovers to 4.40+,
-   ES holds at 4.50, XState stable.
+2. **Do NOT dogfood ts-forge-v1 as daily driver.** Keep ts-forge-v0.7-r64
+   as the recommended local model until v1.1 clears the regression gate.
+
+3. **v1.2 (only if v1.1 still regresses): rebalanced data mix.** Cut
+   FP volume to match v0.7's ratio (~30% of total), tighten FP
+   verifier gate (require actual `Effect.gen` usage, not just
+   `pipe(`), drop anchor ratio to 8%. Combined with v1.1's warm-start.
 
 3. **Investigate which FP batches caused the drift.** The FP B-wave
    subagents had varied survival rates (B2 at 68%, B22 at 70%). A post-hoc
