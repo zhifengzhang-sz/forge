@@ -189,6 +189,8 @@ If v1 had warm-started from v0.7-r64, the LoRA initialization would already enco
 
 This isn't hindsight bias — it was the obvious right choice and we missed it for four versions in a row. v1's most valuable output is this realization, not the ES score.
 
+**EDIT 2026-04-22**: This prediction was **falsified** by v1.1. See "Training Methodology — v1.1/v1.2 findings" below. Warm-start preserved infrastructure and sped convergence but did NOT preserve capability on FP/RX. The reasoning error is documented in the next section.
+
 ### Lessons added to "What We'd Do Differently"
 
 10. **Default to warm-start, not fresh-from-base.** Each training version should continue from the prior shipped version's merged weights, not re-initialize from raw base. Fresh-from-base is a research-mode choice for ablations; production iteration is sequential. Cost of ignoring this: v1 traded v0.7's proven FP=4.40 for v1's FP=3.80, despite having all of v0.7's FP data plus 874 new FP pairs. Three runs at ~75 min each were effectively wasted on relearning what the prior run already knew.
@@ -196,3 +198,78 @@ This isn't hindsight bias — it was the obvious right choice and we missed it f
 11. **Predeclared thresholds must respect the eval's resolution.** At n=5 per domain, the noise floor is roughly ±0.40 on a single response. Predeclaring `≥4.60` or `≥4.50` thresholds is claiming precision the eval can't deliver. Either expand the eval (n=10 minimum) or soften the thresholds to ranges ("4.3-4.7") so single-response volatility doesn't flip binary ship/no-ship decisions.
 
 12. **"Don't regress" needs a per-domain absolute floor, not a flat delta.** A flat "0.3 drop from v0.7 halts" is fine for domains with room (FP at 4.40) but harsh for near-ceiling domains (RX at 4.80 has only 0.20 of headroom before 5.0). Better rule: halt if a domain falls below both (a) v0.7 minus 0.3 AND (b) an absolute floor that matches the domain's trained maturity (e.g. RX≥4.50 as an absolute floor independent of prior run).
+
+## Training Methodology — v1.1/v1.2 findings
+
+### The warm-start capability-preservation prediction was wrong
+
+v1's decision proposed that warm-starting from v0.7's merged weights would preserve prior capabilities (see prior section). **v1.1 and v1.2 falsified this.**
+
+- **v1.1** (warm-start from v0.7 + same 4885-record data): FP 4.00 (vs v0.7's 4.40, -0.40), RX 4.40 (-0.40), XState 3.80 (-0.30). Gate halted on FP and RX, same pattern as fresh-base v1. Warm-start infrastructure worked (loss opened at 0.38 instead of 1.5, confirming the merged base is loaded correctly) but prior capability was not preserved.
+- **v1.2** (warm-start + delta-only data, dropping FP/RX entirely): FP **collapsed to 2.20** — worse than the untrained Qwen3-14B base (2.60). Both independent graders flagged "library confusion": model produced AWS SDK imports, broken `Option` usage, missing `Layer.succeed`/`Context.Tag` in Effect answers.
+
+The reasoning error in v1's prediction: we conflated **"the merged base encodes prior capabilities"** (true — v0.7's LoRA is merged into the base weights) with **"prior capabilities are protected during new training"** (false — the new LoRA modifies those same weights).
+
+### LoRA is global, not local
+
+A LoRA adapter modifies **all 40 layers × 7 projection matrices** (q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj). At r=64, that's 256.9M trainable parameters spread across every attention and MLP block. There is no "LoRA for FP" vs "LoRA for XState" — every parameter is shared.
+
+During training:
+1. Gradients come only from whatever's in the current batch (e.g., ES + XState data).
+2. Those gradients update ΔW in whatever direction lowers the batch loss.
+3. The LoRA has no mechanism to say "don't touch FP representations."
+4. Every subsequent inference pass — including FP queries — goes through the LoRA-modified weights.
+
+Consequence: training on domain X perturbs domain Y's inference, even when Y is never in the batch. In v1.2, training heavily on XState's `setup({types}).createMachine` pattern biased the model's attention toward state-machine idioms; FP queries then came back with wrong-library output because the Effect-specific attention patterns had been displaced.
+
+### Cross-domain interference correlates with syntactic surface
+
+v1.2 excluded BOTH FP and RX from training. FP collapsed (4.40 → 2.20); RX held (4.80 → 4.60). The asymmetry is explained by surface similarity:
+
+- **XState ↔ Effect**: both use `setup({types, ...})`-style typed-block composition and generator-like control flow (`Effect.gen(function*)`). Shared tokens cause attention heads to confuse the domains.
+- **XState ↔ RxJS**: RxJS uses `pipe(op1(), op2(), ...)` operator composition — no `setup`, no generators, no typed blocks. Distant surface. No interference.
+
+This means domain coexistence in training data isn't a pure "more is better" — it depends on the syntactic neighborhoods of what you're training. Training heavily on one syntactically-rich pattern (XState `setup`) can disrupt domains that share surface tokens.
+
+### v0.7's FP recipe was atomic pattern drilling; v1's was compositional scenarios
+
+We assumed v1's FP regression was caused by low-quality FP synthesis batches (B2, B22 at 68-70% verifier survival). Actual finding from comparing v0.7 and v1 theme selection:
+
+- **v0.7 FP corpus (8 batches, 320 records)**: each batch drills ONE pattern × 40 variations. A = Effect.gen with yield*. B = Context.GenericTag. C = Schedule retry. D = fp-ts Option chain. E = TaskEither.tryCatch. F = Brand.nominal. G = acquireRelease/scoped. H = Effect.tap for logging. 40 minimal variations of ONE API per batch. This is **atomic pattern drilling**.
+- **v1 FP corpus (24 batches, 874 records)**: each batch is a **compositional scenario** combining 2-4 patterns. "Build a full HTTP handler from scratch" (B14). "File upload pipeline with acquireRelease + validation + encryption" (B15). "Event-sourcing command handler in Effect" (B22). "Hexagonal architecture with service layers" (B23). Plus advanced APIs not in v0.7 (Schema, Stream, Lens, RequestResolver).
+
+These aren't low-quality records. They're **high-complexity** records. The problem is per-pattern training density: v0.7 gave the model 40 examples of Brand.nominal; v1 spread 874 records across ~20 topics at ~5-10 atomic-pattern examples each. Insufficient signal per pattern.
+
+Both independent graders on v1.2 flagged this as "library confusion" without prompting — the model learned compositional usage but not pattern identity.
+
+### Verifier calibration is not a substitute for synthesis discipline
+
+v0.7's verifier gate was loose (`any of 21 tokens`) — same gate v1 used. v0.7's FP shipped at 4.40 because the upstream synthesis was disciplined (pattern spec + house rules + atomic drilling). v1's FP dropped to 3.80 despite the identical verifier because the upstream synthesis chose scenarios over patterns.
+
+Tightening the verifier gate retroactively (Phase 3 of training.process.md) is a band-aid on a synthesis-discipline problem. The real fix is upstream: pick atomic patterns, drill them, then let a simple gate catch the obvious misses.
+
+### Experimental design: one variable per arm
+
+v1.1 changed warm-start AND kept full data. v1.2 changed warm-start AND stripped data. Neither isolated a single variable, so the cross-arm comparison couldn't discriminate between (a) data composition, (b) base initialization, (c) cross-domain interference. Three runs at ~60-75 min each produced compounded signal instead of independent tests.
+
+Going forward: **each arm changes exactly one variable vs the prior arm.** If two things must change, run two arms.
+
+### Negative-result discipline: trust prior diagnostic notes
+
+`v1/decision.md` explicitly wrote "FP verifier gate is too loose. 20-token positive gate lets structurally weak code through." The fix (tighten to structural patterns) was spec'd in `docs/training.process.md` Phase 3. Both were in the repo before v1.1 and v1.2 ran. We ran two more arms on uncorrected data anyway.
+
+Rule: when a prior decision.md flags a root-cause hypothesis with evidence, address it before running more experiments that sit on top of it.
+
+### Lessons added to "What We'd Do Differently"
+
+13. **Atomic pattern drilling beats compositional scenarios for primary training signal.** For a new domain or capability, pick one API surface per batch and drill it with 30-40 minimal variations. Save compositional scenarios ("build an end-to-end HTTP handler") for a second-phase polish on top of a solid atomic foundation. Pattern identity must be learned before pattern composition.
+
+14. **Warm-start is training continuation, not capability freezing.** Treat `MODEL = v0.7/gguf/r64` as "start from these weights" — not "v0.7's learning is protected." Training on any data perturbs everything because LoRA is global. If you need real capability isolation, use LoRA stacking with separate frozen adapters (never tested in this project).
+
+15. **Syntactic interference is a real constraint on multi-domain training.** Domains that share surface patterns (XState + Effect both use `setup`/generator-like composition) will compete for the same attention capacity. Domains that don't (RxJS vs XState) coexist cleanly. Factor this into data-mix design.
+
+16. **Isolate one variable per experimental arm.** Changing base + data + gate together makes the signal uninterpretable. Prefer more arms with single-variable changes over fewer arms with multi-variable changes — each arm is ~1.5h, and interpretability compounds.
+
+17. **Act on documented negative signals before running new experiments on top of them.** If `decision.md` flags a root cause with evidence, fix it first. Running more experiments on known-contaminated inputs wastes compute and adds confounds.
+
+18. **The verifier is a quality floor, not the quality driver.** The upstream synthesis spec (patterns.fp.md, phrasings.md, house rules, theme selection) is what determines whether training data teaches the target capability. A tight verifier catches obvious misses; it cannot rescue compositionally-scattered records.
