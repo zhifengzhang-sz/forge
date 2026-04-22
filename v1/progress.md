@@ -1,8 +1,20 @@
 # v1 Execution Progress Ledger
 
+**STATUS: EXECUTION COMPLETE.** Phase A-H finished. See `v1/decision.md`
+for outcome. Phase I (ship) was halted by Phase G regression gate.
+
 Cross-session resumable record. Each wave appends a row here when the
 verified batch lands. Resuming from this ledger: read to find the last
 completed wave, continue from the next one.
+
+## Final outcome
+
+- **Training data: 4885 verified records** (target was 5000, 97.7%)
+- **Trained model**: `ts-forge-v1:latest` in ollama (9GB)
+- **Phase G regression gate: HALT** — FP -0.60, RX -0.27 vs v0.7-r64
+- **v1/decision.md**: written documenting "Solid v1, do not ship" outcome
+- **ES: 4.50 (+1.40 vs v0.7)** — biggest single-domain gain in project
+- **Ship tag**: NOT created. v0.7-r64 remains recommended daily driver.
 
 ## Waves
 
