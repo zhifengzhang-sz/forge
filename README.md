@@ -4,6 +4,24 @@ Fine-tune open-weight models to write idiomatic TypeScript in four domains: func
 
 See [docs/design.md](docs/design.md) for the full design document.
 
+## Research output
+
+**[When rsLoRA Hurts: Vanilla LoRA Scaling Outperforms rsLoRA on Underrepresented Domains in Imbalanced Multi-Task Fine-Tuning](paper/rslora-imbalanced.pdf)** — Zhifeng Zhang ([ORCID 0009-0004-9509-5221](https://orcid.org/0009-0004-9509-5221)) & Claude Opus 4.7 (April 2026)
+
+Empirical paper produced from this project's investigation. Six-arm α-decoupling ablation at r=128 on Qwen3-14B fine-tuned on a 4-domain TypeScript corpus with 12% minority share. Finding: the canonical rsLoRA recipe (α=r) produces a U-shaped degradation on the underrepresented domain, scoring 1.40 below vanilla LoRA on that task while peaking on the majority-share task.
+
+- Paper PDF: [`paper/rslora-imbalanced.pdf`](paper/rslora-imbalanced.pdf)
+- Source markdown: [`paper/paper.md`](paper/paper.md) — pandoc + xelatex build via [`paper/Makefile`](paper/Makefile)
+- Bibliography: [`paper/refs.bib`](paper/refs.bib) (16 citations)
+- Figure source: [`paper/src/make_figure.py`](paper/src/make_figure.py)
+- Per-arm raw eval data: `results/B1/` … `results/B6/`
+
+Companion documents:
+
+- [`docs/conclusions.cross-version.md`](docs/conclusions.cross-version.md) — methodology + recipe lessons across v0 → v3 (the keystone synthesis)
+- [`docs/findings.v3.conclusions.md`](docs/findings.v3.conclusions.md) — v3-phase specifics + literature posture
+- [`docs/findings.multi-domain.md`](docs/findings.multi-domain.md) — earlier finding (multi-task joint vs single-task) with literature
+
 ## Hardware Requirements
 
 | Component | Minimum |
