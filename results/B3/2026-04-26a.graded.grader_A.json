@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-B3",
+  "arm": "B3",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5 setup() with typed context/events and fromPromise actor with input fn. Minor flaw: state 'email' has no NEXT transition to 'password', so the form can't actually progress past email even though emailCheck stores result. Otherwise correct."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5 with setup(), typed events, named guard. Guard 'isDownloading' is semantically thin (any state with progress<100 passes), but it is wired correctly to PAUSE only inside 'downloading'. Five states present, assign tracks progress."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5 invoke + fromPromise with input fn, onDone assigns output, onError targets 'failed' with proper Error narrowing. Retry transition is a nice touch."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "fromObservable usage is awkward — manually constructs a Subscribable instead of returning a true Observable, and has a defensive 'typeof observer === function' branch that doesn't reflect the actual fromObservable callback contract. The machine wiring (invoke, DATA event handling) is correct; concept conveyed but not idiomatic."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4→v5 migration: setup() with typed context/events, named action 'bump', destructured ({ context }) updater, no v4 Machine() or (ctx) leftovers."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "pipe + Either + chainW composition is correct and the three validators are pure. However splitEmail uses 'throw new Error' on the happy path post-validation which contradicts the FP discipline asked for; should have returned Either or branded after the @-check guarantees split safety."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Effect.gen, Layer.merge, catchTag and Context.GenericTag all present and shape is right. But: declares 'class Config' and 'const Config' with the same identifier — a TypeScript merging hazard / shadowing that will not compile cleanly. Concept correct, code would not run as written."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic: pipe + O.chain(O.fromNullable) handles the optional email field, then O.map for uppercase. Concise and correct."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Correct TaskEither composition with TE.chainW; types model the union FetchError well. Slight: uses chainW but a single FetchError type means chain would suffice — minor stylistic note, not wrong."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Layer.merge composes Logger + Database, Effect.gen consumes both, Effect.provide injects. Uses Context.GenericTag (current Effect API) rather than the older Context.Tag — still idiomatic. Solid example."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic pipeable typeahead: debounceTime(250), distinctUntilChanged, switchMap, plus a sensible filter for short queries. Cancellation behavior of switchMap is called out."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with object form is the modern idiom; map projects to a typed ViewModel. Clean, no over-engineering."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files) + mergeMap with concurrency=3 is the textbook answer. Commentary correctly contrasts concatMap/switchMap/forkJoin."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Accurate explanation of replay semantics with a concrete currentUser$ BehaviorSubject example, and a contrasting Subject case showing late subscriber misses emissions. Crisp."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Returns OperatorFunction<T,T> via pipe(tap<T>(...)) — correct and type-safe. Slightly indirect (could just return tap directly), but composable. Demo usage with declared events$ illustrates."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union state and event types, initial state, evolve with exhaustive switch and never-check. ItemRemoved guards against negatives. Idiomatic."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Full Decider pattern with initialState/decide/evolve. Rejects withdraw>balance and other invalid transitions. Exhaustive switches with never-checks. Open/close lifecycle handled."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Loads via readStream, folds with evolve, decides, appends with expectedRevision (using 'no_stream' sentinel for empty). Solid optimistic concurrency shape. Minor: revision after replay should be the last event's revision, not the readStream-returned revision — but the abstraction passes that through fine."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state,event) updates id/itemCount/totalCents correctly, handles add/remove with quantity*price, and tracks closedAt. Read model has an extra 'closedAt' field beyond the prompt's spec — harmless extension. Exhaustive."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoff prose is reasonable but slightly muddled (claims snapshot 'carries the burden of evolve having to process all events since last snapshot' — that's a feature, not a burden of snapshots). Signature is OK but has a bug: the loop reads 'event.revision' though revision lives on the envelope, not the event payload. Concept conveyed, code wouldn't typecheck."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib with proper docstring, handles n<2, O(n) time, O(1) space. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Did not actually invoke a Read tool — printed a pseudo 'Read(path: ...)' line and then fabricated specific dependencies (express, mongodb, typescript, jest, eslint, redis) with no evidence. Hallucinated content where the prompt explicitly asked to look at the file."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required topics (caching, over-fetching, schema evolution, tooling) accurately and with concrete examples (ETags, persisted queries, OpenAPI, GraphiQL). Within the requested length."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clear three-step plan: extract pure parser, extract pure validator, extract persistence adapter behind an orchestrator. Calls out separation of concerns and migration path. No code, as requested."
+    }
+  ]
+}

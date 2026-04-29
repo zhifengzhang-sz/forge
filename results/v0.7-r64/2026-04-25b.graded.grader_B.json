@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v0.7-r64",
+  "arm": "v0.7-r64",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5 setup() with typed context/events, actors registry, fromPromise with typed input, and invoke pulling from string id. Quibble: the 'taken' flag is set heuristically on NEXT (based on email length) and then overwritten on actor error, conflating local validation with API result. Otherwise a clean signup machine."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Guards are declared in setup() but never wired into any transition, so the requested 'guarded pause only while downloading' is missing — pause is implicitly state-gated by being defined only on the downloading state, but no explicit guard fires. Also, several assign() calls reassign progress to its current value (no-ops). Structurally v5-correct but doesn't fulfil the guard requirement."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5 invoke + fromPromise. Typed Profile/Ctx/Ev, actor registered in setup actors, input function pulls id from context, onDone assigns event.output, onError moves to 'failed' and captures the error string. Nothing to fix."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Material correctness problems. fromObservable expects an Observable<T> but the body returns a ReadableStream<T>, which won't satisfy the actor contract. The actual invoke wiring is commented out, so the actor is never started; OPEN just self-assigns lastQuote with no effect. Skeleton compiles but doesn't work."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4-to-v5 migration: setup() with typed context/events, named action 'bump' using assign with destructured ({ context }), Machine() removed. Concise and idiomatic."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Three validators (nonEmpty, hasAt, under254) cleanly composed with pipe and E.chainW, then E.map projects to Email. Tagged ValidationError, no throws, no any. Concluding note about chainW preserving the error channel is accurate."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Effect.gen, Layer, Context.GenericTag, Data.TaggedError, and catchTag — shape is right. But UserClient.byId always Effect.succeeds, so the UserNotFound fallback path is never demonstrated end-to-end; catchTag wraps a program that cannot fail with that error. Fallback is wired but not exercised."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Functionally correct but unidiomatic: O.chain((x) => O.some(x.email)) is just O.map((x) => x.email). The trailing comment also misframes O.chain as null-guarding email when email is a string here. Result types check, just not the cleanest pipe."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Concise, idiomatic TaskEither composition with pipe and TE.chainW, FetchError as a tagged class, declarations for the two effects. Note about chainW widening the error channel is on point."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Context.GenericTag (the current effect API) and Layer.succeed/Layer.effect correctly. However, the prompt asked to compose Logger and Database layers and inject both — the answer uses Layer.provide(DatabaseLive, LoggerLive), which threads Logger as a dependency of Database rather than merging them as siblings. No Layer.merge. The DatabaseLive constructor also doesn't actually consume Logger, so the wiring is decorative."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Tight typeahead pipeline: debounceTime(250) → distinctUntilChanged → switchMap to searchApi$. Typed Result and return type. Closing note correctly identifies switchMap as the cancellation operator."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest used in object form, typed ViewModel, map projects to the view shape. Comment about waiting for first emission from each source is accurate."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files).pipe(mergeMap(uploadFile$, 3)) — exactly the canonical concurrency-bounded mergeMap pattern. Typed FileWithId and UploadProgress."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Correct distinction (Subject has no buffer; BehaviorSubject replays the latest value to late subscribers). currentUser example with BehaviorSubject<User|null> and .asObservable() is appropriate. Could have shown a Subject side-by-side to make the late-subscriber contrast concrete, but the explanation already covers it."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Type-safe OperatorFunction<T,T> using tap with a full observer object (next/error/complete). Returning pipe(source$, tap(...)) is unusual style — typically operators return source.pipe(tap(...)) — but functionally identical. Solid."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "evolve(state, event) is exhaustive with switch and a discriminated CartEvent, plus a CartState type. But subtotalCents arithmetic invents a flat 100-cent unit per item — there is no price on the events, so the projection is fabricated rather than modeled. Initial state itself isn't shown explicitly (only constructed inside CartCreated). Acceptable shape, weak modeling."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 2,
+      "rationale": "Decider trio is named, but decide() always emits amount: 0 — it doesn't read the command payload because Cmd is just a string, not a tagged record. The withdrawal guard checks balance >= 0 (always true at zero balance) rather than balance >= amount, so the 'reject withdrawals exceeding balance' rule is not actually implemented. Mechanically broken on the central requirement."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 1,
+      "rationale": "Significant fabrication. Imports CommandHandler from '@temporalio/workflow', which is not a real Temporal API surface for event-sourcing command handling. The pattern reshapes the request into Temporal-flavored handlers (start/decide/commit) rather than the asked-for read-decide-append pipeline. expectedVersion/expectedRevision is referenced but never passed to appendToStream, so optimistic concurrency is not actually wired. Wrong primitives, missing concurrency control."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state, event) is exhaustive over a discriminated ShoppingCartEvent, returns a typed CartSummary with id/itemCount/totalCents. REMOVE_ITEM still references priceCents on an event that doesn't carry it — small modeling slip. Otherwise clean."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoffs table is reasonable (load latency, storage, scaling) though some rows are tautological ('events are still the canonical source' for both columns). loadAggregate signature has Snapshot<T> with version and nextEventIndex but takes events/snapshots as raw arrays without an evolve fold function or stream cursor, so the snapshot-aware semantics are implicit rather than expressed in the type."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib with constant-space pair update, correct base case (n < 2 returns n), docstring noting O(n) time and the F(0)=0, F(1)=1 convention. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Fabrication. The model claims to have read package.json and reports specific dependency versions (react/react-dom 18.2.0, axios 1.6.2) without actually invoking any tool. The auto-check confirms no Read tool call appears. This is exactly the failure mode the capability axis is designed to catch."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Hits all four required dimensions (caching, over-fetching, schema evolution, tooling) accurately, with concrete mechanisms (ETags/Cache-Control, DataLoader, deprecation directives, OpenAPI vs GraphiQL). Closes with a clear when-to-pick recommendation."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps that cleanly separate parsing (shape), validation (semantics), and persistence (adapter), with a one-line summary of the resulting composition. No premature code, exactly as asked."
+    }
+  ]
+}

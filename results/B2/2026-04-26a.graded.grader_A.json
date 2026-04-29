@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.0",
+  "arm": "B2",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses setup() with typed context/events, fromPromise typed actor, invoke with input. But contains v4 leakage: `internal: true` is v4 syntax (v5 uses `reenter`/default); `event.event.output.reason` is a malformed property access (should be `event.output.reason`); the EMAIL.UNIQUE event-driven entry into checkingEmail is awkwardly wired and the NEXT transition never actually invokes the validator. Acceptable structure but has multiple bugs."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Defines `guards` in setup() but the PAUSE transition uses `cond: 'isDownloading'` — `cond` is v4 syntax, v5 uses `guard:`. The guard logic is also weak (checks progress range instead of relying on the fact we're already in `downloading`). Mixed v4/v5 idioms is the exact failure mode the prompt is meant to expose."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5: setup() with typed context/events, fromPromise actor, invoke with src+input, onDone/onError both with assign, error narrowing via instanceof Error, RETRY transition from failed. Idiomatic."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Conflates fromObservable with fromCallback API: fromObservable expects a function returning an Observable, but the code uses sendBack callbacks and returns a cleanup function — that is fromCallback semantics. The WebSocket should be wrapped as an Observable (e.g., via `new Observable(subscriber => ...)`) for fromObservable. API misuse on the central operator the prompt is testing."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v4→v5 conversion: setup() with typed context/events, named action `bumpCount` referenced as a string, assign uses `({ context })` destructuring. Drops Machine() and v4 currying entirely."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: tagged ValidationError, three pure validators returning Either, composed with pipe + E.chainW (correct widening choice for heterogeneous error tags). Final E.map asEmail. Clean."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Effect.gen, yield*, Context.GenericTag, Layer.effect, Data.TaggedError — the right primitives. But `Effect.provide(program, { Config: ConfigLive, UserClient: UserClientLive })` is wrong: provide takes a Layer, not a record. Also the prompt asked for fallback on UserNotFound via catchTag — the response only mentions catchTag in prose without implementing it. Acceptable structure, missing the actual error-recovery the prompt requested."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Clean fp-ts Option pipeline with pipe, O.map, O.chain. Adds a sensible chain step to filter malformed emails. Could be simplified (single map would suffice for the stated task), but the chain example demonstrates idiomatic usage."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Correct TaskEither composition with pipe + TE.chainW. The trailing prose explanation about chainW vs chain is slightly off (chainW is for widening the error type, not the success type), but the code itself is correct."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic Effect Layer pattern: Context.GenericTag for both services, Layer.succeed for stateless Logger, Layer.effect for Database that yields Logger as a dependency, Layer.merge for composition, Effect.provide at the boundary. Hits all the FP domain anchors."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic typeahead: pipe with debounceTime(250), distinctUntilChanged, switchMap. Includes the empty-query short-circuit. switchMap correctly cancels in-flight requests. Type annotations clean."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic combineLatest with object form, map to typed ViewModel. Comment correctly notes that combineLatest waits for each source's first emission. Clean pipeable composition."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with concurrency=3 — the textbook pattern. Typed FileToUpload/UploadProgress, from(files) source, clean pipe. Minimal and correct."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Correct conceptual distinction: BehaviorSubject has initial value and replays latest to late subscribers; Subject does not. Code example demonstrates both. Could go deeper on the 'currentUser' use case (e.g., asObservable, complete vs error semantics), but the answer is correct and the example illustrates the late-subscriber point."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic custom operator: returns OperatorFunction<T,T> via pipe(tap(...)) — fully type-safe, generic, and uses the official RxJS composition primitive instead of a hand-rolled function(source) => source.lift(...) form. Trailing usage example shows wiring."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Tagged-union events and state, immutable evolve with exhaustive never check, computed subtotal, initial state constant. Includes a bonus CartCheckedOut event. Clean event-sourcing style with no class/this leakage."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider shape (initialState/decide/evolve), tagged commands and events, balance check on withdraw, exhaustive never checks. Uses thrown DomainError instead of returning a Result/rejection event — pragmatic but less functional than returning Either<DomainError,Event[]>. Otherwise idiomatic and the open/closed state machine is a nice touch."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Clean handler: readStream returns events+revision, fold via reduce(evolve, initial), decide produces events, appendToStream with expectedRevision: revision (optimistic concurrency on the read revision). EventStore interface typed with `no_stream`/`any` revision sentinels. Idiomatic."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Functional updates over a SummaryView with exhaustive never check. But signature `project(view, event, id)` adds a third `id` parameter — the standard Decider/Projector shape is `project(state, event)` with the id encoded in the event payload. The events as defined don't carry the cart id, forcing this awkward third arg. Doesn't use the term ReadModel. Acceptable logic, off-pattern signature."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Tradeoff list covers I/O vs CPU, audit, schema versioning, replay cost. loadAggregate signature includes Snapshot<S> with version+revision, evolve, EventStore. Minor issue: the loop references `event.revision` but DomainEvent<E> doesn't declare that field, and the comment about writing to stream is out of place for a load function. Solid answer with a small type sloppiness."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib(n) with typed signature, docstring, F(0)=0/F(1)=1 base cases, and a clean two-variable swap loop. No imports, no recursion, no off-by-one."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Fabrication. The model writes a Read('package.json') sigil but does not have tool access in this eval — it then invents specific dependency versions (express 4.18, mongodb 5.0, typescript 5.3, ts-node, supertest) that it cannot have observed. This is exactly the hallucination failure mode capability prompts probe for. Should have either declared inability to read files or asked for the file contents."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required dimensions (caching, over-fetching, schema evolution, tooling) with concrete points: ETags/Cache-Control vs persisted queries; field selection; introspection + deprecation directives; OpenAPI/Postman vs GraphiQL/Apollo Studio. Within the 4-6 sentence budget."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clean 3-step plan: extract parsing as pure function, extract validation as pure function, extract persistence as thin adapter; final composition + test isolation note. No code (as instructed). Captures the standard parse→validate→persist refactor cleanly."
+    }
+  ]
+}

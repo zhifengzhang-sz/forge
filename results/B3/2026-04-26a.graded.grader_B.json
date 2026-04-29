@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-B3",
+  "arm": "B3",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5 setup() with typed context/events, fromPromise actor with input, assign with ({event}) destructure, guards on transitions. Email check returns to 'email' rather than transitioning to 'password' on success, and there is no NEXT transition out of 'email' to advance the form — flow is incomplete. Otherwise solid v5."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean setup() with typed guards. Guarded PAUSE transition uses guard: 'isDownloading'. Minor: the guard name 'isDownloading' is slightly off (it really checks progress<100, not the state), but the intent matches the prompt and the v5 shape is correct. No DONE/ERROR auto-emission demo, but not required."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5: setup({actors}), invoke with src+input, onDone assigns context, onError targets 'failed' with typed error narrowing. Includes RETRY in failed. No fabrications."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "fromObservable used with input. However the implementation hand-rolls a Subscribable instead of using rxjs Observable, and the observer-callback branching ('typeof observer === \"function\"') is non-idiomatic for v5 fromObservable, which expects a real Observable. Sends DATA via observer.next, but the parent machine receiving these as events from an invoked observable is implicit. Works conceptually but feels off."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5 conversion: setup() with typed context/events, named action 'bump' with assign and ({context}) destructure, no Machine() / ctx => / (ctx,. Idiomatic."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "pipe + Either, three validators composed with chainW, returns Either<ValidationError, Email>. Tagged ValidationError. Throws inside splitEmail for an internal invariant — minor blemish (could use E.fromNullable or a never-typed branch) but not a logic bug since the prior validators ensure '@' present. Otherwise idiomatic fp-ts."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect.gen with yield*, Layer.succeed/effect/merge, Data.TaggedError, Effect.catchTag for typed UserNotFound recovery, Effect.provide. Minor: declares both 'class Config' and 'const Config' tag — name shadowing is a smell (and the class isn't actually used as the service type the tag returns). The catchTag flow correctly handles the typed error. Solid effect idiom."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Concise, idiomatic: pipe + O.chain(O.fromNullable) + O.map(toUpperCase). Correctly handles optional email. No fabrications."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "pipe + TE.chainW with proper FetchError union. Minor mismatch: prompt says fetchOrders takes user, signature is fetchOrders(id: string) and call passes user.id — close enough but not a literal user-arg. Returns OrderList instead of Orders (renamed). Idiomatic TE composition."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect Layer for Logger and Database, Layer.merge composition, Effect.provide injection, Effect.gen program. Uses Context.GenericTag (modern Effect API) — note suite anchor lists 'Context.Tag' but GenericTag is the current idiom, not a fabrication. Correct shape."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "pipeable: debounceTime(250), distinctUntilChanged, switchMap, plus a sensible filter for min length. Cancellation explained. Idiomatic typed RxJS."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest in object form (modern), map to ViewModel, fully typed interfaces. Clean."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files) -> mergeMap(uploadFile$, 3). Concurrency cap correct. Comment correctly contrasts with concatMap/switchMap/forkJoin. Idiomatic."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clear semantic explanation, concrete BehaviorSubject<User|null> with initial null, contrasting Subject example showing late subscriber misses prior emission. Accurate."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Type-safe OperatorFunction<T,T> implemented as pipe(tap<T>(...)). Generic preserved. Minor: doesn't use 'subscribe' (suite anchor) but the operator is correctly built without it — anchor miss is fine. Clean."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union state, three event variants, pure evolve with exhaustive switch + never check, initial state. Idiomatic functional ES."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider interface, decide+evolve+initialState, withdrawal rejection on insufficient funds via thrown error. Adds open/close which is fine extension. Minor: uses thrown errors rather than returning a Result/Either — the suite doesn't forbid throws, but a pure decider returning Event[] | Error would be more idiomatic. Otherwise correct."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "readStream + appendToStream + expectedRevision present. Optimistic concurrency via revision ?? 'no_stream'. Ticket aggregate is a reasonable substitute. Minor: revision is taken from the read result (presumed last revision) rather than threading a NoStream sentinel for empty streams cleanly, but the null-coalesce handles it. Solid."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Pure project(state, event) over the four-event union, exhaustive switch with never check, ReadModel-shape CartSummary with id/itemCount/totalCents. Anchor 'ReadModel' literal not present (uses 'CartSummary') but the concept is correct. Idiomatic."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Reasonable tradeoff explanation (storage vs replay, frequency-of-touch heuristic). Snapshot-aware loadAggregate signature with SnapshotStore + EventStore + Decider. Minor bug: 'from = event.revision' inside the loop reads .revision off event but event is the unwrapped E; should be envelope.revision. Otherwise the shape and reasoning are good."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib, docstring, typed signature. F(0)=0, F(1)=1 boundary handled. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Major fabrication: model didn't actually read the file but invented dependencies (express, mongodb, typescript, jest, eslint, redis). Suite anchor explicitly penalizes cap fabrication. Mentions Read tool in prose but produces hallucinated content. Bad."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required topics (caching, over-fetching, schema evolution, tooling) accurately and concisely. ETag/Cache-Control vs persisted queries is correct, and OpenAPI/GraphiQL tooling contrast is apt. Within length budget."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps, no code as instructed, clear separation of concerns (parse/validate/persist), and useful framing about deprecating the monolith via an orchestration wrapper. Excellent plan-only response."
+    }
+  ]
+}

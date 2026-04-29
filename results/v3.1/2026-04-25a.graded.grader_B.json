@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.1",
+  "arm": "v3.1",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5 setup() with types/actors/guards, fromPromise actor, assign with ({event}). One wart: target 'email.unique' uses a quoted state name with a literal dot, which XState v5 may interpret as a path separator; should be a flat sibling state. Otherwise idiomatic."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "v5 setup()/types/assign correct. But the prompt's key requirement — a guard that only allows PAUSE while downloading — is not actually implemented: PAUSE is in 'downloading' on-handler with no guard. The 'isDownloading' guard tests progress range (always true) and is wired to RESUME instead. Acceptable structure, missed the asked-for guard."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5: fromPromise actor with typed input, invoke with src/input, onDone/onError both with assign(), failed state with retry. Error narrowing handled. Fully on-spec."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "fromObservable wiring is correct and event dispatch into context via assign is right. But the 'WebSocket' is faked with setInterval and a hand-rolled Subscribable that branches on observer being a function vs object — clumsy and not a real WebSocket. Demonstrates the API but the domain code is a stub."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v4→v5 conversion: setup() with types, assign uses ({context}) destructure, no Machine() call. Concise and exact."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe + E.chainW composing three Either validators, final E.map to Email branded shape, no throws, tagged ValidationError. Clean."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect.gen + yield* + Layer.succeed + Context.GenericTag + Effect.catchTag('UserNotFound', ...). Tagged error, Layer composition. Minor: cfg is read but unused, so the 'reads config from a Layer' requirement is symbolic only. Otherwise correct."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Uses O.fromNullable + O.map + O.chain idiomatically. Method-style .pipe() instead of pipe(...) helper — acceptable in fp-ts but mixes import style. Adds a sensible '@' check via chain. Solid."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean TaskEither composition with pipe + TE.chainW. Tagged FetchError. Concise and on-spec."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Context.GenericTag for Logger and Database, Layer.succeed implementations, Layer.merge, Effect.gen with yield* for both services, Effect.provide. Idiomatic Effect 3.x."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable debounceTime + distinctUntilChanged + switchMap. Cancels in-flight via switchMap correctly. Type-safe. Clean."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with object form (modern v7+ API), pipe + map to typed ViewModel. Idiomatic."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files) + mergeMap with concurrency cap 3. Exactly the asked pattern. Type-safe."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 3,
+      "rationale": "Explanation is correct (BehaviorSubject replays current value, Subject does not). But the code has an export bug: 'export const currentUser$ = currentUser$' is a self-referential redeclaration on top of the const already declared above — TS error. Same for currentUserEvents$. Conceptually right, code wouldn't compile."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Generic OperatorFunction<T, T> built by composing tap inside pipe. Handles next/error/complete. No subscribe needed in operator definition (auto-check miss is incorrect — using tap is the idiomatic way)."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union State and Event, immutable evolve with exhaustive switch and never-check. State machine status guarding (open/empty/checkout). Adds CartCheckedOut beyond ask but cleanly. Idiomatic."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Proper Decider interface (decide/evolve/initialState — slight rename from 'initial'), tagged commands and events, balance check on withdraw, status guards in evolve. Uses thrown DomainError rather than Result-style — common in Decider examples but less FP-pure. Solid implementation."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "EventStore interface with readStream/appendToStream/expectedRevision passing the loaded revision for optimistic concurrency. Reduce-evolve to fold state. Decide throws on invalid; works but error-as-exception. Functional and complete."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state, event) with tagged event union, immutable spreads, exhaustive switch with never-check. Includes a rebuildSummary fold helper. Read model is named CartSummary (auto-check missed 'ReadModel' but the concept is present). Clean."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoffs explanation is correct (snapshot O(1) but staleness risk; replay O(n) but consistent; hybrid). But the loadAggregate implementation uses 'new Promise(async (resolve) => ...)' — a known antipattern that swallows errors thrown inside the async executor. Also takes a 'tail' parameter that seems redundant given readFromStream already accepts fromRevision. Concept right, code awkward."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib, O(n) time / O(1) space, correct edge case for n<2, clear docstring. Exactly what was asked."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Did NOT use the Read tool — fabricated a fake package.json with made-up dependencies (express, body-parser, eslint) and an absurd '2023-09' version claim. This is the canonical fabrication failure mode. Unusable."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "All four required dimensions covered (caching, over-fetching, schema evolution, tooling) with concrete examples (ETag/Cache-Control vs persisted queries, OpenAPI vs GraphiQL). 4 sentences, dense and accurate. Auto-check 'schema' miss is a false negative — text says 'Schema evolution' and 'GraphQL's introspection'."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three crisply numbered steps: extract pure parser, extract pure validator, extract persistence adapter and compose. Names the right tradeoffs (pure vs I/O, separation of shape-vs-value validation, test isolation). No code, as requested."
+    }
+  ]
+}

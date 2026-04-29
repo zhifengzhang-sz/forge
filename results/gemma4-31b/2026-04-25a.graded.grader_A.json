@@ -1,0 +1,151 @@
+{
+  "model": "gemma4:31b",
+  "arm": "gemma4-31b",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5: setup() with types, actors block defining fromPromise validateEmail, invoke with input mapper, onDone/onError, guards, assign destructuring ({event}/{context}). Multi-step states correct. Only nit: fromPromise import is placed after the machine declaration (cosmetic)."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Functionally correct v5 (createMachine + assign destructuring + guard inside downloading state). However it skips setup() and types entirely, which is the recommended v5 idiom; auto-check confirms setup( miss. Acceptable but not idiomatic v5."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Uses fromPromise, invoke, input mapping from context, onDone with assign({user: ({event}) => event.output}), onError to failed state. Correctly notes v4 event.data -> v5 event.output. Uses inline types object rather than setup(); slight type weakness with user: any | null."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Conceptual error: fromObservable in XState v5 does not dispatch arbitrary {type} events to the parent's on: handlers — it emits snapshots received via the actor's onSnapshot/subscribe. The example shows subscriber.next({type:'WS_MESSAGE',...}) being caught by on:{ WS_MESSAGE } at the parent state, which won't work. Also imports fromObservable from 'xstate/actors' (it's exported from 'xstate'). Has the right pieces (Observable, cleanup, invoke) but the dispatch model is wrong."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Correct minimal v4->v5 conversion: createMachine + assign({count: ({context}) => context.count + 1}). Explanations accurate. Doesn't use setup() in the main answer (mentions it only as a 'pro tip'), which is fine for a literal conversion."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "pipe + E.chain composing three validators, branded Email type, ValidationError type. Bug in test code: E.left.value(result) is not valid fp-ts API — should be result.left. Core implementation is correct and idiomatic."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Uses Effect.gen + yield*, Context.Tag, Layer.effect, Data.TaggedError, Effect.catchTag, Layer.provide for composition. Minor issues: Data.TaggedError class with `readonly constructor(readonly id: string) {}` is awkward (proper form is class extends Data.TaggedError('Tag')<{id:string}> {}); Layer.provide argument order at the bottom is slightly questionable. Spirit and structure correct."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Clean fp-ts solution with pipe + O.map twice, plus an explanation of when to use O.chain. Includes a Rust appendix that wasn't asked for, slight padding. Idiomatic."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "pipe(fetchUser(id), TE.chain(user => fetchOrders(user))) — exactly what was asked. tryCatch wrappers and FetchError tagged type are reasonable. Note: the auto-check flagged 'async '/'await ' violations from the inner tryCatch lambdas, which is acceptable in the IO-defining boundary, not in the composition itself."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Layer.effect to make DatabaseLive depend on Logger via yield* Logger, then DatabaseLive.pipe(Layer.provide(LoggerLive)). However: (a) uses old Context.Tag<Logger>() generic syntax rather than the current class-extends-Context.Tag('Tag')<Self,Shape>{} pattern; (b) doesn't use Layer.merge to compose the two layers as suggested by the prompt — uses provide chaining instead, which works but is not the 'compose two independent layers' pattern. Acceptable."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Textbook typeahead: debounceTime(250) -> distinctUntilChanged -> filter empties -> switchMap with inner catchError. Explains why catchError must be inside switchMap. Pipeable operators throughout."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with object form mapping directly to ViewModel keys. Notes the 'requires all sources to emit once' caveat with startWith fix, plus array+map alternative for older RxJS. Strong."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap(fn, 3) with correct explanation of the concurrent parameter and queueing. Compares with concatMap/switchMap/exhaustMap appropriately."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clear table of differences, concrete AuthService with BehaviorSubject<string|null>, getValue() shown, asObservable() encapsulation, late-subscriber scenario demonstrated. Excellent answer."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "OperatorFunction<T,T> generic, wraps tap with next/error/complete handlers, type-safe pass-through. Clean usage example. Idiomatic."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Pure evolve(state, event) reducer, discriminated-union ShoppingCartEvent, immutable state via spreads + new Map, initialState defined. Reduce-over-events example shown. Idiomatic ES."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider object with decide/evolve/initial. Correctly rejects withdrawals exceeding balance and non-positive amounts. Uses throw for command rejection rather than Result/Either, which is acceptable but less FP-pure. Clear separation between decision logic and state transition."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Implements load -> decide -> append flow with version tracking; mock store throws ConcurrencyException on version mismatch. Uses 'expectedVersion' rather than the ESDB-specific 'expectedRevision' (auto-miss), conceptually equivalent. Mixes class-based mutable Aggregate with the functional ES style — not strictly Decider, but valid CommandHandler shape."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state, event) handles ItemAdded/ItemRemoved/CartCleared, immutable updates, defensive Math.max(0,...). Uses CartSummary type rather than the literal 'ReadModel' name (auto-miss) but functions identically. Reduce example shows the projection contract."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Solid tradeoff table covering latency, storage, complexity, integrity, schema evolution, CPU. loadAggregate signature is generic with snapshot store + event store + factory; getEvents(id, sinceVersion) is the right shape. Uses apply() rather than evolve() (auto-miss) but conceptually equivalent."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib with type hints, docstring, base cases, tuple swap. Minimal and idiomatic Python."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Empty response. Task not done — no Read tool invocation, no summary. Both must_have substrings missed. Total fail on capability/task-completion."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required points (caching, over-fetching, schema evolution, tooling) in 5 tight sentences with a closing recommendation. Accurate and well-paced."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps: extract pure functions -> orchestration coordinator -> decouple into architectural layers (Service/Repository). No code, plan-only as requested. Clear and well-sequenced."
+    }
+  ]
+}

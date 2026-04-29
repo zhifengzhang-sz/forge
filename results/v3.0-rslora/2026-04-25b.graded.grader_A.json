@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.0-rslora",
+  "arm": "v3.0-rslora",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5: setup() with types, actors registry, fromPromise with typed input, assign with ({event}) destructuring, invoke with input mapper, onDone/onError. Multi-step structure with email/checking/password/confirm/done covers the prompt fully. Clean, no v4 leakage."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Correct v5 setup() with typed guards and assign. Guarded PAUSE transition present. Minor nits: guard 'isDownloading' is checked on PAUSE/RESUME using progress<100 rather than current state — the prompt asked for guard tied to 'while downloading' which is already implied by being in the downloading state, so the guard is somewhat redundant but not wrong. No progress event/transition shown for incremental updates. Otherwise solid."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5: setup with actors registry, fromPromise typed in/out, invoke with src-string + input mapper, onDone storing event.output, onError moving to 'failed'. All idioms correct."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses fromObservable correctly and wires invoke + WS_MESSAGE handler with assign. However the 'WebSocket stream' is faked with a hand-rolled Subscribable that emits two hardcoded strings — no actual WebSocket bridging (no new WebSocket(url), no onmessage->observer.next). Acceptable structural answer but doesn't fulfill the WebSocket-stream wrapping intent."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4→v5 migration: setup() with typed context/events, assign uses ({context}) destructuring, no Machine() or ctx=> patterns. Faithful semantics preserved."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe + E.chainW composition of three validators, tagged ValidationError, final E.map to brand Email. Clean, no throws or any."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Effect.gen, yield*, catchTag, and a Layer — core idioms present. However Layer.effect(\"Config\", ...) passes a string instead of a Context.Tag (broken API; should be Context.GenericTag<Config>); the program's R parameter is the string 'Config' not the Tag; and the catchTag returns null then branches imperatively rather than mapping to the default user directly. Functional shape is right but wiring has bugs."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Correct use of pipe + O.chain (with O.fromNullable for the optional email field) + O.map for uppercasing. Slight stylistic nit: pipe(O.chain(u, ...), O.map(...)) places u inside chain's argument list rather than starting the pipe with u; idiomatic fp-ts would be pipe(u, O.chain(x => O.fromNullable(x.email)), O.map(s => s.toUpperCase())). Works correctly."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Has pipe and TE.chainW which is good, but the catchAll body is broken: TE.tryCatch(e, (u) => new FetchError(String(u))) — passes the error e as the thunk, which is wrong (tryCatch expects a Lazy<Promise>, not an error). The whole catchAll is gratuitous because chainW already widens errors. Compiles to nonsense; idiomatic answer is just pipe(fetchUser(id), TE.chainW(fetchOrders))."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Good Effect idioms: Context.GenericTag for both services, Layer.succeed/Layer.effect, program uses yield* Tag pattern. But Layer.merge was asked for and not used — instead Layer.provide(LoggerLive, DatabaseLayer) is called, which has the wrong semantic (Layer.provide builds a layer that satisfies LoggerLive's deps using DatabaseLayer; Logger here has no Database dep so this is incorrect composition). The Database service is a Logger dep only by accident in the explanation. Should have been Layer.merge(LoggerLive, DatabaseLayer)."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Textbook typeahead: pipeable debounceTime(250) → distinctUntilChanged → switchMap. Correct cancellation explanation. Clean types."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Object form of combineLatest with map to ViewModel — idiomatic and type-safe. Clean."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Correct: from(tasks) piped through mergeMap with concurrency=3. Concise and correct."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clear behavioral contrast (no replay vs initial-value + sync getValue), concrete BehaviorSubject example with asObservable, late-subscribe scenario. Solid."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Type-safe OperatorFunction<T,T> implemented via tap with full observer (next/error/complete). Proper signature, no any. Good."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union State (empty/shopping/checked-out) and Event types, tagged events, pure evolve with exhaustive switch + never check, immutable updates, sensible initial. Idiomatic."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider interface + decide/evolve/initialState all present, balance check rejects overdrafts, exhaustive never branches. Minor: prompt asked for 'initial' field name; here it's initialState (semantic equivalent but pedantic mismatch). decide throws DomainError rather than returning Result — acceptable but Decider variants typically return Either. Solid overall."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "readStream/appendToStream/expectedRevision all wired with bigint|'no_stream' typing and correct optimistic concurrency by passing the read revision. Includes a working evolve and decide. Minor: doesn't show the appendToStream's nextRevision being returned/used; the {events,revision} returned by readStream isn't quite the EventStoreDB shape (real client returns events plus a separate revision tracker). Functional and idiomatic enough."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Pure project(state, event) over discriminated ShoppingCartEvent, immutable updates, bounded itemCount/totalCents, exhaustive never. Read model lacks the literal 'ReadModel' name from must_have but includes a CartSummary with id/itemCount/totalCents (plus checkedOut). Minor naming gap, otherwise idiomatic."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clear tradeoff discussion (storage vs compute, schema versioning), Snapshot<S> type with version, snapshot-aware loader. Quirks: the fromStream boolean flag is awkward — typical implementation tries snapshot first then catches up from snapshot.version onward via readStream from that revision; here the two paths are mutually exclusive and the snapshot path doesn't replay tail events past the snapshot. Good explanation, signature is OK."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib with O(n) time, O(1) space, proper docstring, types. Edge cases (n<2) handled. Idiomatic Python."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Fabrication: claims to use Read tool but instead invents a fictional package.json with express/body-parser/morgan and summarizes the made-up content. This is exactly the failure mode the must_not_have-style behavior is meant to catch — task not actually done. Bad."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four asked dimensions (caching, over-fetching, schema evolution, tooling) accurately and concisely in 4 sentences. Note: 'schema' appears in the body ('schema evolution', 'introspection'); auto-check missed because 'schema' was asked literally — content fully covers it. Strong answer."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps, each focused on a single concern (parse/validate/persist), with a clean final composition note. No premature code. Exactly what was asked."
+    }
+  ]
+}

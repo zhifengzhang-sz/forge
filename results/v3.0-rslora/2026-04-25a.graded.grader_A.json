@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.0-rslora",
+  "arm": "v3.0-rslora",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "setup() with types.context/events, actors registry with fromPromise<Profile, Email>, typed events with namespaced strings, assign uses ({event}) destructure, invoke with input thunk and onDone/onError. Idiomatic v5 throughout; the createMachine call is method-form .createMachine({...}) which is correct."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "setup() with types and a registered guard; assign uses static value form correctly; transitions structured with target/guard/actions. Pause is gated by guard. Clean v5. Minor: guard 'isDownloading' tied to progress<100 is reasonable but semantically a bit indirect."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Actors registered in setup with fromPromise<Profile,{userId:string}>; invoke with src + input thunk; onDone stores event.output via assign; onError moves to 'failed'. Idiomatic v5 spawn-via-invoke pattern."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "fromObservable used, parent invokes the actor and assigns event.data on WS_MESSAGE. However the inner stream is a hand-rolled Subscribable rather than an actual Observable (e.g. from rxjs/new Observable), and synchronously emits in subscribe rather than wrapping a real WebSocket. Pattern is right; implementation is illustrative-only."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4→v5: Machine() replaced by setup().createMachine; ctx => ... replaced by ({context}) => context.count + 1; types declared in setup. No leftover v4 patterns."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "pipe + E.chainW composes three Either validators; tagged ValidationError; final map wraps into Email. No throws, no any. Idiomatic fp-ts."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Effect.gen+yield*, Data.TaggedError, catchTag are correct. But Layer.effect takes a Tag, not a string ('Config' is wrong); the program then yields* Config (a Layer) instead of a Context.Tag, which would not type-check. Effect.Effect<User, never, Config> uses Config (Layer) as the requirement type — also wrong. Idea is right; the Layer/Tag plumbing is broken."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "pipe with O.chain (handles optional email field via fromNullable) then O.map for uppercase. Idiomatic Option composition without imperative checks."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "pipe + TE.chainW correctly composes the two TaskEithers with widened error. But the TE.catchAll((e) => TE.tryCatch(e, ...)) is malformed — TE.tryCatch expects a thunk returning a Promise, not the caught error. The error-unification step doesn't compile/work. Core idea is right; the unification call is fabricated."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Context.GenericTag for Logger and Database, Layer.succeed and Layer.effect, Effect.gen with yield* Tag — all good. But Layer.provide(LoggerLive, DatabaseLayer) is the wrong direction unless Logger requires Database (it doesn't here); the canonical compose is Layer.merge(LoggerLive, DatabaseLayer) — which is what the prompt expected. Code would not give the program both services as written."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "debounceTime(250) → distinctUntilChanged → switchMap to searchApi$. Cancellation note correct. Clean typed Observable<Result[]> pipeline using pipe operators."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object-form with three named Observables; map projects into a typed ViewModel interface. No deprecated static. Idiomatic and readable."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(tasks).pipe(mergeMap(uploader, 3)) — concurrency cap correctly expressed via the second mergeMap argument. Right operator and right shape."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Crisp distinction: BehaviorSubject requires initial value, replays current to late subscribers, exposes getValue(); Subject does not. Concrete currentUser$ example uses BehaviorSubject<User|null> with asObservable. Solid."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Generic OperatorFunction<T,T> implemented with tap covering next/error/complete; values pass through unchanged; type-safe. Example usage commented in. Good."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Tagged Event union, status-discriminated State, immutable evolve via spread, exhaustiveness via never. Initial state defined. Clean event-sourcing idiom."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Decider<C,E,S> interface with initialState/decide/evolve, withdraw rejects when amount > balance, includes open/deposit branches with invariant checks. Throws DomainError for invalid commands (acceptable rejection signal). Tagged events, immutable evolve."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "readStream returns events + revision; events.reduce(evolve, initial) rebuilds state; decide produces new events; appendToStream called with expectedRevision: revision (optimistic concurrency). Clean handler shape with EventStore interface."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state, event) is correct, immutable, exhaustive with never; tracks itemCount/totalCents and an extra checkedOut flag. Type is named CartSummary rather than ReadModel — minor, since the ReadModel role is clearly the type. Idiomatic projector."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Tradeoffs covered briefly (storage vs compute, schema versioning). loadAggregate signature includes Snapshot<S> with version, decider, snapshot store, and stream. However the fromStream boolean branches between snapshot-or-stream rather than the canonical 'load snapshot then replay events after snapshot.version' — so the function isn't truly snapshot+catchup as typically implemented. Signature itself is fine."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib with O(n) time, constant space, correct boundary for n<2, F(0)=0/F(1)=1 documented in docstring. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Did not actually use the Read tool — fabricated a 'typical' package.json with express/body-parser/morgan and summarized the fabrication. The prompt explicitly asked to read the actual file. This is fabrication of file contents."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required dimensions concretely: HTTP/CDN caching vs persisted-query layers; over-fetching as GraphQL's win; REST versioning vs GraphQL deprecation directives + introspection; OpenAPI/Postman vs GraphiQL/Apollo Studio. Tight prose, accurate."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three-step plan with clear separation: extract parse → extract validate → extract persist as thin adapter, then compose. Notes that callers can use parts independently and each layer is testable. No code, exactly as asked."
+    }
+  ]
+}

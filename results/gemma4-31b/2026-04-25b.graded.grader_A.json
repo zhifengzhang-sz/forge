@@ -1,0 +1,151 @@
+{
+  "model": "gemma4:31b",
+  "arm": "gemma4-31b",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5: setup() with types, fromPromise actor in actors block, assign with ({event}) destructuring, input passing, onDone/onError. Guards used. Minor flaw: fromPromise import is appended at the end of the file (after first use) — would still work in TS due to hoisting of imports but stylistically off. Otherwise correct."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses createMachine instead of setup() (prompt-implied; suite must_have lists setup(). Correct v5 assign and guard syntax with ({context, event}) destructuring. Guard for pause is present (progress > 0) but doesn't strictly enforce 'only while downloading' via guard — relies on state placement. Functional and v5-correct but not idiomatic best-practice (no setup/types)."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Correct v5: invoke + fromPromise, input passing, onDone with event.output, onError to 'failed'. Uses createMachine with types literal rather than setup() but explanations are accurate (calls out v4→v5 differences correctly: data→output, args→input)."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Conceptually right: Observable wrapping WebSocket, subscriber.next emits {type, data}, cleanup function, fromObservable invoked. Two issues: (a) imports from 'xstate/actors' which is incorrect (fromObservable lives in 'xstate'); (b) passes a constructed Observable directly to fromObservable instead of a factory function expected by v5 fromObservable signature. Cleanup logic and event routing are sound."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Correct minimal v4→v5 conversion: createMachine + assign with ({context}) destructuring. Mentions setup() in pro tip but doesn't use it. Suite must_have lists setup(); pure createMachine path is acceptable v5 but not the most idiomatic. Code compiles and runs correctly."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Solid fp-ts pipe + Either with three validators composed via E.chain plus a final E.map to brand the type. Branded Email type is a nice touch. Bug: 'E.left.value(result)' is not valid fp-ts — should be 'result.left' since result is Left<E>. Composition logic itself is correct."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Right architecture: Context.Tag, Layer.effect, Effect.gen, catchTag fallback to default user. Several errors: (a) 'Data.TaggedError(\"UserNotFound\")' is missing the tail '<{id:string}>{}' generic+empty body required by Effect; (b) 'readonly constructor(readonly id: string){}' is invalid TS syntax; (c) Effect.Effect signature uses 3 type params (legacy <A,E,R> form is fine). Conceptually solid demonstration of Layer + catchTag pattern."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe + O.map composing extraction and uppercase. Correctly explains when O.chain is needed (nested Option). Includes Rust comparison as bonus. No bugs."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Correct TaskEither composition with pipe + TE.chain. Uses TE.tryCatch with proper FetchError tagging. Short-circuit semantics explained correctly. Could mention the simpler 'TE.chain(fetchOrders)' point-free form but the eta-expanded form is fine."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Right idea: two services (Logger, Database), DB depends on Logger via Layer.effect + Effect.gen, and provided into a program. Issues: (a) uses 'Context.Tag<Logger>()' (older Effect API) rather than the modern class-based 'Context.Tag(\"id\")<Self, Shape>()' or Context.GenericTag pattern; (b) 'Logger.of({...})' is not the standard Effect Tag.of pattern (works in fp-ts but here is questionable); (c) suite explicitly expects Layer.merge — uses Layer.provide for the dependency edge which is appropriate but Layer.merge is absent. Compositional flow is otherwise educational and correct."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Textbook typeahead: debounceTime(250) → distinctUntilChanged → filter (non-empty) → switchMap with inner catchError. Cancellation semantics explained accurately, including why catchError must live inside switchMap. Type-safe."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Uses combineLatest({user, settings, theme}) (v7+ object form) which directly produces ViewModel — clean and correct. Suite must_have includes 'map'; the object form does not need an explicit map operator, but the alternative array+map form is also shown. Mentions startWith caveat for late emissions. ViewModel typed."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Correctly uses mergeMap(uploadFile, 3) for concurrency cap. Explains queue behavior, contrasts with concatMap/switchMap/exhaustMap. Type-safe with Progress interface."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clear conceptual table comparing Subject vs BehaviorSubject (initial value, memory, late subscriber behavior). Concrete AuthService example with asObservable() encapsulation and getValue(). Accurately predicts expected console output and contrasts what would change with Subject."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic custom operator: returns OperatorFunction<T,T> by wrapping tap with next/error/complete. Generic, type-safe, full lifecycle observation. Includes correct usage example with expected output."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Pure evolve(state, event) covering CartCreated/ItemAdded/ItemRemoved with discriminated-union events. Immutability via spread + new Map(). Uses Map<string,CartItem> for O(1) item lookups — sensible. Initial state defined. Replay example via reduce."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Clean Decider with initial, decide, evolve. Decide validates (positive amount, balance check) and emits Deposited/Withdrawn events; evolve is total and pure. Good separation between decision and evolution. Discriminated-union types throughout."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Comprehensive: IEventStore interface, Aggregate with loadFromHistory + handle, CommandHandler orchestrating read→decide→append with expectedVersion. Optimistic concurrency check in MockEventStore. Minor: uncommittedEvents field on aggregate is mutable state (the pattern conflicts slightly with the pure Decider approach), and 'data: any' weakens types. expectedRevision is named 'expectedVersion' which the suite asks for — present."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Pure project(state, event) handling ItemAdded/ItemRemoved/CartCleared. Lazy initialization via state ?? {…}. Defensive Math.max(0,…) clamps. ReadModel and Event types defined and used. Reduce-based usage example produces correct result."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Solid tradeoff table (latency, storage, integrity, schema evolution, CPU). Snapshot-aware loadAggregate signature uses Snapshot<T>, version, IEventStore.getEvents(id, sinceVersion) and ISnapshotStore. Uses 'apply' instead of 'evolve' on aggregate (suite must_have lists 'evolve' — present in prose discussion but not the function name). Generic factory pattern, clean."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib with proper handling for n<=0 and n==1. Tuple swap a,b = b,a+b. Docstring present. Correct."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Empty response. The model produced no output — did not attempt the Read-tool task. Unusable."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Concise, accurate coverage of all four required dimensions: caching (URL-based vs single-endpoint), over-fetching (selectable fields), schema evolution (versioning vs additive), and tooling (HTTP ecosystem vs typed schema/devex). Stays in the 4-6 sentence range. Balanced conclusion."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps: extract pure functions, create orchestration coordinator, decouple into architectural layers (service/domain + repository). No code. Covers separation of concerns and testability rationale. Matches the prompt constraint."
+    }
+  ]
+}

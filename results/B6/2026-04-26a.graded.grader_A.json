@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-B6",
+  "arm": "B6",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5 setup() with typed context/events and a fromPromise actor declared in the actors map. However, the email state never actually invokes checkEmail — EMAIL.NEXT transitions directly to password without consulting the uniqueness validator, so the actor is defined but unused. Structure and typing are idiomatic, integration with the prompt's intent is partial."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic setup() with typed guards object and assign-based progress tracking. The guard 'isDownloading' is wired to RESUME (paused→downloading) rather than to PAUSE while downloading as the prompt literally asks; PAUSE while downloading is implicitly enabled because it can only be sent from that state. Reasonable v5 idiom but a small misread of the prompt."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5: setup() with an actors map referencing a top-level fromPromise, invoke with src + input, onDone with assign on event.output, onError moving to 'failed' with error capture, and a RETRY transition. Types are clean and no v4 leakage."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses fromObservable and wires it into invoke, but constructs a hand-rolled Subscribable with a polymorphic observer/function check rather than using rxjs Observable; this is awkward and not what 'wrap a WebSocket stream' implies. Also dispatches the message into the same machine's context rather than truly to a parent. Functional but not idiomatic."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4→v5 conversion: setup() with typed context/events, createMachine, and assign rewritten to the destructured ({ context }) form. No v4 patterns leak."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe with three Either-returning validators stitched via E.chainW, branded Email tag, and a clean ValidationError ADT. No throws, no any."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Effect.gen, Layer, Context.GenericTag and Data.TaggedError correctly, but the fallback path is non-idiomatic — Effect.either then a synchronous _tag inspection inside gen instead of Effect.catchTag('UserNotFound', ...). Modeling User as a Context service is also strange (it is a value, not a capability). Compiles to the right shape, but the typed-error handling anchor is missed."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean fp-ts Option pipeline: O.fromNullable lifts, O.chain handles the nullable email field, O.map uppercases. Good explanation distinguishing chain vs map."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic TaskEither composition with pipe and TE.chainW, properly threaded FetchError type, declared dependencies for the example. Clean."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Hits the Effect/Layer anchors: Context.GenericTag for both services, Layer.succeed/Layer.effect for live impls, Layer.merge to combine, Effect.provide to inject. Minor smell — both an unused AppLayer (Layer.provide(DbLive, LoggerLive)) and a FullLayer (Layer.merge) are declared, and the explanation conflates the two combinators. Idiomatic enough."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clean pipeable operators: debounceTime(250) → distinctUntilChanged() → switchMap into the API. Good cancel-on-new-input note. Type-safe."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic combineLatest in object form + map to a typed ViewModel. Crisp."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Correct mergeMap with the concurrency cap of 3 as the second argument; explanation correctly identifies why mergeMap (interleaving) over concatMap."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 3,
+      "rationale": "Explanation is accurate. But the typed exports are wrong: `_currentUser$.asObservable()` returns Observable<User|null>, not BehaviorSubject<User|null>, so the annotation lies; same problem on events$. Concept right, type-safety claim broken."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic custom operator built on tap, returns OperatorFunction<T,T>, generic and type-safe. Bonus example call site demonstrates use."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union State and Event types, pure evolve with exhaustiveness check via never, clean initial state, plus a fold helper. Idiomatic ES."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider interface with decide/evolve/initialState matches the pattern. Withdraw correctly rejects on insufficient funds. Two issues: throws DomainError instead of returning a typed result (less pure than canonical Decider), and 'Deposit'/'Withdraw' commands assume 'open' state but no 'Open' command is provided so the decider is unusable from the initial state."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Clean: typed Command/Event/State, pure evolve and decide, EventStore interface with ExpectedRevision union ('no_stream' | 'any' | bigint), and a handler that reduces events to state then appends with the read revision as expectedRevision. Optimistic concurrency wired correctly."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Pure project(state, event) over a discriminated event union with exhaustive never check, clean read-model shape. ItemRemoved logic uses Math.max guards which is a reasonable defensive choice but slightly off (subtracts 1 from itemCount instead of event.qty — a small bug in the decrement)."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoffs paragraph is brief and somewhat muddled (snapshots aren't 'eventually consistent with the event store' — they are consistent at their version). The loadAggregate signature is fine, but the implementation has a real bug: when a snapshot is found it returns snap.state without folding events after snap.streamRevision, defeating snapshot-aware loading."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib with constant space, clear docstring, correct n<2 base case. Type hints present."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Fabricated capability: claims to call the Read tool but invents a package.json with react/redux/axios. No actual tool invocation, no awareness that the model cannot read files. Capability hallucination on a prompt designed to expose exactly this."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required topics (caching, over-fetching, schema evolution, tooling) with concrete examples (ETags/CDN, persisted queries, introspection/deprecation, OpenAPI vs GraphiQL). Within the sentence budget."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clean 3-step refactor: extract pure parser, extract pure validator, extract persistence adapter, then compose. Notes test-in-isolation benefit and backwards compatibility for existing callers. No code, just the plan, as asked."
+    }
+  ]
+}

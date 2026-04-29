@@ -1,24 +1,31 @@
-"""Tool-call regression test for v0.
+"""Tool-call regression test.
 
 Calls Ollama's OpenAI-compatible /v1/chat/completions with a tool definition.
 A model that supports tool calls should emit tool_calls in the response.
 A fine-tuned model that has lost tool calling will emit prose instead.
 
-This is the v0-(B) canary — the failure mode that breaks Claude Code integration.
+This is the catastrophic-forgetting canary — the failure mode that breaks
+Claude Code integration.
 
 Usage:
-    python v0/tool_call_smoke.py --model qwen3-coder:30b --arm base
-    python v0/tool_call_smoke.py --model ts-forge-v0-curated --arm curated
-    python v0/tool_call_smoke.py --model ts-forge-v0-extracted --arm extracted
+    python tools/eval/tool_call_smoke.py --model ts-forge-v2.0 --arm v2.0
+    python tools/eval/tool_call_smoke.py --model ts-forge-v0.7-r64 --arm v0.7-recheck
+
+Output: results/<arm>/<YYYY-MM-DD>.toolcall.json (+ legacy copy at
+        v0/results/<arm>.toolcall.json).
 """
 
 import argparse
 import json
+from datetime import datetime
 from pathlib import Path
 
 import requests
 
-V0 = Path(__file__).parent
+TOOLS_DIR = Path(__file__).resolve().parent
+REPO_ROOT = TOOLS_DIR.parent.parent
+DEFAULT_OUT_ROOT = REPO_ROOT / "results"
+LEGACY_OUT_ROOT = REPO_ROOT / "v0" / "results"
 URL = "http://localhost:11434/v1/chat/completions"
 
 TOOLS = [
@@ -90,12 +97,22 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--arm", required=True)
+    ap.add_argument("--out-dir", type=Path, default=None,
+                    help=f"defaults to {DEFAULT_OUT_ROOT}/<arm>/")
+    ap.add_argument("--no-legacy-symlink", action="store_true")
     args = ap.parse_args()
 
-    out_path = V0 / "results" / f"{args.arm}.toolcall.json"
-    out_path.parent.mkdir(exist_ok=True)
+    out_dir = args.out_dir or (DEFAULT_OUT_ROOT / args.arm)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d")
+    out_path = out_dir / f"{timestamp}.toolcall.json"
 
-    results = {"model": args.model, "arm": args.arm, "calls": []}
+    results = {
+        "model": args.model,
+        "arm": args.arm,
+        "session_date": timestamp,
+        "calls": [],
+    }
     for p in PROMPTS:
         print(f"[{p['id']}] expects {p['expects_tool']!r}... ", end="", flush=True)
         try:
@@ -121,6 +138,12 @@ def main() -> None:
     pass_rate = sum(1 for c in results["calls"] if c.get("success")) / len(PROMPTS)
     print(f"\nTool-call pass rate: {pass_rate:.0%} ({sum(1 for c in results['calls'] if c.get('success'))}/{len(PROMPTS)})")
     print(f"Wrote {out_path}")
+
+    if not args.no_legacy_symlink:
+        LEGACY_OUT_ROOT.mkdir(parents=True, exist_ok=True)
+        legacy_path = LEGACY_OUT_ROOT / f"{args.arm}.toolcall.json"
+        legacy_path.write_text(json.dumps(results, indent=2))
+        print(f"Wrote legacy copy: {legacy_path}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,31 @@
+{
+  "model": "gemma4:31b",
+  "arm": "gemma4-31b",
+  "grader": "B",
+  "graded": [
+    {"id": "xstate-01", "domain": "xstate", "score": 4, "rationale": "Uses setup() with types and actors, fromPromise with input mapper, proper ({event})/({context}) destructuring, onDone/onError. Minor wart: fromPromise import placed at the bottom of the file (would need hoisting in actors block) but otherwise solid v5 idioms."},
+    {"id": "xstate-02", "domain": "xstate", "score": 5, "rationale": "Idiomatic v5 — setup() with types and named guards, guard referenced by string id, assign with ({event}) destructuring, all v5 patterns."},
+    {"id": "xstate-03", "domain": "xstate", "score": 4, "rationale": "Correct v5 invoke+fromPromise with input mapper, onDone uses event.output and onError uses event.error (correct v5 changes called out explicitly). Lacks setup() for type safety, otherwise idiomatic."},
+    {"id": "xstate-04", "domain": "xstate", "score": 3, "rationale": "fromObservable usage is mostly correct with RxJS new Observable wrapper and cleanup. However, imports fromObservable from 'xstate/actors' which is the wrong path (should be 'xstate'), and uses bare createMachine without setup(). Concept is right but small fabrication on imports."},
+    {"id": "xstate-05", "domain": "xstate", "score": 4, "rationale": "Correctly converts to createMachine and updates assign to ({context}) destructuring. Mentions setup() as a 'pro tip' but uses two-argument createMachine(config, options) form which is slightly off-idiom for v5 (v5 prefers setup()). Conversion itself is correct."},
+    {"id": "fp-01", "domain": "fp", "score": 5, "rationale": "Idiomatic fp-ts: pipe, Either, three validators chained via E.chain, discriminated-union ValidationError, branded Email type. Clean and correct."},
+    {"id": "fp-02", "domain": "fp", "score": 5, "rationale": "Idiomatic Effect: Context.Tag, Layer.succeed/Layer.effect, Effect.gen with yield*, Data.TaggedError, Effect.catchTag for typed fallback, Layer.provide composition. Correct end-to-end."},
+    {"id": "fp-03", "domain": "fp", "score": 5, "rationale": "Clean pipe + O.map composition. Bonus explanation of when chain is needed (nested Option). Idiomatic fp-ts Option."},
+    {"id": "fp-04", "domain": "fp", "score": 5, "rationale": "Correct TaskEither composition with TE.tryPromise + TE.chain, shared FetchError, pipe. Idiomatic."},
+    {"id": "fp-05", "domain": "fp", "score": 4, "rationale": "Good Effect Layer composition with Context.Tag, Layer.succeed, Layer.effect, Layer.provide. Uses older yield* _(...) adapter pattern (still works). Bug: inner Effect.fail should be yielded (return Effect.fail(...) returns the Effect rather than failing). Doesn't use Layer.merge but Layer.provide is the correct dep-composition primitive."},
+    {"id": "rx-01", "domain": "reactive", "score": 5, "rationale": "Textbook typeahead: debounceTime, distinctUntilChanged, filter, switchMap with inner catchError. Explains why catchError must be inside switchMap. Idiomatic."},
+    {"id": "rx-02", "domain": "reactive", "score": 5, "rationale": "combineLatest array form + map to ViewModel interface, with bonus startWith advice for cold sources. Idiomatic."},
+    {"id": "rx-03", "domain": "reactive", "score": 5, "rationale": "mergeMap with concurrent=3 second arg, correct comparison with concatMap/switchMap/exhaustMap. Idiomatic."},
+    {"id": "rx-04", "domain": "reactive", "score": 5, "rationale": "Clear Subject vs BehaviorSubject explanation with concrete AuthService using BehaviorSubject<User|null>, asObservable() encapsulation, .value accessor. Excellent."},
+    {"id": "rx-05", "domain": "reactive", "score": 5, "rationale": "Idiomatic OperatorFunction<T,T> wrapping tap with full observer object (next/error/complete). Generic over T, type-safe, no any."},
+    {"id": "es-01", "domain": "eventsourcing", "score": 5, "rationale": "Discriminated-union ShoppingCartEvent, immutable evolve via spread, exhaustive switch, reduce-based folding example. Textbook."},
+    {"id": "es-02", "domain": "eventsourcing", "score": 5, "rationale": "Clean Decider with decide/evolve/initial as a literal object, pure functions, separation of business rules vs state transition, immutable updates, withdrawal rejection. Idiomatic."},
+    {"id": "es-03", "domain": "eventsourcing", "score": 4, "rationale": "Correct CommandHandler flow (load -> rehydrate -> decide -> append) and uses expectedVersion for optimistic concurrency with clear conflict semantics. Note: prompt asked for 'expectedRevision' specifically (EventStoreDB term) — uses expectedVersion instead. Uses class-based aggregate with this.changes/this.balance which is more OOP than functional decider, but pattern is correct."},
+    {"id": "es-04", "domain": "eventsourcing", "score": 5, "rationale": "Pure project(state, event) function with null-state init, immutable updates, defensive Math.max(0,...), clean reduce example. Idiomatic projector."},
+    {"id": "es-05", "domain": "eventsourcing", "score": 4, "rationale": "Strong tradeoff analysis (latency, storage, schema evolution, complexity). loadAggregate signature loads snapshot then events sinceVersion via factory. Uses aggregate.apply rather than calling the requested 'evolve' name (so the must-have hint is missing), but the abstraction is correct."},
+    {"id": "cap-01", "domain": "capability", "score": 5, "rationale": "Correct iterative fib with edge cases (n<=0 returns 0, n==1 returns 1), tuple-swap loop, docstring. Concise and correct."},
+    {"id": "cap-02", "domain": "capability", "score": 1, "rationale": "Empty response. Model produced nothing. Unusable."},
+    {"id": "cap-03", "domain": "capability", "score": 5, "rationale": "5 sentences covering all four required dimensions (caching, over-fetching, schema evolution, tooling) with a closing tradeoff summary. On-target and well-balanced."},
+    {"id": "cap-04", "domain": "capability", "score": 5, "rationale": "Clean 3-step plan, no code: extract pure functions, orchestration layer, decouple into architectural layers. Crisp and matches the brief."}
+  ]
+}

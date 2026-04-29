@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-B4",
+  "arm": "B4",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5 setup() with typed context/events, fromPromise actor declared in setup.actors, guards via inline ({context}) =>. Multi-step states wired correctly. Minor: the checkEmail actor is declared but never invoked in any state (no invoke block calls it) — so the email-uniqueness check from the prompt isn't actually performed at runtime. Structure is otherwise correct."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean setup() with named guard registered in setup.guards and referenced as string 'isDownloading' on PAUSE. assign() tracks progress correctly. Slight semantic mismatch: the guard checks progress<100 rather than 'is in downloading state' — but PAUSE only appears on the downloading state's `on`, so structural enforcement is already in place. Idiomatic v5."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5 invoke + fromPromise. Actor registered in setup.actors, invoked with `src` string + typed `input` callback, assign uses event.output on onDone, error on onError moves to 'failed'. Discriminated event types. Fully wired."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "fromObservable is used and registered in setup.actors. However the inline Subscribable is hand-rolled with a non-idiomatic dual observer shape (if typeof observer === 'function' ... else observer.next?). Idiomatic v5 would return an RxJS Observable directly (new Observable(subscriber => ...)). The parent receives events via on: WS_MESSAGE which is correct. Functional but quirky."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4→v5 migration: setup() with typed Ctx/Ev, named action 'bumpCount' registered in setup.actions, ({context}) => destructuring style, no Machine() or ctx => syntax. Final state shape mirrors the original. Exemplary."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Fabricated API. The response calls `.chain` as a method on fp-ts Either values (`(x) => x.chain(f)`) — fp-ts Either is not method-based; chain is a free function E.chain. Also defines an unused chain helper above. The pipe shape is right but the body would not compile. Three validators are present but composition is broken."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Right shape: Effect.gen + yield*, Context.GenericTag, Layer.merge, catchTag('UserNotFound'). However Effect.succeed<User, UserNotFound>(...) is wrong — Effect.succeed takes a single type arg and never carries an error channel. Also the get() implementation returns the same user in both branches, so UserNotFound is never raised — catchTag will never fire. Anchors hit but executable behavior is broken."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "pipe + O.chain + O.map, correctly typed Option<User> -> Option<string>. The response openly notes that O.chain((u) => O.some(u.email)) is equivalent to O.map and explains when chain matters — accurate self-aware idiom. Could simplify to a single map, but uses both as the prompt requested."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean pipe + TE.chainW composition. Types declared, FetchError tagged, both fetchers declared. Correct comment about chainW vs chain. Idiomatic fp-ts."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "All anchors hit: Layer.succeed, Context.GenericTag (modern Effect API; the suite's must_have 'Context.Tag' is stale terminology), Layer.merge, Effect.gen with yield* on each service, Effect.provide. The Layer.merge vs Layer.provide note at the end is technically correct."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "All three operators present and pipeable: debounceTime(250), distinctUntilChanged, switchMap. Includes a sensible filter for non-empty queries. Returns Observable<Result[]> typed. Note about switchMap cancellation is accurate."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with object syntax (preferred over array form) plus map to project into a typed ViewModel. All three streams composed. Clean and idiomatic."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap(fn, 3) — the concurrency cap is the second positional argument, exactly as required. Source built from of(...files). Note about the numeric cap is correct."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 3,
+      "rationale": "Explanation of Subject vs BehaviorSubject is accurate (initial value, getValue, immediate replay to late subscribers). However the code contains a TypeScript syntax error: `export const logout: void => currentUser$.next(null);` is missing the `=` and an arrow target — would not compile. Otherwise the BehaviorSubject example is correct and demonstrates the late-subscriber property."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Returns OperatorFunction<T, T>, generic over T, source$.pipe(tap(...)) preserves type identity. Type-safe and composes cleanly. Sample usage included."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated unions for State (empty | active) and Event (CartCreated | ItemAdded | ItemRemoved). evolve handles all three cases, exhaustiveness check via never. initialShoppingCart provided. Defensive branch for ItemAdded when in 'empty' status. Solid."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Full Decider<C, E, S> interface, discriminated commands and events, decide and evolve both exhaustive with never checks. Withdrawal balance check correctly rejects via DomainError. Initial state present (initialState rather than the prompt's 'initial' label, but semantically identical). Idiomatic."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "All three anchors: readStream, appendToStream, expectedRevision passed through from the loaded revision (proper optimistic concurrency, including the no_stream sentinel). evolve/decide present. Type signatures for the EventStore interface are reasonable (bigint revisions, sentinel union)."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state, event) handles created/added/removed/checkedOut with exhaustiveness. Tracks itemCount and totalCents per the read model spec. The literal type name 'ReadModel' isn't used (it's CartSummary instead) — minor naming miss, but the read-model role is filled. Includes a buildCartSummary fold helper as a bonus."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Snapshot interface carries version/streamRevision/state. loadAggregate signature accepts streamName, evolve, initial, snapshots, events; folds remaining events from the snapshot's revision. Tradeoff prose is fine but the line 'Corruption is the same risk either way' is debatable — snapshots add a separate failure surface (stale/corrupt snapshot data) that streams alone don't have. Otherwise sound."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative O(n) Fibonacci with O(1) space, correct base case for n<2, clear docstring stating semantics F(0)=0, F(1)=1. Type hints present. Tight."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Severe capability fabrication. The model invents the contents of package.json (react, react-dom, axios, typescript, webpack with specific versions) without performing a Read — there is no actual file content available to it. Response opens with 'I'll use the Read tool' but then prints fictional JSON as if read. Exactly the failure mode the capability anchor is meant to detect."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Tight four-sentence comparison covering all four required dimensions: caching (HTTP/ETags/CDN vs persisted-query layer), over-fetching (GraphQL win), schema evolution (REST versioning vs introspection+deprecation), tooling (OpenAPI/Postman vs GraphiQL/Apollo). Balanced, no fabrication. The suite's must_have 'schema' missed only because of case sensitivity in the auto-checker — content is correct."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clean 3-step refactor plan: extract parsing (pure), extract validation (pure), extract persistence (adapter), with the original function recomposed as parse → validate → persist. Stays plan-only as instructed (no function definitions). Each step justifies its boundary."
+    }
+  ]
+}

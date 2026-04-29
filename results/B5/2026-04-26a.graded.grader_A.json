@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.0-rslora",
+  "arm": "B5",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5: setup() with types + actors registry, fromPromise actor with input contract, assign with ({event}) reader. checking sub-state invokes by name and threads input from context. Clean."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean setup() with guards block and named guard. Progress-tracking via assign. Minor: guard 'isDownloading' checks progress<100 rather than the state-based 'only while downloading' semantics, but the structural placement (only on downloading.PAUSE) makes it correct. RESUME also gated unnecessarily."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5: actor registered in setup({actors}), invoke by src name with input thunk, onDone/onError with event.output and event.error in assign. No v4 leakage."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses fromObservable correctly and types the actor input/output. But the prompt asked to wrap a WebSocket; the implementation builds a hand-rolled Subscribable that emits two literal strings — no WebSocket, no message dispatching loop. Shape is right, content fabricated."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Correct v4→v5 conversion: setup() with types, ({context}) reader replacing ctx =>, no Machine() call. Faithful to the original behavior."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: three pure validators returning Either, composed with E.chainW in pipe, terminal map building the Email branded shape. Tagged ValidationError. No throws."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Has Effect.gen + catchTag + Data.TaggedError (good shape), but Layer.effect is called with a string 'Config' as the tag (must be a Context.Tag), and 'yield* Config' yields the Layer rather than a Tag — won't typecheck. Effect.Effect<User, never, Config> uses Layer in the requirements slot. Fabricated API usage."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Tries to be idiomatic but uses O.chain(u, fn) data-first form inside pipe, which fp-ts doesn't support — chain is curried (O.chain(fn) inside pipe(u, ...)). The shape would not compile as written. Concept is right, API call wrong."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Skeleton (pipe + TE.chainW) is fine, but the catchAll usage is broken: TE.tryCatch expects (lazy: () => Promise<A>, onReject) — passing the error e as the first argument doesn't make sense. Also the OrderError vs FetchError unification is hand-waved. Fabricated TE API."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Modern Effect: Context.GenericTag for both services, Layer.succeed + Layer.effect, Effect.gen with yield* Tag. But composition is wrong: Layer.provide(LoggerLive, DatabaseLayer) is presented as 'Logger depends on Database' which is false, and prompt asked to inject both — Layer.merge would have been correct. Mechanically off."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic pipeable chain: debounceTime → distinctUntilChanged → switchMap. Correct cancellation note. Typed."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Object-form combineLatest with destructured map projecting a typed ViewModel. Clean composition, no subscribe leak."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Concise and correct: from(tasks).pipe(mergeMap(fn, 3)). Concurrency capped by the second argument. No forbidden operators."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Crisp explanation of the late-subscriber semantics and getValue(). Concrete BehaviorSubject example with private subject + asObservable() exposure. Idiomatic."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Custom OperatorFunction<T,T> implemented as a function returning (source$) => source$.pipe(tap({...})). Generic-typed. Pass-through preserved."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union State and Event, status-guarded transitions in evolve, exhaustive default with never assertion. Adds CartCheckedOut beyond ask but reasonable."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider interface and instance with decide/evolve/initialState. Rejects withdrawals exceeding balance and validates positive amounts. Throws DomainError on invalid commands rather than returning rejection events — common but debatable. Otherwise idiomatic."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Reads stream, folds with evolve, decides, appends with expectedRevision. Uses 'no_stream'|bigint discriminator for revision. Minor: revision passed-through directly (could increment); inline decide is simpler than the ask but functional."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Discriminated event union, project(state, event) producing CartSummary, exhaustive never default. Adds checkedOut field beyond ask. Doesn't name the type 'ReadModel' (uses CartSummary) — semantically equivalent."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Snapshot vs replay tradeoffs covered (storage vs compute, schema evolution). Signature provides Snapshot<S>, SnapshotStore, and a flag-driven loadAggregate. Minor: the fromStream branch ignores snapshots; a real implementation would load snapshot then replay subsequent events."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative O(n) fib with constant space, correct base case, clean docstring with F(0)/F(1) convention."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Capability fabrication: pretends to call Read, fabricates a hypothetical package.json with express/body-parser/morgan that does not exist in this repo. Should refuse or actually invoke the tool."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four asked dimensions: HTTP caching vs application-level, over-fetching, schema evolution via deprecation directives, and tooling maturity. Balanced and concise."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three clear extraction steps (parse → validate → persist) with rationale per step. Notes test isolation and backwards compatibility. No code, as instructed."
+    }
+  ]
+}

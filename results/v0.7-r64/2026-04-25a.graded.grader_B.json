@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v0.7-r64",
+  "arm": "v0.7-r64",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5 setup() with types, fromPromise actor, typed events, assign with ({ event }). Has a 'submit' state outside the prompt's three steps (acceptable as the API check stage). The 'taken' field is mis-modeled (set from email-empty check before invoke; then set true on actor onError) but the basic shape is correct."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "setup() + assign() are correct, and guards are declared in setup, but the prompt asked for a guarded PAUSE transition and PAUSE has no guard attached. The declared guards (isDownloading, isPaused) are never referenced. assign({ progress: ({ context }) => context.progress }) on PAUSE/RESUME is a no-op. RESUME doesn't make progress advance. Compiles, but doesn't satisfy the guarded-transition requirement."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5 invoke + fromPromise with typed input, onDone storing output via assign, onError to 'failed' with error message. Idiomatic and complete."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "fromObservable expects an Observable but the actor returns a ReadableStream, which is the wrong type — won't typecheck against fromObservable's signature. The invoke block is also placed inside an event handler (on.OPEN) alongside a target transition, an unusual structure. The 'quote' event forwarding to context works in spirit but the actor wiring is broken."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v4 → v5 conversion: setup() with types, named action 'bump', assign with ({ context }), no Machine() or ctx => patterns. Idiomatic."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Three validators composed with E.chainW + final E.map to construct Email. Tagged ValidationError, no throws, correctly preserves error channel. Idiomatic fp-ts."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Effect.gen with yield*, Data.TaggedError, Context.GenericTag, Layer.succeed/effect, Layer.provide for ConfigLive into UserClientLive, and Effect.catchTag for typed UserNotFound fallback. Solid modern Effect idiom."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Result is correct but anti-idiomatic: O.chain(x => O.some(x.email)) is just O.map(x => x.email). Using chain where map is sufficient defeats the prompt's idiomatic intent. The toUpperCase is fine. Bonus comment is misleading (Option doesn't model null/undefined directly)."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "pipe + TE.chainW for FetchError-preserving composition of fetchUser then fetchOrders. Clean and minimal. Correct widening rationale."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Logger via Context.GenericTag is fine, but Layer.provide(DatabaseLive, LoggerLive) makes Database depend on Logger rather than composing them as parallel services — Layer.merge would be the asked-for composition. Database doesn't actually use Logger, so DatabaseLive is just discarding the dependency. The 'inject both into a program' shape works but isn't the canonical merge."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "input$.pipe(debounceTime(250), distinctUntilChanged(), switchMap(...)) — exact textbook typeahead. Correct switchMap rationale (cancels in-flight)."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object form + map to typed ViewModel. Pipeable operators only, no subscribe. Type-correct."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files).pipe(mergeMap(uploadFile$, 3)) — concurrency-capped mergeMap with the literal 3. Correct and minimal."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Explanation is accurate (Subject drops history; BehaviorSubject replays last value to late subscribers). Code uses BehaviorSubject correctly. Demonstration is slightly weak — the subscribe is after the first next, which does illustrate the late-joiner case, but a parallel Subject example would have made the contrast tangible."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Type-safe OperatorFunction<T,T> using tap with full observer (next/error/complete). Returns Observable<T> via pipe. Idiomatic. Doesn't include subscribe (which would actually be wrong for an operator), and the must_have on 'subscribe' is misguided here."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Pure evolve(state, event) with discriminated CartEvent, typed CartState, all three event types handled. ItemAdded appends a new line item rather than incrementing existing-sku quantity, and subtotalCents arithmetic uses fixed 100 instead of price — modeling shortcuts but the evolve shape is correct."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 2,
+      "rationale": "Has decide/evolve/initial structure, but logically broken: Cmd is just 'Deposit' | 'Withdraw' string with no amount carried, so all events get amount: 0. The withdraw guard checks ctx.balance >= 0 (always true for non-overdrawn accounts) instead of ctx.balance >= cmd.amount. Decider shape present but rejection logic doesn't actually reject."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 1,
+      "rationale": "Fabrication: imports CommandHandler and assign from '@temporalio/workflow' — Temporal exposes no such API. The CommandHandler({...}) DSL with start/decide/commit hooks is invented. expectedVersion is computed but never passed to appendToStream, so optimistic concurrency is not actually implemented. Doesn't satisfy the prompt."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Pure project(state, event): CartSummary with all three event variants handled. CartSummary stands in for ReadModel naming. REMOVE_ITEM decrements totalCents by event.priceCents, which the event type does carry — sound. Idiomatic."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoffs table covers the right axes (latency, storage, audit, scaling). Signature has Snapshot<T> with version + state + nextEventIndex and a seed factory. Missing: the signature doesn't show evolve/apply being threaded through, so 'snapshot-aware' is implied by the seed but not concrete. Adequate, not crisp."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib with docstring, correct base cases, type-annotated. Done."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Fabrication. The model has no file-system tool access in this eval and did not actually read package.json — yet it states specific dependencies (react/react-dom 18.2.0, axios 1.6.2) and a claim about devDependencies pinning. Invented contents. The prompt itself was a tool-use ask the model can't fulfill, but the correct response is to say so, not confabulate."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Hits all four required axes (caching, over-fetching, schema evolution, tooling), correctly characterizes HTTP cache vs single-endpoint POST, DataLoader for over-fetching mitigation, deprecation directives, and ends with a decisive guidance heuristic. Within sentence budget."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps cleanly separating parsing (shape), validation (semantics), persistence (adapter). No code, just plan. Correctly notes the original function reduces to composition."
+    }
+  ]
+}

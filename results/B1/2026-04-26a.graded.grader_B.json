@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-B1",
+  "arm": "B1",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "v5 setup() with types, fromPromise actor, invoke+input+onDone/onError, assign with ({ event }) — all correct v5. But the confirm-state assign body uses invalid syntax: `errors: { ...({ context }) => context.errors, confirm: 'mismatch' }` spreads a function expression instead of using a context callback. Real defect in otherwise solid code."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "v5 setup() with typed guards declared (isDownloading/isPaused), assign for progress, transitions and ERROR handling clean. However the prompt explicitly asked for a guarded transition gating PAUSE — guards are defined but never wired into any transition; PAUSE is allowed only by virtue of state placement. Acceptable but misses a stated requirement."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5: setup with actors, fromPromise<User, Input>, invoke with input mapper, onDone storing event.output, onError narrowing event.error, failed state with RETRY. Idiomatic and complete."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "fromObservable usage is non-idiomatic: hand-rolls a Subscribable, returns `{ output: out }` (fromObservable expects an Observable, not an object), pushes to a dead `out` array, never disconnects WebSocket on unsubscribe path correctly. The standard idiom `new Observable(observer => { ws.onmessage = ...; return () => ws.close(); })` is missed. Compiles-shaped but semantically broken."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v4→v5 conversion: setup() with types, named action via assign with ({ context }) callback, no Machine() or ctx=>. Concise and correct."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "pipe + Either with three validators composed via E.chainW, tagged ValidationError, no throws, terminal map to brand the Email type. Idiomatic fp-ts."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Effect.gen, Context.GenericTag, Layer.succeed/effect, Layer.merge, Data.TaggedError — all correct v3 Effect idioms. But the prompt asked to fall back to a default on UserNotFound; the program never invokes catchTag/catchAll/orElse, and the trailing prose claims catchTag is used when it isn't. The fetch is also a stub (Effect.succeed) so the failure path is never actually tested. Acceptable scaffolding, missed core requirement."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "pipe + O.fromNullable + O.chain + O.map, handles nullable user and nullable email cleanly with no imperative null checks. Idiomatic."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "pipe + TE.chain composing fetchUser then fetchOrders, correct error channel typing as TaskEither<FetchError, Orders>. No async/await, no .then. Clean."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect Layer pattern with Context.GenericTag, Layer.succeed for Logger, Layer.effect for Database that yields Logger, Layer.merge to compose, Effect.provide for injection. Solid Effect v3. Minor wart: `log.info(...).pipe(Effect.flatMap(() => Effect.void))` is awkward where a plain `log.info(...)` would suffice since info already returns Effect<void>. Auto-check noted Context.Tag miss but GenericTag is the correct current API."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable operators only: debounceTime(250) → distinctUntilChanged() → switchMap to searchApi$. Correct cancellation semantics and typing. Idiomatic."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object form with named keys, map to typed ViewModel, explicit interfaces for User/Settings/Theme. Clear and idiomatic; comment correctly distinguishes from forkJoin."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files).pipe(mergeMap(uploadFile$, 3)) with parameterized concurrency. Tight, correct, type-safe."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Crisp explanation distinguishing late-subscriber semantics; concrete BehaviorSubject<User|null> example with setter, asObservable getter, and a guard subscriber. Good."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Generic logTap<T>(label) returning OperatorFunction<T,T>, built via pipe(tap({next,error,complete})). Type-safe pass-through, correct rationale for tap vs map. Idiomatic."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Tagged sum types for State and Event, immutable transitions via spread, status-guarded handlers, exhaustiveness check with const _:never. Initial state included. Idiomatic."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider with decide/evolve/initial, tagged commands and events, balance check rejects withdrawals. Throws BankAccountError for invalid commands — common Decider style though Result<E[]>/Either would be more functional. Otherwise clean and immutable."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "CommandHandler reads stream, folds events through evolve from initialState, decides, appends with expectedRevision for optimistic concurrency. EventStore interface typed with bigint|'no_stream' revision. Clean ports-and-adapters shape."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state,event) with immutable updates, handles ItemAdded/Removed/CheckoutCompleted with exhaustiveness check. CartSummary is the read model (auto-check missed literal 'ReadModel' string but the concept is present). Aggregate helper via reduce. Minor: priceCents on ItemRemoved is unusual schema choice."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoff prose is correct and concise. Signature includes Snapshot<S> with version+revision, Decider, EventStore, SnapshotStore. But the implementation has bugs: `e.meta.revision` references a field not on the E type; returns `last` (the freshly read store revision) instead of the tracked per-event revision; the version field on Snapshot is loaded but never used; when no snapshot is found it returns 'no_stream' without reading any events. Acceptable as a sketch."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative O(n) fib with constant space, correct base case, tuple swap, type-annotated docstring noting F(0)=0,F(1)=1. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Fabricates the Read tool output — invents a fictional package.json with react/axios/typescript/webpack rather than actually invoking the tool. The summary is then derived from the fabricated content. Tool-use task failed via hallucination."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four requested dimensions (caching via HTTP/ETag/CDN vs application-level for GraphQL; over-fetching as GraphQL's win; schema evolution via versioning vs introspection+deprecation; tooling OpenAPI/Postman vs GraphiQL/Apollo). Within the 4-6 sentence bound. Auto-check missed lowercase 'schema' but 'Schema evolution' is present."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps separating parse → validate → persist as pure functions plus an adapter behind an interface; closes with the original function reduced to an orchestrator and a note about explicit error types. No code, as instructed."
+    }
+  ]
+}

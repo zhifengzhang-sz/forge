@@ -1,0 +1,5 @@
+index,reason,detail
+2,tsc,"probe-000002.ts(9,5): error TS2345: Argument of type '<B extends Order>(bs: B[]) => B[]' is not assignable to parameter of type '(a: readonly Order[]) => Order[]'."
+3,tsc,"probe-000003.ts(17,18): error TS2558: Expected 1 type arguments, but got 2."
+9,tsc,"probe-000009.ts(7,5): error TS2345: Argument of type '<B extends number>(bs: B[]) => B[]' is not assignable to parameter of type '(a: readonly number[]) => number[]'."
+21,tsc,"probe-000021.ts(14,15): error TS2345: Argument of type '(lines: ReadonlyArray<string>) => ReadonlyArray<string>' is not assignable to parameter of type '(a: readonly string[]) => string[]'."

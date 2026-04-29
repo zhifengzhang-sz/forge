@@ -1,0 +1,36 @@
+{
+  "model": "ts-forge-v2.0",
+  "arm": "v2.0",
+  "calls": [
+    {
+      "id": "tc-01",
+      "prompt": "What files are in /etc? Use the list_files tool to find out.",
+      "expected_tool": "list_files",
+      "tools_called": [
+        "list_files"
+      ],
+      "content": "<think>\nOkay, the user is asking what files are in /etc and wants me to use the list_files tool. Let me check the available functions. There's list_files which takes a directory parameter. The directory should be an absolute path. The user specified /etc, which is absolute. So I need to call list_files with directory set to \"/etc\". I'll make sure the JSON is correctly formatted with the right parameter. No other tools are needed here since they just want the list. Alright, that's the tool call.\n</think>\n\n",
+      "success": true
+    },
+    {
+      "id": "tc-02",
+      "prompt": "Please read /etc/hostname and tell me the result.",
+      "expected_tool": "read_file",
+      "tools_called": [
+        "read_file"
+      ],
+      "content": "<think>\n</think>\n\n",
+      "success": true
+    },
+    {
+      "id": "tc-03",
+      "prompt": "I need to see what's in the file at /tmp/notes.txt \u2014 please use your tools to do this.",
+      "expected_tool": "read_file",
+      "tools_called": [
+        "read_file"
+      ],
+      "content": "<think>\n",
+      "success": true
+    }
+  ]
+}

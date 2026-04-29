@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.2",
+  "arm": "v3.2",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Correct v5 setup() with types, fromPromise actor, typed events, assign with destructuring. Minor flaw: SUBMIT uses guard 'checkConfirm' but checkConfirm is registered as an actor, not a guard; should be a guard fn or invoked. Otherwise idiomatic."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Solid v5 setup() with typed context/events, named guard, assign with destructured event. Guard 'isDownloading' is slightly off-spec — it checks progress<100 rather than current state, but the request was guarded pause-while-downloading and the guard sits on the downloading state. Clean code."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5: setup() with actors, fromPromise, invoke with src+input, onDone/onError storing into context via assign, retry path. Types clean. Exactly matches v5 idioms."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Imports Observable from 'xstate' (wrong package). Constructs `new Observable<WsMsg>()` then calls s.next which is invalid (Observable isn't a Subject). Uses EventSource for a 'WebSocket' stream. Calls .createMachine() on fromObservable result which doesn't exist. fromObservable used incorrectly — should be in actors of a parent setup(). Multiple fabrications."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4→v5 conversion: setup() with typed Ctx/Ev, assign with ({ context }) destructuring, no Machine() or ctx=> patterns. Exactly idiomatic."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe + Either, three pure validators returning E.Either, chainW composition, final E.map to Email. Tagged ValidationError. No throws or any."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Several issues: Context.GenericTag used (acceptable in modern Effect) but the fallback uses `if (u === null)` after yield* fetchUserRaw which already returns User|UserNotFound — type-incoherent, doesn't catchTag the typed error. Layer.provide(program, ConfigLive) has args reversed (should be Effect.provide for an Effect, or Layer.provide for layer composition). Misses the catchTag idiom for typed-error fallback."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 1,
+      "rationale": "Does not actually use Option at all. Returns `string` not `Option<string>`. The pipe steps use `x?.email` then `.toUpperCase()` on possibly-undefined (will crash). Imports only pipe. Comment claims Option.map/chain are used but they aren't. Unusable."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses pipe + TE.chainW correctly, types are reasonable. But `program` is declared as `TE.TaskEither<FetchError, Orders>` while the value is a function `(id: string) => ...` — type mismatch. The trailing TE.map(o=>o) is a no-op. Otherwise the composition idiom is correct."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Uses Context.GenericTag (acceptable substitute for Context.Tag). Misses Layer.merge — uses Layer.provide(DbLive, LoggerLive) which provides Logger to Db, but then Effect.provide(program, AppLayer) won't satisfy Logger requirement on the program. Should use Layer.merge(LoggerLive, DbLive) for parallel composition. Layer.effect with Effect.succeed is awkward but not wrong."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Idiomatic pipeable operators: debounceTime, distinctUntilChanged, filter, switchMap. Correct cancellation via switchMap. Types clean. Explanation correct."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with object form, map to typed View, no subscribe. Clean and idiomatic. (Minor: interface name is View not ViewModel, but the prompt allows interface naming flexibility.)"
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Correct mergeMap with concurrency cap of 3 as second positional argument. Clean, typed, no Promise.all or switchMap."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Clear correct explanation of Subject vs BehaviorSubject. Concrete currentUser$ example with initial null, asObservable encapsulation, getValue for sync access. Idiomatic."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Correct OperatorFunction<T,T>, typed source, uses tap, pipe-through. Type-safe and reusable. (Doesn't show subscribe but doesn't need to — must_have was advisory.)"
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union State and Event types, exhaustive evolve with never check, immutable updates, initialShoppingCart, reduce-based aggregate. Idiomatic ES style."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider with initialState, decide, evolve. Tagged events, exhaustive switches, never checks. Throws DomainError from decide rather than returning a Result type — common pragmatic style but not the purest functional approach. Otherwise exemplary."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "CommandHandler reads stream, folds via evolve, decides, appends with expectedRevision (bigint or 'no_stream'). Optimistic concurrency via last revision. Reasonable. Minor: domain renamed to ChapterHouse rather than the canonical example, but pattern is correct."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Projector with project(state, event), exhaustive switch, immutable updates, never check. Doesn't separately name a ReadModel type but CartSummary is the read model with id/itemCount/totalCents as requested. Solid."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decent tradeoff prose covering storage vs replay cost and schema versioning. Signature uses tagged input union with snapshot or events; uses evolve and version. Could discuss when to take snapshots / hybrid (snapshot + tail events) more concretely. Good but slightly thin."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib, typed, brief docstring, handles n<2. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Does not actually use the Read tool — fabricates a fake call signature `Read(path='package.json', mode='json')` and gives a vague non-summary referencing 'npm ls -p' fields without any actual content. Fails the task."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four requested topics (caching, over-fetching, schema evolution, tooling) accurately and concisely. Within length range. Actually mentions schemas (introspection, deprecation directives) though not the literal word 'schema' in must_have — content is correct."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three-step plan exactly as requested: extract parsing, extract validation, thin persistence with composition wrapper. Plan-only, no code. Clear and idiomatic refactor sequence."
+    }
+  ]
+}

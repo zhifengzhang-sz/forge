@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v0.7-r64",
+  "arm": "v0.7-r64",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5: setup() with types + actors, fromPromise with typed input, assign with ({event}) destructure, invoke with input + onDone/onError. Multi-step flow wired correctly. Minor: 'taken' is set as a heuristic (length===0) which is unrelated to the actual uniqueness check, and an extra 'submit' state was inserted beyond the spec. Structure and v5 idioms are sound."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "v5 syntax is correct (setup/assign/guards block). However the guard requirement was not actually applied — guards are declared but never referenced via 'guard:' on the PAUSE transition. The 'pause only while downloading' constraint is satisfied implicitly only because PAUSE is on the downloading state. Several assigns are no-ops (progress: ctx => ctx.progress). Acceptable but not idiomatic."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5: setup() with typed actors, fromPromise<Profile,{id}>, invoke with input from context, onDone assigns event.output to context, onError targets 'failed' and stores error string. Exactly what was asked, no fabrications."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Conceptual error: fromObservable expects an RxJS Observable (or interop), but the response returns a ReadableStream from the factory, which will not satisfy the Observable contract. Also places the invoke inside an event handler ('idle.on.OPEN') rather than declaring it on a state node, which is awkward at best. Anchor terms appear but the wiring is wrong."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v4→v5: setup() with types, named action 'bump' using assign({count: ({context}) => context.count + 1}), referenced as actions: 'bump' from the transition. No leftover Machine() or ctx => patterns."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Idiomatic fp-ts: pipe + E.chainW composition of three string-validators, then E.map to construct Email. Tagged ValidationError. Reasonable rationale comment about chainW widening the error channel. Minor: splitAt is recomputed inside map rather than carried forward, but that's cosmetic."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Hits the FP anchors: Effect.gen + yield* + Layer + Context.GenericTag + Data.TaggedError + catchTag fallback. Layer.provide composes UserClientLive on top of ConfigLive. Minor: byId always succeeds, so the typed UserNotFound failure path is theoretical — the fallback never fires in practice. Structure is correct v3 Effect."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses pipe + Option, but the chain step `O.chain((x) => O.some(x.email))` is just a wrapped O.map — no actual chain semantics needed because email is not an Option. Idiomatic version would be a single O.map(u => u.email.toUpperCase()) or two O.maps. Acceptable but not idiomatic."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Concise pipe + TE.chainW composition with widened error channel. Types declared cleanly. Anchor signature matches what was asked. No fabrication."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Layer + Context.GenericTag, but composes via Layer.provide (DatabaseLive on LoggerLive) rather than Layer.merge for parallel injection — and the program never actually uses Logger, so 'inject both' is not demonstrated end-to-end. Effect.succeed wrapping a Layer.effect factory is unusual (Layer.succeed would be cleaner there). Functional but loose."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable operators: debounceTime(250), distinctUntilChanged, switchMap with typed Observable<Result[]> return. Cancels in-flight via switchMap. Concise and idiomatic."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with the object form, mapped to a typed ViewModel via the map operator. Correct semantics ('emits whenever any source emits, after each has emitted once'). Clean types."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with the third positional concurrency argument set to 3. Typed FileWithId / UploadProgress. Concise and correct."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Clear prose explanation of the difference (no initial vs. cached latest), with a BehaviorSubject<User|null> example demonstrating the late-subscriber semantics. Minor: the demo shows .subscribe explicitly which is fine for illustration but the example would be tighter as a state-stream wrapper. Solid."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Returns OperatorFunction<T,T>, parameterized over T, uses standalone pipe + tap with full observer (next/error/complete). Type-safe. Minor: the pipe(source$, tap(...)) form is unusual — most authors return source$.pipe(tap(...)). Both are correct."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "evolve(state, event) over a CartEvent union with State and Event types, initial-style 'CartCreated' arm establishing the cart. Pure, exhaustive switch. Minor: subtotal uses a 100-cent placeholder per quantity instead of carrying a price on ItemAdded — adequate for the scope, but a real cart would track price."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 2,
+      "rationale": "Decider shape (decide/evolve/initial) is present, but the core requirement is broken: Withdraw is checked with `ctx.balance >= 0` (always true), so insufficient-funds rejection never fires. Cmd is also a bare string with no amount payload, so all event amounts are hardcoded 0. Pattern recognized but logic wrong."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 1,
+      "rationale": "Fabrication: imports CommandHandler from '@temporalio/workflow', which has no such export. Invents a CommandHandler({id, start, decide, commit}) factory shape that does not exist. Misses the explicit expectedRevision anchor. The optimistic-concurrency contract (passing expected version into appendToStream) is not implemented."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "project(state, event) over a typed event union with CartSummary fields { id, itemCount, totalCents }. Pure, exhaustive. Weakness: no ReadModel type alias (anchor missed), and REMOVE_ITEM carries priceCents which isn't realistic — a real projector would look up price from current state. Adequate sketch."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoff table covers latency, storage, fidelity, audit, scaling. Snapshot-aware signature has version + state + nextEventIndex, but the loadAggregate signature passes events and snapshots in as arrays rather than taking a reader fn, which is unusual; and evolve is not part of the signature (anchor missed). Decent prose, weaker code anchor."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib with the canonical (a, b) = (b, a+b) loop, F(0)=0/F(1)=1 base, brief docstring. Type annotation present."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Fabrication: claims to have read package.json and reports specific dependencies (react/react-dom 18.2.0, axios 1.6.2) and devDependency policies that were not actually retrieved. The Read tool was never invoked. Pure hallucinated content — the exact failure mode the capability anchor warns against."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "All four required topics covered (caching, over-fetching, schema evolution, tooling) with concrete mechanisms (ETag/Cache-Control, persisted queries, DataLoader, OpenAPI, GraphiQL). Closing pick-one summary. Within sentence count. Accurate."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps, plan-only, no code beyond names. Each step extracts one of the three responsibilities into a pure function or thin adapter, with a clear explanation of why ('parsing answers shape, validation answers values'). Closes with the composed shape. On-task."
+    }
+  ]
+}

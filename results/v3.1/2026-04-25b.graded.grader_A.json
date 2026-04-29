@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.1",
+  "arm": "v3.1",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5 setup() with types, actors, fromPromise, assign with ({event}). Only addresses email step (not password/confirm) so partial scope coverage. Code itself is clean v5."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5 setup() with guards block and guard: 'isDownloading'. Guard semantics are slightly off (guards 'pause' on progress<100 rather than gating only when in downloading state — but the state machine structure already only allows PAUSE in downloading). Otherwise good idiomatic v5."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5: setup, fromPromise actor with typed input/output, invoke with input, onDone/onError, ({event}) destructuring, retry/reset events. Idiomatic."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Correct fromObservable usage with typed input, invoked into machine with assign on emission. The custom Subscribable shim is a bit awkward and not a real WebSocket, but pattern is correct v5."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4-to-v5 conversion: setup() with types, assign with ({context}) destructure, no Machine() or ctx => patterns. Idiomatic."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe with E.chainW composing three validators, tagged ValidationError, branded Email record. Clean."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect.gen with yield* on Config tag, Context.GenericTag, Layer.succeed, Effect.catchTag for typed UserNotFound. Slight nit: cfg is read but unused; declare-only fetchUser. Pattern is correct and idiomatic."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses fp-ts Option correctly with O.fromNullable, O.map, O.chain. However the prompt says input is Option<User> but the function takes User|null|undefined and constructs the Option internally. Mixes method-pipe (.pipe) instead of pipe(). Acceptable but not what was asked."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe with TE.chainW composing two TaskEither operations with shared FetchError. Clear explanation of chainW vs chain."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Effect Logger + Database via Context.GenericTag, Layer.succeed for each, Layer.merge into AppLayer, Effect.gen consuming both, Effect.provide. Idiomatic v3 Effect."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable operators: debounceTime(250), distinctUntilChanged, switchMap. Clean typed function with explanation of switchMap cancellation semantics. Idiomatic."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with object form (modern RxJS), map projecting into typed ViewModel. Idiomatic."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files).pipe(mergeMap(uploadFile$, 3)) — exactly the canonical concurrency-cap pattern. Good explanation of mergeMap vs concatMap."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 3,
+      "rationale": "Explanation is mostly accurate. Slight inaccuracy: BehaviorSubject 'replays every subsequent value' overstates — it emits current value to new subscribers, not full history. Also has a duplicate export const currentUser$ name collision that would be a TS error."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Generic OperatorFunction<T,T> implemented via pipe(tap({next,error,complete})). Type-safe and clean."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union state with status tags, tagged Event union, evolve as pure function with exhaustive switch and never check. Idiomatic Decider-style functional ES."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Full Decider interface, decide rejects withdrawals exceeding balance, evolve handles all events with never check. Throws DomainError instead of returning Result/Either — acceptable but not the most idiomatic functional ES style. Otherwise solid."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clean handler: readStream, reduce(evolve), decide, appendToStream with expectedRevision passing through the read revision. Good optimistic concurrency. Throws on domain errors (could be tagged result) but pattern is correct."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Pure project(state, event) function with exhaustive switch and never check, plus rebuildSummary fold. Read model has extra checkedOut field beyond what was asked — minor scope creep. Did not name a 'ReadModel' type alias as the must_have hinted. Solid pattern."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoffs explained correctly. The signature includes snapshot/version/evolve. However the implementation uses 'new Promise(async resolve => ...)' which is the explicit Promise constructor antipattern (should just be async function). Also the 'tail' parameter is unnecessary indirection. Good prose, mediocre code."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative O(n) with constant space, correct base case, clear docstring. Idiomatic Python."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Fabrication: invents a fake package.json with made-up dependencies (express, body-parser, eslint) instead of actually using a Read tool or refusing. Hallucinated content presented as factual."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required topics (caching, over-fetching, schema evolution, tooling) accurately and concisely. Well-balanced tradeoff analysis."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three-step refactor plan: pure parse, pure validate, persistence adapter, with rationale. No code as instructed. Mentions test isolation benefit. Clean plan."
+    }
+  ]
+}

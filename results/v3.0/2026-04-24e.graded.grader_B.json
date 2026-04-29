@@ -1,0 +1,31 @@
+{
+  "model": "ts-forge-v3.0",
+  "arm": "v3.0",
+  "grader": "B",
+  "graded": [
+    {"id": "xstate-01", "domain": "xstate", "score": 3, "rationale": "Good setup()/types/actors/fromPromise with input mapper. But uses v4-ish `internal: true` on transition, and onError branch reads `event.event.output.reason` (incorrect — should be `event.output.reason`). EMAIL.UNIQUE target='checkingEmail' flow is awkward. Correct shape overall but with bugs."},
+    {"id": "xstate-02", "domain": "xstate", "score": 2, "rationale": "Uses setup() and guards block correctly, but then uses `cond: 'isDownloading'` (v4 keyword) instead of `guard:` on the PAUSE transition. Also the isDownloading guard checks progress rather than state, odd. No PROGRESS completion -> DONE logic. v4 leakage lowers score."},
+    {"id": "xstate-03", "domain": "xstate", "score": 5, "rationale": "Idiomatic v5: setup() with types/actors, fromPromise with typed input, invoke with src string + input mapper, onDone storing output, onError transitioning to failed with error message extraction. Clean."},
+    {"id": "xstate-04", "domain": "xstate", "score": 3, "rationale": "Uses fromObservable but implementation uses sendBack/cleanup pattern (that's a callback/fromCallback style, not an actual Observable). fromObservable expects returning an Observable, not using sendBack. Structurally mixed. Mentions 'Observable' via WebSocket but doesn't construct one via RxJS."},
+    {"id": "xstate-05", "domain": "xstate", "score": 5, "rationale": "Clean v5 conversion: setup() with types and actions, named assign action using ({context}) destructuring, proper createMachine shape. Idiomatic."},
+    {"id": "fp-01", "domain": "fp", "score": 5, "rationale": "Idiomatic fp-ts: pipe + E.chainW composing three validators, tagged ValidationError, Email branded via object wrapper, E.map at the end. Clean."},
+    {"id": "fp-02", "domain": "fp", "score": 3, "rationale": "Uses Effect.gen, Layer, Context.GenericTag, TaggedError — but the program never actually calls catchTag for the fallback. The prompt asks to fall back on UserNotFound; response says catchTag 'can later discriminate' but doesn't implement the fallback. Also Effect.provide gets an object literal `{Config: ..., UserClient: ...}` which is wrong — should be a merged Layer. Bugs."},
+    {"id": "fp-03", "domain": "fp", "score": 5, "rationale": "Clean fp-ts: pipe, O.map, O.chain for filter, final O.map to uppercase. Idiomatic."},
+    {"id": "fp-04", "domain": "fp", "score": 5, "rationale": "Idiomatic TaskEither composition: pipe + TE.chainW, proper types, concise. Note on chainW vs chain is correct."},
+    {"id": "fp-05", "domain": "fp", "score": 5, "rationale": "Effect-TS: Context.GenericTag for both services, Layer.succeed for Logger, Layer.effect for DB consuming Logger, Layer.merge for composition, Effect.provide at the boundary. Solid."},
+    {"id": "rx-01", "domain": "reactive", "score": 5, "rationale": "debounceTime + distinctUntilChanged + switchMap, typed, with sensible N<2 guard. Idiomatic RxJS."},
+    {"id": "rx-02", "domain": "reactive", "score": 5, "rationale": "combineLatest with object form + map to ViewModel, typed correctly. Clean."},
+    {"id": "rx-03", "domain": "reactive", "score": 5, "rationale": "mergeMap with concurrency 3 via `mergeMap(project, 3)`. Correct and idiomatic."},
+    {"id": "rx-04", "domain": "reactive", "score": 5, "rationale": "Correct explanation and concrete code example showing BehaviorSubject provides initial + latest-to-late-subscribers vs Subject missing emission."},
+    {"id": "rx-05", "domain": "reactive", "score": 4, "rationale": "Correct OperatorFunction<T,T> using tap + pipe, type-safe. Minor: prompt demanded 'subscribe' substring (auto-check miss), but conceptually the operator is correct without needing subscribe. Not the cleanest demo but correct."},
+    {"id": "es-01", "domain": "eventsourcing", "score": 5, "rationale": "Clean discriminated union events, State type, initial state, evolve with exhaustive switch + never assertion. Good."},
+    {"id": "es-02", "domain": "eventsourcing", "score": 4, "rationale": "Decider interface with decide/evolve/initialState, discriminated commands/events. Rejects over-balance withdrawals. Minor: throws DomainError from decide (some prefer returning Result), uses `initialState` not `initial` property name (but prompt said `initial: State` — slight mismatch). Still solid."},
+    {"id": "es-03", "domain": "eventsourcing", "score": 5, "rationale": "Reads stream with revision, folds with evolve, decides, appends with expectedRevision: revision, throws on conflict. Clean optimistic concurrency pattern."},
+    {"id": "es-04", "domain": "eventsourcing", "score": 4, "rationale": "Project function with exhaustive switch, pure/immutable. Uses SummaryView wrapper instead of returning ReadModel directly (auto-check missed 'ReadModel'), but concept is sound. Passing `id` separately rather than on the event is slightly awkward."},
+    {"id": "es-05", "domain": "eventsourcing", "score": 3, "rationale": "Tradeoffs decent. Signature includes snapshot + version + evolve. But the loop body has bugs: state never updates (writes `next` but doesn't reassign), compares `event.revision` though DomainEvent type has no revision field. Conceptually on track, buggy implementation."},
+    {"id": "cap-01", "domain": "capability", "score": 5, "rationale": "Correct iterative Fibonacci, docstring, handles n<2 base case. Clean."},
+    {"id": "cap-02", "domain": "capability", "score": 1, "rationale": "Model did not actually invoke a Read tool — it fabricated package.json contents ('express 4.18, mongodb 5.0'). Clear fabrication, the task required using the tool."},
+    {"id": "cap-03", "domain": "capability", "score": 5, "rationale": "Covers caching, over-fetching, schema evolution, tooling in ~4 sentences. Accurate and well-scoped."},
+    {"id": "cap-04", "domain": "capability", "score": 5, "rationale": "Three clear steps: parse (pure), validate (pure), persist (adapter), with composition sketch and testability note. No code as asked. Clean."}
+  ]
+}

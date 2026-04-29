@@ -1,0 +1,151 @@
+{
+  "model": "gemma4:31b",
+  "arm": "gemma4-31b",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic XState v5: setup() with types.context/types.events, actors block defining fromPromise validateEmail, input passed from context, onDone/onError, assign with destructured ({event}). Guards on transitions. Minor: fromPromise import placed after use (still hoisted/valid). Strong v5 reference quality."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses createMachine directly without setup() — acceptable v5 but not the modern idiom. assign and guard are correctly used in v5 destructured form. States, events, progress tracking all correct. Functional but misses the setup() pattern that defines idiomatic v5."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Correct use of fromPromise, invoke with src + input, onDone with event.output, onError target. Includes useful v4-vs-v5 comparison table. Uses inline types: {} as {context, events} rather than setup() which would be more idiomatic. user typed as any in context is a small flaw. Otherwise solid."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Wraps WebSocket in new Observable correctly, uses fromObservable, dispatches events as {type, data}, handles cleanup via teardown function. Subscriber.next semantics for event dispatch is correct. Uses createMachine without setup() — acceptable here since focus is fromObservable. Import 'xstate/actors' subpath is dubious (fromObservable is exported from 'xstate' in v5)."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Correct conversion to createMachine with v5 assign destructured signature ({context}) => context.count + 1. Mentions setup() as a follow-up pro tip but doesn't use it for the actual conversion. Adequate idiomatic v5 conversion; could be 5 if it migrated to setup() proactively."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Good fp-ts: pipe, Either, three validators chained with E.chain, branded Email type. Bug: console.log(`...${E.left.value(result).message}`) — E.left.value is not a valid fp-ts API; should access result.left directly. Core validation logic and types are correct."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect.gen, yield*, Layer.effect, Layer.succeed, Layer.provide, Context.Tag class form, Data.TaggedError, catchTag for fallback — all idiomatic. Bug: class UserNotFound extends Data.TaggedError(\"UserNotFound\") {} is missing the generic payload form Data.TaggedError(\"UserNotFound\")<{id: string}>; also `readonly constructor` is not valid syntax. Architecture is correct."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "fp-ts pipe with O.map applied twice for extract+uppercase. Correctly explains when chain is needed (nested Option). Adds unrequested Rust example which is irrelevant scope creep. Core fp-ts code is idiomatic and correct."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "TaskEither composition with pipe and TE.chain is correct. tryCatch wraps async work and tags errors. Short-circuiting explained accurately. Could use TE.chainW or comment on error type widening, but the basic composition is idiomatic fp-ts."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Effect Layer.succeed and Layer.effect, Layer.provide. Issues: (1) const Logger = Context.Tag<Logger>() shadows the Logger interface name and uses the older non-class Tag form rather than Context.GenericTag or class-style; (2) does not use Layer.merge despite the prompt requesting composition with DatabaseLayer (uses Layer.provide which is correct architecturally but explicit Layer.merge is a stronger anchor); (3) Logger.of(...) syntax is wrong with this Tag form. Architecture is sensible but multiple API issues."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable operators only: debounceTime(250), distinctUntilChanged, filter, switchMap with inner catchError. Correctly explains why catchError must live inside switchMap. Idiomatic typeahead pattern with proper cancellation semantics."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Modern combineLatest with object form (RxJS v7+), typed Observable<ViewModel>, ViewModel interface defined. Correctly notes initial-emission caveat and provides startWith fallback. Minor: mock streams use `...` placeholder making the example not directly runnable. Idiomatic and well-explained."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "mergeMap with concurrency cap 3 is correct. Comparison table to concatMap/switchMap/exhaustMap is helpful. Mock uses `new File([\"\"], ...)` (browser-only API) but that's a minor demo issue. Idiomatic answer to the prompt."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Excellent comparison table (initial value, memory, late subscriber semantics, use case), full AuthService example with BehaviorSubject and asObservable encapsulation, getValue noted, and explicit explanation of what would fail with plain Subject for late subscribers. Ideal answer."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "OperatorFunction<T, T> with generic T, returning tap with next/error/complete handlers. Type-safe pass-through, full lifecycle logging. Idiomatic and minimal."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Pure evolve function with switch over CartCreated/ItemAdded/ItemRemoved, immutable updates via spread and new Map(state.items), discriminated event union, separate state interface, exported initialState. Excellent textbook implementation."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Correct Decider object with decide(command,state)->Event[], evolve(state,event)->State, and initial. Validates Withdraw against balance, rejects with thrown error. evolve is pure and total. Throwing in decide is acceptable; returning Result/Either would be more functional but not required. Clean separation of decision vs transition explained."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Full handler flow: readStream -> rehydrate -> handle -> appendToStream with expectedVersion. Optimistic concurrency explained correctly with version capture before decision. Mock store implements version check. Uses class-based aggregate (acceptable here, the prompt's must_not_have only forbids 'class ShoppingCart'). data: any in events weakens typing."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Pure project(state, event) function over CartSummary read model with itemCount and totalCents. Discriminated event union, immutable spreads, defensive Math.max(0,...) for ItemRemoved, null-state initialization from event.cartId, reduce-based replay example. Clean projector."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Strong tradeoff table covering latency, storage, complexity, integrity, schema evolution, CPU. Snapshot-aware loadAggregate function with snapshot, version, sinceVersion fetch. Uses aggregate.apply rather than evolve as a free function — must_have asked for evolve, which appears in the prose but not the signature; conceptually equivalent to apply. Otherwise excellent."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Correct iterative fib(n) with type hints, docstring, handles n<=0 and n==1 base cases, returns nth Fibonacci. Concise and right."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Empty response. Total task failure — no acknowledgment that the model lacks Read tool, no description, no fallback. Unusable."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Concisely covers all four required dimensions: HTTP caching vs single-endpoint, over-fetching mitigation in GraphQL, schema evolution (versioning vs additive deprecation), tooling ecosystem differences. Closes with a clear when-to-use summary. Within length budget."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps: extract pure functions, build orchestration coordinator, decouple into architectural layers (service/domain + repository). No code as instructed. Sensible incremental refactor approach."
+    }
+  ]
+}

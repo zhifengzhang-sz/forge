@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.1",
+  "arm": "v3.1",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5 setup() with typed context/events, fromPromise actor, guards, and assign with ({event}) shape. Minor issue: target 'email.unique' uses a state id with dot in name as sibling target which is ambiguous (XState would interpret it as a state path); also onDone has no assign of result. Otherwise solid v5 idioms."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses setup() with types and a guard, correct v5 shape. However the prompt explicitly asked for a guarded transition that only allows 'pause' while downloading — the response puts PAUSE unguarded on 'downloading' and applies the guard to RESUME instead, missing the spec. Also no assign() actually tracks progress incrementally — context.progress is only reset to 0. The 'isDownloading' guard tautologically returns true."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5: setup({types,actors}) with fromPromise, invoke with src+input, onDone storing event.output via assign, onError targeting 'failed' with error capture. Idiomatic and complete."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses fromObservable correctly and wires it to invoke, with WEBSOCKET event handled via assign. However the 'WebSocket' aspect is faked with setInterval — no actual WebSocket new WebSocket(url) usage, which is the core of the prompt. Subscribable typing is hand-rolled rather than using rxjs Observable. Acceptable v5 shape but capability gap."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v5 conversion: setup() with typed context/events, createMachine, assign uses ({context}) destructuring. Direct, correct, idiomatic."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe with three E.chainW validators producing branded Email via E.map. Tagged ValidationError, no throws, clean composition. Exactly what was asked."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Uses Effect.gen, yield* on Config Tag and fetchUser, Layer.succeed for ConfigLive, Effect.catchTag for the typed UserNotFound fallback. Context.GenericTag used correctly. Slight gap: fetchUser is declare'd not implemented, and the program never uses cfg.baseUrl, but the structure is right."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Mixes pipe-style: uses .pipe method on Option (still valid in fp-ts) plus O.map and O.chain. Output isn't strictly Option<string> from the user's email — extra trim+'@' validation injects logic the prompt didn't ask for. Functionally correct but not the most idiomatic 'extract email and uppercase' shape, and the auto-check 'pipe(' substring isn't actually used as the standalone pipe function from fp-ts/function (despite import)."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean fp-ts TaskEither composition: pipe + TE.chainW, declared fetchUser/fetchOrders, branded FetchError. Concise commentary explains chainW vs chain. Idiomatic."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect Layer composition with Context.GenericTag for both services, Layer.succeed implementations, Layer.merge to combine, Effect.provide on the program. Effect.gen with yield* on both tags. Note: prompt specified Context.Tag (auto-check miss) but GenericTag is the current Effect API — actually correct. Solid implementation."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Textbook RxJS typeahead: pipe with debounceTime(250), distinctUntilChanged(), switchMap to searchApi$. Correct cancellation semantics noted in prose. Idiomatic."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with object form (modern RxJS) + map to a typed ViewModel. Clean interfaces, no subscribe leak. Idiomatic."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files) piped through mergeMap(fn, 3) — exactly the bounded-concurrency pattern. Helpful explanatory note distinguishing mergeMap/concatMap. Idiomatic."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 3,
+      "rationale": "Explanation is correct and concise. However the code has a duplicate export bug: declares `const currentUser$` and then `export const currentUser$ = currentUser$` (same name, redeclaration error in TS). Also incorrectly says BehaviorSubject 'replays every subsequent value' — it only emits the latest on subscribe, not full history. Idea right, code wouldn't compile."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "Generic OperatorFunction<T,T> built via pipe(tap(...)) — type-safe and idiomatic. Auto-check 'subscribe' miss is artifact of must_have substring; the operator itself is correct. The unused Observable import exists via the declared events$, satisfying the type. Solid."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union state and event types, immutable evolve via switch, exhaustive never check, initial state. Adds CartCheckedOut as a bonus state. Textbook event sourcing in TS."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Decider interface with initialState/decide/evolve, discriminated unions for command/event/state, withdrawal exceeding balance correctly rejected. Uses thrown DomainError for command rejection rather than returning Result/Either — Decider purists prefer total functions, but throws are widely accepted for command rejection. Otherwise idiomatic."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "CommandHandler reads stream, folds events with evolve, decides, appends with expectedRevision. Optimistic concurrency wired correctly. Minor: passes the read revision back as expectedRevision (correct), but the EventStore interface doesn't show how revision advances per event — the read returns single 'revision' which is the right end-of-stream version. Solid."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Projector is a pure project(state, event) over discriminated-union events updating CartSummary. Adds rebuild helper. Auto-check 'ReadModel' miss is cosmetic — CartSummary is the read model. Solid implementation."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoffs explanation is correct and crisp (O(1) vs O(n), staleness risk, hybrid). Code has a notable smell: wraps async logic in `new Promise(async (resolve)...)` which is a Promise-constructor antipattern — should just be an `async function`. Also no error handling. Signature is fine but implementation quality drags this down."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative O(n) constant-space fib with correct base cases (F(0)=0, F(1)=1) and a clear docstring. Type hints present. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Fabrication: model invents a fake package.json with express/body-parser/eslint instead of declining or asking. The actual repo doesn't have those. Doesn't use a Read tool, hallucinates content. Capability red flag."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Crisp coverage of all four asked points: HTTP caching+ETags, GraphQL over-fetching win, schema evolution via deprecation directives, tooling tradeoffs. Within length target. Strong answer."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps separating parsing/validation/persistence with clear rationale per layer, no premature code, ends with composition + test isolation note. Exactly what was asked."
+    }
+  ]
+}

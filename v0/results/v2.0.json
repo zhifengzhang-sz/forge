@@ -1,0 +1,250 @@
+{
+  "model": "ts-forge-v2.0",
+  "arm": "v2.0-r64",
+  "graders": [
+    "A",
+    "B"
+  ],
+  "graded": [
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Correct iterative fib with docstring, handles n<2 base case, O(n)/O(1). Small bug in the response text itself: the closing code fence is `` `` `` (two backticks) instead of three, so the code block is mildly malformed in rendering. Function itself is correct.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Correct iterative fib with proper base case for n<2, O(n)/O(1), type annotations, docstring. The closing code-fence typo (`` vs ```) is cosmetic. Function is correct.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "grader_A_score": 2,
+      "grader_A_rationale": "The task explicitly required using the Read tool to look at the actual package.json; the response fabricates a plausible-looking set of dependencies (express, mongodb, eslint, jest) and presents them as if read. This is exactly the 'invented imports / nonexistent APIs' failure mode and should score low despite the prose being reasonable.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "Fabricates the file contents \u2014 the model didn't actually call a Read tool (and in this eval context couldn't), yet reports specific dependencies (express 4.18.2, mongodb 5.1.3, eslint, jest) as if it had read them. This is straight-up hallucination. Should have either refused or said 'I don't have tool access here.'",
+      "mean": 1.5,
+      "disagreement": 1
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Covers all four requested axes (caching, over-fetching, schema evolution, tooling) accurately and concisely. Mentions ETag/Cache-Control, persisted queries, introspection/deprecation, OpenAPI/GraphiQL. Within the sentence budget, no factual errors.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Covers all four required facets \u2014 HTTP caching (ETags/Cache-Control/CDNs) vs GraphQL's app-layer caching; over-fetching comparison; schema evolution (versioning vs introspection + deprecation); tooling maturity (OpenAPI/Postman vs GraphiQL/Apollo). Within the 4-6 sentence window and accurate.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Clean 3-step refactor plan: extract pure parse, extract pure validate, extract persistence adapter and compose. Explains each step's single responsibility and notes test-in-isolation and backward-compat callers. No code, exactly as requested.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Three clearly numbered steps, each focused on one responsibility (parse/validate/persist), with guidance on purity, error handling, composition as a pipeline, and backward compatibility via wrapping. No code \u2014 respects the 'just the plan' constraint.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Discriminated-union State (none/active/checked-out) and Event types, immutable evolve with exhaustiveness check via `const _never: never = event`, sensible guards for wrong-state events. Slightly over-delivers with CartCheckedOut but within scope.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Discriminated-union State and Event types, initial state, pure evolve with exhaustiveness `_never: never` check, proper immutable spreads, guards on status before applying events. Textbook decider-style evolve.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Correct Decider shape with initialState/decide/evolve, discriminated commands/events, withdrawal rejection via DomainError. Uses thrown DomainError rather than returning a Result/Either \u2014 a defensible choice in TS decider literature, though some purists prefer returning errors. Exhaustiveness checks are nice.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Clean Decider<C,E,S> interface, tagged commands/events, exhaustive decide/evolve with never-checks, domain errors for invalid states, correct insufficient-balance rejection. Minor: throwing DomainError from decide isn't strictly functional (Result/Either would be more idiomatic), but it's a common pragmatic choice and the structure is correct.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Loads stream, folds via evolve/reduce, decides, and appends with expectedRevision \u2014 classic optimistic-concurrency command handler. EventStore interface is reasonable. Minor: readStream returning full events plus a `revision` field is a simplification; a real store usually returns per-event revisions, and `expectedRevision: revision` when stream is 'no_stream' would need the empty-list case to be correct. Still on-pattern.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Correct command handler: readStream returns events+revision, fold through evolve, decide on command, appendToStream with expectedRevision = revision. Full decider defined inline, typed EventStore interface. Exactly the optimistic concurrency pattern asked for.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Pure project(state, event) with discriminated events and immutable spreads. CartSummary has the requested id/itemCount/totalCents fields plus owner/checkedOutAt extras. Missing a literal `ReadModel` type alias (though CartSummary is effectively one). Correct semantics for add/remove including a max(0,...) clamp.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Pure project(state, event) function, discriminated-union events, immutable spreads, exhaustive switch with never-check. Uses `CartSummary` as the read model type name rather than `ReadModel` (must_have miss), but the content is correct; itemCount and totalCents tracked correctly with Math.max clamp on removal.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Tradeoffs are accurate (replay cost, schema drift, parallel rebuild). Signature includes Snapshot<S>, version, revision, loadedFromSnapshot, and the function reads snapshot + tails new events. Minor issue: `revision` is pulled off each raw event via a cast, which is a bit hand-wavy \u2014 real stores return revision alongside events. Still a solid answer.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Reasonable tradeoffs covered (load cost, schema drift, parallel rebuilds). Snapshot-aware loadAggregate signature includes version check and readFromRevision. Weak spot: the revision extraction `(e as { revision?: bigint }).revision ?? revision` is a bit hacky \u2014 real EventStore APIs return revision alongside the event envelope. Signature and tradeoffs are solid overall.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Uses pipe and Either as required, but the composition is wrong \u2014 each validator takes a string but `pipe(s, nonEmpty, hasAt, ...)` passes an `Either<ValidationError, string>` into `hasAt` after the first step, which is a type error. The prompt asked for E.chain composition; this is not actually chained and won't compile.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Uses pipe + Either.left/right, three tagged validators. However, it does NOT compose with `chain` as the prompt requested \u2014 it just pipes functions sequentially, which type-checks only because every validator happens to take `string`. Once `asEmail` returns Either, the pipeline is broken unless each prior step's return is already Either (they are, but pipe treats them as plain functions, not as Either-chained). Missing `E.chain`/`E.flatMap` composition is the key idiomatic gap.",
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Effect.gen, Layer, yield* are all present and correct, and UserNotFound is a proper Data.TaggedError. But the prompt requires a fallback to a default on UserNotFound \u2014 the response explicitly notes the fallback isn't implemented. The defined `fetchUser` helper is never invoked by `program`, and `Context.GenericTag<User>` is created but unused, which is odd.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Effect.gen with yield*, Context.GenericTag, Layer.succeed, and typed TaggedError are correct. But the stated 'fallback to default on UserNotFound' is never implemented \u2014 no Effect.catchTag/orElse present; the final program still fails on UserNotFound. The response even admits the fallback 'lives inside the program itself' but doesn't actually show it.",
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Clean fp-ts: pipe with two O.map calls produces Option<string> correctly. The prompt mentioned Option.chain as an option, but two maps is idiomatic here since both steps are total \u2014 acceptable choice. No stray nulls or type evasions.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Idiomatic pipe + two O.map calls for the straight transform. Minor ding: the prompt asked to demonstrate Option.map AND Option.chain; this uses only map. Otherwise clean and type-safe.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Idiomatic TaskEither composition with pipe and TE.chainW, correct error typing FetchError shared across both steps, returns TE.TaskEither<FetchError, ReadonlyArray<Order>>. Brief note explains chainW vs chain choice.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Clean TE.chainW composition with pipe, proper types, declare stubs for dependencies, and a correct explanation of the W variant. Exactly what the prompt asked for.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Good Effect Layer example with Context.GenericTag, two services, Layer.merge, and Effect.provide. Uses GenericTag rather than the older Context.Tag class pattern, which is current idiom. Program yields services and calls methods correctly. Minor nit: the must_have hinted Context.Tag but GenericTag is the modern v3 replacement and is fine.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Proper Context.GenericTag (v3 idiom), Layer.succeed for each service, Layer.merge for composition, Effect.provide in the runnable, Effect.gen consuming both services. Note: prompt's must_have lists `Context.Tag` but GenericTag is the current Effect v3 idiom, so this is correct. Only minor gap: could show Layer.provide dependency direction if DB depended on Logger.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Exactly the expected typeahead: debounceTime(250), distinctUntilChanged(), switchMap to cancel in-flight, with a sensible extra filter on min length. Typed, no subscribe, no Promise interop errors.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Textbook typeahead: debounceTime(250) -> distinctUntilChanged -> filter -> switchMap for cancellation. Types are clean, pipe composition correct, explanation of switchMap cancellation accurate.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Idiomatic combineLatest with the object form for typed destructuring, mapped to a ViewModel interface. Returns Observable<ViewModel>; no forkJoin/zip/subscribe. Exactly on target.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Uses combineLatest with the object-form (typed destructuring in map), ViewModel interface defined, pipe + map correctly transforms. Exactly right.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Correct use of mergeMap's concurrency argument (second positional arg = 3), from(files) to turn the array into an Observable. Clean, typed, no concatMap/switchMap/Promise.all.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "`from(files).pipe(mergeMap(f => uploadFile$(f), 3))` \u2014 correct use of mergeMap's concurrency parameter, with a brief correct explanation. Types are clean.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Accurate explanation of Subject vs BehaviorSubject, with a BehaviorSubject<User|null> example and late-subscriber semantics called out. Could have shown a plain Subject alongside for direct contrast (must_have included 'Subject' which is satisfied only via BehaviorSubject). Overall solid.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Correct conceptual explanation (Subject has no initial; BehaviorSubject replays latest to new subscribers) and a working example with BehaviorSubject(null). Would be stronger with a side-by-side Subject example to directly contrast late-subscriber behavior, but the key point is made.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Correctly typed OperatorFunction<T,T> built by returning `pipe(tap({...}))` with next/error/complete handlers. Clean and type-safe. Minor: the prompt's must_have 'subscribe' hints they wanted subscription-site demo; the response shows a `.pipe(logTap(...))` site instead, which is arguably cleaner but doesn't subscribe.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Clean OperatorFunction<T,T> returning pipe(tap({next,error,complete})). Type-safe, no `any`, no hand-rolled subscribe \u2014 idiomatic tap usage. The must_have 'subscribe' miss is actually the right choice (tap is the idiomatic operator implementation).",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Uses setup() with types, actors, fromPromise, and input mapper correctly. However, it uses v4-style `cond: 'emailAvailable'` on the NEXT transition instead of v5's `guard:`, and the emailAvailable guard is declared as a free function outside setup() rather than registered via `guards:` in setup \u2014 so the string reference will not resolve. Also `signupMachine['context']` is not a valid type accessor.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Correct use of setup() with typed context/events, actors registry, fromPromise with input mapper, and assign with ({event}) destructuring. However, it uses v4-style `cond: 'emailAvailable'` on a transition (should be `guard:` in v5), the guard isn't registered in setup().guards, and it exports `emailAvailable` as a loose ctx function rather than wiring a proper v5 guard. Also missing an onError handler on the invoke.",
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "grader_A_score": 2,
+      "grader_A_rationale": "Uses setup() and assign() correctly, but the prompt explicitly requires a guarded transition allowing PAUSE only while downloading and there is no guard at all \u2014 the PAUSE transition is unconditional (and already confined to the downloading state, missing the point of the exercise). Also no PROGRESS-driving source/actor for the download itself, and storing ERROR.message into the url field is a clear bug.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Uses setup()+assign and v5 destructuring but completely omits the required guard on PAUSE \u2014 the PAUSE transition is unconditional, and the 'ERROR' top-level handler bizarrely overwrites `url` with the error message (wrong field). No `guards` key in setup(). Given the prompt explicitly asked for a guarded transition, this misses the core requirement.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Idiomatic v5: setup() with typed context/events, fromPromise with typed input mapper, invoke src as string with input thunk, onDone/onError with assign using event.output and event.error. Retry transition back to loading is a nice touch.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Textbook v5: setup() with typed Ctx/Ev, actors registry, invoke with src+input mapper, onDone assigning output, onError routing to a 'failed' state and capturing the error. Properly casts event.error and offers a RETRY transition.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "grader_A_score": 2,
+      "grader_A_rationale": "Invents a `Subscribable` class constructor imported from xstate \u2014 this is not a real XState export and fromObservable expects an RxJS Observable (or Subscribable value), not a custom class instantiation. The observer-callable-vs-object handling is also nonsense. The parent machine forwarding is fine but the actor body is broken.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Fabricates an API: `Subscribable` is not a class you `new` with a subscribe callback in xstate/rxjs \u2014 fromObservable expects a real RxJS Observable (e.g., `new Observable(subscriber => ...)`). The `typeof observer === 'function'` branch is also not how xstate subscribers work. Typed events and the assign wiring are otherwise fine, but the core actor body would not compile/run.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Clean v5 conversion: setup() with typed context/events, named action registered in setup.actions, assign uses `({ context }) =>` destructuring, no Machine() or (ctx,event) positional signatures. Exactly the expected migration.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Clean v5 conversion: setup() with typed context/events, named action 'bumpCount' via assign with ({context}) destructuring, referenced by string from the transition. Drops Machine() and positional ctx arg cleanly.",
+      "mean": 5.0,
+      "disagreement": 0
+    }
+  ]
+}

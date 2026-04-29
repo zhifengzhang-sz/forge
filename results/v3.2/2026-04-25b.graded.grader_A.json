@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.2",
+  "arm": "v3.2",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Uses setup() with types and actors (fromPromise) and assign with destructured args — all v5 idiomatic. However the SUBMIT transition references guard: 'checkConfirm' but no guards are defined in setup() (checkConfirm is registered as an actor, not a guard); the email step also never invokes the checkEmail actor. Acceptable shape, broken wiring."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5: setup({types, guards}), assign with ({event}) destructuring, guarded PAUSE transition restricted to downloading state. All five states present, no v4 patterns."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5 invoke with src by name, input mapper from context, fromPromise actor with typed input/output, onDone/onError both wired with assign and proper destructuring. Includes a sensible failed→retry transition."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Multiple errors: `new Observable<WsMsg>()` with no subscriber function is invalid; calling `.next()` on an Observable doesn't exist (needs Subject/observer); uses EventSource despite the prompt requiring WebSocket; `fromObservable(...).createMachine(...)` chains a non-existent method. The fromObservable signature itself is roughly correct but the surrounding code does not work."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v4→v5: setup({types}), assign with ({context}) destructuring, no Machine() / no `ctx =>`. Direct, idiomatic, complete."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "pipe + E.chainW composition of three validators returning Either<ValidationError, string> then mapped to Email. Proper left/right with tagged ValidationError class. No throws. Idiomatic fp-ts."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Effect.gen + yield* + Context.GenericTag + Layer.succeed are correct. But the prompt asked for typed-error fallback (catchTag on UserNotFound) and the answer uses an `if (u === null)` branch despite fetchUserRaw being typed as Effect.Effect<User, UserNotFound> (never null). Also `Layer.provide(program, ConfigLive)` is wrong shape — should be Effect.provide(program, ConfigLive) for an Effect→Effect, or Layer.provide is for Layer composition. Gets the surface vocabulary right but misses the recovery semantics."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 1,
+      "rationale": "Does not use Option at all despite prompt explicitly requiring Option.map / Option.chain. The pipe is degenerate (three steps, last is non-total: `e.toUpperCase()` will throw if `e` is undefined when user lacks email). Return type is string, not Option<string>. The trailing prose mentions Option.map/chain but the code does not. Unusable for the asked task."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Body uses pipe + TE.chainW idiomatically. But the declaration `export const program: TE.TaskEither<FetchError, Orders> = (id: string) => ...` is type-incorrect — TaskEither is not a function type, so this would not compile. Either the annotation should be `(id: string) => TE.TaskEither<FetchError, Orders>` or the arrow should be removed. The composition itself is right."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Defines Logger and Db tags via Context.GenericTag, layers with Layer.succeed and Layer.effect, composes via Layer.provide and provides to program. But the prompt explicitly asked for Layer.merge (and Context.Tag) — Layer.provide chains a dependency rather than composes peers, which is a different operation. Layer.effect with Effect.succeed is also weakly idiomatic vs Layer.succeed. Workable but off-spec."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "pipe with debounceTime(250), distinctUntilChanged, filter, switchMap. Correct cancellation semantics. Properly typed Observable<ReadonlyArray<Result>>. The closing prose is slightly muddled about mergeMap behavior but the code is clean."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest with the object-form (named keys) is the modern idiom; map projects into a typed View interface. No subscribe leakage, no zip/forkJoin confusion."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(jobs) -> mergeMap(uploadFile, 3). Concurrency cap correct, types tight, no concatMap/switchMap/Promise.all anywhere."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Crisp Subject vs BehaviorSubject explanation; BehaviorSubject<User|null> with private/public split, login() and whoami() helpers, and notes the late-subscriber semantics. Idiomatic."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Generic OperatorFunction<T,T> implemented via tap, type-preserving, includes a usage example. No `: any`, no inline `function logTap(source...)` anti-pattern. Note the `subscribe` token is missing from the implementation but that's an auto-check artifact — the operator is correct as-is."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Tagged Event union, tagged State union (empty/shopping/checked-out), pure evolve with status guards, exhaustiveness check via `const _n: never`. Initial state and a fold helper. Textbook."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Full Decider<C,E,S> interface with initialState, decide, evolve. Tagged commands and events, balance check, status guards. Minor: uses `throw new DomainError` for rejection rather than returning [] / a Result — common but debatable in pure-decider style. Otherwise clean and idiomatic."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "readStream → reduce(evolve) → decide → appendToStream with expectedRevision. Handles 'no_stream' for empty streams. Typed StoredEvent with revision: bigint. Clean optimistic-concurrency wiring."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "project(state, event) is pure, immutable, exhaustive, and tracks itemCount and totalCents correctly with floor at zero. CartSummary is the read model (the literal token 'ReadModel' is missing, but the structural concept is present). No DB I/O leaked into the projector."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Discusses storage-vs-replay tradeoff and snapshot versioning. Signature is snapshot-aware with a tagged LoadInput union and an Aggregate<S,E> with evolve. Reasonable but light on tradeoffs — doesn't mention staleness, schema drift cost, or hybrid loaders that combine snapshot + tail events."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib with handles n<2, clear docstring, correct edge cases. Right shape and correct."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Hallucinates a tool call rather than actually invoking Read. Doesn't summarize any real package.json contents — instead waves at what `npm ls -p` would show. The prompt explicitly asked to use Read and summarize the dependencies; the model neither read nor summarized."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required dimensions (caching, over-fetching, schema evolution, tooling) with concrete details (ETags, persisted queries, introspection, OpenAPI/GraphiQL). Within length budget. Balanced."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps, no code, separates concerns sensibly (parsing as shape recognition, validation as value-rules, persistence as thin call), and addresses the meta-question of preserving callers and enabling unit tests."
+    }
+  ]
+}

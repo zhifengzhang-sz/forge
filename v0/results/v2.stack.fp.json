@@ -1,0 +1,250 @@
+{
+  "model": "ts-forge-v2-stack-fp",
+  "arm": "v2.stack.fp-r64",
+  "graders": [
+    "A",
+    "B"
+  ],
+  "graded": [
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Correct iterative Fibonacci with proper base cases, docstring, type hints. Clean and idiomatic Python.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Correct iterative fib with docstring, handles n<2 edge case. Clean.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "grader_A_score": 1,
+      "grader_A_rationale": "Fabrication: the model did not actually call Read (no tool use), invented `Read('package.json')` as if it were a runtime JS function, then hallucinated dependency counts and names (`express`, `pg`, `winston`, `typescript`). This is exactly the failure mode the grading guide flags as score-low.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "Fabricates file contents: claims '14 runtime dependencies, including express, pg, winston' without having actually read package.json. Shows a fake `Read('package.json')` code snippet instead of using the tool. Classic hallucination \u2014 the worst pattern for this prompt.",
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Covers all four requested dimensions (caching, over-fetching, schema evolution, tooling) accurately and concisely. The word `schema` appears (auto-check false miss). Well-calibrated tradeoff discussion; slightly dense but within the 4-6 sentence target.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Covers caching, over-fetching, schema evolution, tooling \u2014 all four explicitly with concrete tradeoffs. Fits the 4-6 sentence ask. Well-calibrated and accurate.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Three clear steps, correctly avoids writing code, each step identifies responsibility and testability rationale. The `1. 2. 3.` auto-check misses because the response uses bold `**Step 1:**` markers instead of numeric list \u2014 substance is there. Good plan.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Three clear refactor steps covering parse, validate, persist, with a composition hint and backward-compat note. Used `**Step 1/2/3**` headings instead of `1.`/`2.`/`3.` numbering (cosmetic miss on the must_have hint) but the structure is correct and the plan is sensible.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "grader_A_score": 3,
+      "grader_A_rationale": "Decent shape \u2014 discriminated-union Events, readonly State, pure `evolve` with switch. However the `total` on `ItemAdded`/`ItemRemoved` uses `quantity` rather than price (unclear semantics), and `ItemRemoved`'s `total` update has an operator precedence bug: `state.total - state.items.find(...)?.quantity ?? 0` evaluates the `??` after subtraction. No exhaustiveness `never` check. Acceptable but flawed.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Discriminated-union Event type, readonly State, `initial` state, and an `evolve` switch. Bug in `ItemRemoved` branch: operator precedence \u2014 `state.total - state.items.find(...)?.quantity ?? 0` parses as `(state.total - undefined) ?? 0`, yielding NaN. The `total` being a sum of quantities is also semantically odd (usually it'd be money). Shape is idiomatic, one real bug.",
+      "mean": 3.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Clean Decider: discriminated-union Command and Event, pure `decide` returning `Event[]`, pure `evolve`, `initial: {balance: 0}`. Withdrawals over balance return `[]` (silent rejection). Missing exhaustive `never` check on the switch, and silent rejection is an arguable design choice (throwing a rejection event or a typed error is more common). Solid.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Clean Decider: tagged commands/events, `decide` returning Event[] (empty on rejection is a reasonable choice though a RejectedWithdrawal event is sometimes preferred), `evolve` using exhaustive switch, and `initial` on the exported object. Idiomatic.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "grader_A_score": 2,
+      "grader_A_rationale": "Structure is wrong: `next = state.apply(cmd)` \u2014 `apply` is event-shaped but gets a Command; then `appendToStream(..., next)` passes an Aggregate where `readonly Event[]` is required. Never actually calls a decide function. `expectedVersion: events.length` is at least the right concurrency idea, but the data flow from command\u2192events is missing. Conceptually confused.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Missed the hint `expectedRevision`. The Aggregate.apply contract expects `Event` but is called with `cmd` (a Command) \u2014 type-broken. `appendToStream` is passed `next` (a single Aggregate) rather than `readonly Event[]`. Never invokes `decide` \u2014 it conflates decide/apply. Has Effect.gen skeleton but the command-handler logic is incorrect.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "grader_A_score": 3,
+      "grader_A_rationale": "`project` function produces correct CartSummary updates for add/remove, uses discriminated event type and readonly fields. Wrapping in `Effect.succeed` is overkill for a pure projection \u2014 most projectors are synchronous `(state, event) => state`. No `ReadModel` type alias (auto-check notes). Works but the Effect wrapping is unmotivated.",
+      "grader_B_score": 3,
+      "grader_B_rationale": "Returns Effect-wrapped CartSummary and correctly folds itemAdded/itemRemoved. Didn't name the type `ReadModel` as hinted. The project signature returning Effect is heavier than the requested `project(state, event) -> state`. Functional but slightly over-designed.",
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "grader_A_score": 2,
+      "grader_A_rationale": "Explanation of tradeoffs is reasonable. The code signature is problematic: `seen.has(evt.type)` rejects duplicate event types, which is wrong \u2014 multiple ItemAdded events are expected. The `__snapshot__` event filter is fabricated convention. Doesn't use `evolve` (prompt anchor). `applyEvent` is referenced but undefined. Flawed implementation.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Prose on tradeoffs is reasonable. But the loadAggregate implementation has real bugs: `seen` dedupes by event.type (not event.id), so a second ItemAdded would throw; `applyEvent` is undefined; `state: unknown` and version bookkeeping intermix snapshot+events awkwardly (version is set from snapshot, then incremented without skipping events before snapshot.version). Missing `evolve` per the hint.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "grader_A_score": 2,
+      "grader_A_rationale": "The core pipe+chain composition is reasonable, but the `Validator` class is declared AFTER being instantiated with `new Validator(...)` (temporal dead zone / class-before-use), and the class body itself is malformed (two `run` declarations, constructor assigning to `this.run`). The wrapper class is also pointless \u2014 plain function chain would be idiomatic. Code as written will not run.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "The pipe/Either validators themselves are fine, but the code contains a duplicate class declaration conflict (`interface Validator` then `class Validator`), and the class is both referenced before declaration and internally broken (`run = this.f` plus constructor assigning `this.run = this.f`). Would not compile. The core idea is right, execution is sloppy.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Good Effect-TS idioms: `Data.TaggedError`, `Context.GenericTag`, `Layer.effect`, `Effect.catchTag`, `Effect.gen` with `yield*`. Small issue: the `FetchUser` service as declared will never actually produce a `UserNotFound`, so the fallback never fires \u2014 the demo of the typed-error fallback is hollow. Structurally correct and idiomatic.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Clean Effect idioms: `Context.GenericTag`, `Data.TaggedError`, `Effect.gen(function*)` with `yield*`, `Effect.catchTag`, `Layer.succeed`/`Layer.effect`, `Layer.merge`, and `Effect.provide`. Minor issue: the `FetchUser` service never actually fails with UserNotFound (it always succeeds), so the catchTag is vacuous; shape is correct but the example doesn't demonstrate the fallback firing.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Clean, idiomatic fp-ts. Two `O.map` calls composed via `pipe` \u2014 exactly what the prompt asked for. Types are correct, no escape hatches, concise commentary. Textbook answer.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Idiomatic fp-ts: two clean `O.map` calls in a pipe, correct types, no unnecessary `O.chain`. Tight and correct.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Correct and idiomatic: `pipe(fetchUser(id), TE.chainW(...))`. Uses `chainW` with reasonable justification. Minor: the `User.orders` shape vs `fetchOrders(ids: ReadonlyArray<string>)` is a bit contrived, and the prompt said `fetchOrders(user)` not `fetchOrders(user.orders)`. Core pattern is solid.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Correct and idiomatic TaskEither composition using `TE.chainW` to widen error channel. Proper types, no async/await. Minor nit: passes `user.orders` (string ids) to `fetchOrders` which the declaration accepts, consistent.",
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Idiomatic Effect-TS layer composition with `Context.GenericTag`, `Layer.succeed`, `Layer.effect`, `Layer.merge`, and `Effect.provide`. Auto-check misses `Context.Tag` because this uses the newer `GenericTag` \u2014 that is actually correct. Program uses `yield*` on service tags properly. Solid.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Correct use of `Context.GenericTag`, `Layer.succeed`, `Layer.effect`, `Layer.merge`, and `Effect.provide`. `Effect.gen` consumes both services with `yield*`. Minor: `Context.Tag` was the hinted name (cosmetic \u2014 GenericTag is the current API), and `db.ping()` return is discarded. Solid.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Correct pipeline: `debounceTime(250)`, `distinctUntilChanged()`, `switchMap`. `Observable` and `Result` are not imported but the function signature is right. Wrapping `searchApi(q)` in `from(...)` is unnecessary since `searchApi` already returns `Observable<Result[]>`, but harmless. Good idiomatic use of `switchMap` for cancellation.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Correct pipe with `debounceTime`, `distinctUntilChanged`, `switchMap`; cancellation semantics explained. Unnecessary `from(searchApi(q))` wrapping an already-Observable is a minor wart, and `Observable`/`Result` are referenced without imports.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "grader_A_score": 1,
+      "grader_A_rationale": "Wrong operator \u2014 uses `merge` instead of `combineLatest`. `merge` emits each stream's values independently, so the ViewModel gets partial values with hardcoded defaults for the other fields, which the response then awkwardly rationalizes. Also missing imports. Does not satisfy the prompt.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "Uses `merge` instead of `combineLatest`, which is precisely wrong for a ViewModel: `merge` emits from one source at a time with stubbed defaults for the others, so the ViewModel is always partially stale. `combineLatest`, `map`, and `Observable` imports are missing. The rationale even acknowledges the staleness problem but doesn't fix it.",
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "grader_A_score": 2,
+      "grader_A_rationale": "`files.pipe(...)` where `files` is a `File[]` is a type error \u2014 arrays don't have `.pipe`. Should wrap with `from(files)` first. The `mergeMap(uploadFile, 3)` concurrency idea is correct and `concatMap` is referenced only in commentary, not used. The unused `concatMap` import is noise. Would not compile as written.",
+      "grader_B_score": 2,
+      "grader_B_rationale": "Uses `mergeMap(uploadFile, 3)` correctly, but applies it to `files.pipe(...)` where `files: File[]` is a plain array, not an Observable \u2014 `.pipe` doesn't exist on arrays. Would need `from(files).pipe(...)`. Also imports `concatMap` unused. Concept right, code broken.",
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_A_rationale": "Accurate explanation of Subject vs BehaviorSubject and correctly identifies BehaviorSubject as the right choice for the currentUser late-subscriber case. Example is clear if minimal \u2014 doesn't actually show a subscription demonstrating the late-subscriber behavior, which was the crux of the prompt. Good but not exceptional.",
+      "grader_B_score": 4,
+      "grader_B_rationale": "Correct conceptual distinction and an appropriate BehaviorSubject example. Missing a concrete late-subscriber demonstration (calling `.subscribe` after `.next` to show the replay), but the prose covers it. Clean.",
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_A_rationale": "Exactly right: `OperatorFunction<T, T>`, generic, returns source piped through `tap`. Clean, type-safe, idiomatic. Commentary correctly notes the zero-runtime-cost intent. The must_have `subscribe` miss is spurious \u2014 `tap` is the correct operator and subscribing inside a custom operator would be wrong.",
+      "grader_B_score": 5,
+      "grader_B_rationale": "Textbook idiomatic OperatorFunction: generic `<T>`, returns `source => source.pipe(tap(...))`, correct types. Exactly what was asked.",
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "grader_A_score": 1,
+      "grader_A_rationale": "Mixes setup() with bare createMachine patterns, uses v4 `cond:` instead of v5 `guard:`, never uses `assign`, `always: [checkEmail]` is nonsensical, and passes a type (Context) as a runtime value in `types: { context: Context }`. `fromPromise` is wrapped around a Promise-creating function incorrectly. Broken code.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "Uses setup() but then calls .createMachine (violating must_not_have) while still mixing v4 idioms: `cond:` instead of `guard:`, positional `(ctx)` args, `fromPromise` wrapping a raw Promise incorrectly, `always: [checkEmail]` is not valid, and `types: { context: Context }` passes a type as a value. No assign, no action implementations, no typed events. Broken code.",
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "grader_A_score": 1,
+      "grader_A_rationale": "Pure XState v4 code: `createMachine<TContext, TEvent>({...})` generic form, `cond:` instead of `guard:`, `(ctx, e) =>` positional args, no `setup()`. Prompt explicitly requires v5 guarded transition; this fails that entirely.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "Bare `createMachine<Ctx, Ev>({...})` with v4 generic syntax, uses `cond:` throughout, no `setup(`, no `guard:`, no guarded pause-while-downloading. Progress is not tracked from an event; there is no PROGRESS update. Largely v4 code.",
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "grader_A_score": 1,
+      "grader_A_rationale": "Does not use `fromPromise` despite being explicitly required by the prompt \u2014 uses raw async `src:` which is v4 style. `assign` callbacks use positional `(ctx, event) =>` rather than v5 `({context, event}) =>`. No `setup()`. Fails the v5 idiom.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "Uses bare `createMachine` (no setup), `invoke.src: async (ctx) => ...` which is the v4 promise-service idiom, and v4-style `assign({ profile: (ctx, event) => event.data })`. Never uses `fromPromise`. `onError` reads `event.data.status` which would be the thrown Error object, not a typed error shape. Not idiomatic v5.",
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "grader_A_score": 1,
+      "grader_A_rationale": "Syntax error `ws.onmessage = (e) => wsMachine.send(e.data))` has an extra paren. Uses nonexistent `effects:` key in createMachine. `Observable` is not imported. No `setup()`. `fromObservable` is placed inside a bogus `effects:` block rather than `actors` in setup or `invoke`. Broken.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "Syntactically broken: `entry: () => ws.onmessage = (e) => wsMachine.send(e.data))` has an unmatched paren and `wsMachine` is used before declaration. `effects:` is not an XState v5 key (actors go under `setup({actors})` or `invoke`). `Observable` is not imported. fromObservable should return a stream and be invoked; this never wires the observable into state transitions.",
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "grader_A_score": 1,
+      "grader_A_rationale": "Kept v4 `Machine(...)` import and API \u2014 the prompt explicitly said convert to v5 and the response even claims it did. Uses `cond:` not `guard:`, positional `ctx =>`, no `setup()`. The accompanying commentary contradicts the code. Complete failure of the task.",
+      "grader_B_score": 1,
+      "grader_B_rationale": "The task was to convert v4 to v5; the response keeps `Machine(`, keeps `cond:`, keeps `(ctx) =>` positional args, never uses `setup()`, never uses `({ context })` destructuring. It also changes semantics (adds a count<3 branch that was not in the source). This is still v4 code with a wrong explanation claiming Machine is a v5 named export.",
+      "mean": 1.0,
+      "disagreement": 0
+    }
+  ]
+}

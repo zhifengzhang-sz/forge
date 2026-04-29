@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-B1",
+  "arm": "B1",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Idiomatic v5 setup() with typed events, actors map, fromPromise, and assign on input/event. However the confirm-mismatch branch contains a syntax error: `errors: { ...({ context }) => context.errors, confirm: 'mismatch' }` is not valid TypeScript (spreading an arrow expression literally). Compiles broken; otherwise the shape is right."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Clean v5 setup with typed Ctx/Ev and assign-based progress tracking. Guards are declared in setup ({isDownloading, isPaused}) but never referenced on any transition — the prompt explicitly required a guarded PAUSE that only fires while downloading, and the response gates pause structurally (only present in 'downloading' state) rather than via guard. Acceptable but does not satisfy the explicit guard requirement."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5: setup() with actors map, fromPromise typed on output and input, invoke with input mapper, onDone assigns event.output, onError moves to 'failed' with safe error narrowing. Retry transition included. No v4 patterns."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "Uses fromObservable in v5 framing, but the actor body is wrong: it constructs a Subscribable object and then returns `{ output: out }` instead of returning the Subscribable/Observable itself. fromObservable expects the callback to return a Subscribable; this implementation will not stream messages and the events won't reach the parent. Conceptually broken despite surface-level v5 idioms."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v4→v5 conversion: setup() with types and named actions, assign uses ({ context }) destructure, named action 'bumpCount' referenced from transition. No legacy Machine() / ctx => / positional context."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic fp-ts: pipe + E.chainW for error-widening composition of three validators, tagged ValidationError, no exceptions, final E.map to wrap in Email. Clean and correct."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Has Effect.gen, Layer, Context.GenericTag, Layer.merge, and reads config via yield* Config — all idiomatic modern Effect. But the prompt explicitly asked to fall back to a default on UserNotFound; the program never produces or catches UserNotFound (no Effect.catchTag, no failure path). The trailing prose claims catchTag is used 'leaving other errors in the channel' — which contradicts the code (fabrication-adjacent). Functional but does not satisfy the central requirement."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Idiomatic Option pipeline: fromNullable for User, chain into fromNullable for email, map for toUpperCase. No imperative null checks, no direct property access on possibly-null. Clean."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Textbook TaskEither composition with pipe + TE.chain; declared signatures show error type unification on FetchError. No async/await/then. Concise."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean Effect Layer pattern: two Context.GenericTag services, Layer.succeed for Logger, Layer.effect for Database that depends on Logger via yield*, Layer.merge composes them, Effect.provide injects. Modern Effect idiom (GenericTag is the current canonical tag constructor). No class impls."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable operators, correct order (debounceTime → distinctUntilChanged → switchMap), switchMap explanation about cancellation is accurate. Strongly typed Observable<Result[]>. No subscribe, no Promises."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest in object form + typed map to ViewModel; explanation correctly contrasts with forkJoin. Idiomatic and concise."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(files).pipe(mergeMap(uploadFile$, 3)) — exactly the canonical concurrency-capped form. Default param of 3 makes intent explicit. No Promise.all, no concatMap."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Accurate distinction (Subject = no retained value, BehaviorSubject = latest replayed to late subscribers), concrete currentUser$ example with asObservable encapsulation. The example does include a .subscribe call but it is illustrative for the late-subscriber demo."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Returns OperatorFunction<T, T> by composing pipe(tap(...)) with full {next, error, complete} side-effect handlers, uses unknown for error. Correct generic propagation; works on any Observable<T>."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Tagged-union state (empty/open/checked-out) and tagged events; immutable evolve with structural updates; exhaustive never check; ignores invalid transitions safely. Bonus CartCheckedOut handled correctly."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Solid Decider: decide returns Event[], evolve is pure, initial state defined, withdrawals check balance, deposits check positivity, exhaustive never on both unions. Minor type smell: `default: return _` returns a never as State (unreachable but type-incorrect — should be `throw` or just `return state`). Throws errors for rejection, which is one valid Decider style."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Handler reads stream, folds events through evolve to recover state, decides, then appends with expectedRevision matching the read revision — proper optimistic concurrency. Clean separation between domain (decide/evolve) and infra (EventStore interface). No locks/transactions/mutex."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Pure project(state, event) function with immutable updates, exhaustive never, plus a fold helper. Read model has all required fields (id, itemCount, totalCents). Misses literal type alias name 'ReadModel' from the spec but the structural shape is correct. No SQL leakage."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Tradeoff prose is brief but accurate (snapshot trades write for fast reload; replay trades reads for no writes). Function signature is appropriate (Snapshot<S> with version+revision, SnapshotStore, Decider). However the body has bugs: `revision = e.meta.revision` references a `meta` field not present on E, and the function reads the whole stream instead of from the snapshot revision (defeating the snapshot speedup); also returns `last` instead of the iteratively updated revision. Concept right, implementation wrong."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative O(n) constant-space fib with correct base case (n<2 returns n), clear docstring naming complexity and definition. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Fabricates a Read-tool invocation and a fictional package.json (react/axios/typescript/webpack) that the model could not have actually read. The summary is internally consistent with the fabricated content but represents invented evidence. In a capability/agentic context this is the canonical fabrication failure mode."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required dimensions accurately: HTTP caching (ETags/Cache-Control/CDN) vs single-endpoint POST limits; over-fetching as GraphQL's win; schema evolution via versioning vs introspection+deprecation; tooling (OpenAPI/Postman vs GraphiQL/Apollo). Concise and correct."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Clean numbered 3-step plan: extract parsing (pure), extract validation (pure, returns errors), extract persistence (interface for testing); plus a closing sentence describing the resulting orchestrator. No code, as instructed. Crisp and actionable."
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+index,reason,detail
+7,tsc,"probe-000007.ts(11,55): error TS2339: Property 'Type' does not exist on type 'Pool'."

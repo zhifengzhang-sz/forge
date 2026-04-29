@@ -40,6 +40,29 @@ v0.6/.verify-tmp/
 # v0.7 verifier probe dir (per-domain: xstate/, fp/, rx/)
 v0.7/.verify-tmp/
 
+# v1 scratch / weight artifacts
+v1/.verify-tmp/
+v1/tmp/
+v1/gguf_gguf/
+
+# v2 / v3 training output dirs (weights + tokenizer + logs).
+# Source code (train.py, merge.py, decision.md), synthesized training
+# data (data/*.jsonl), and per-arm eval results (results/) are tracked.
+gguf_gguf/
+v2/logs/
+v2/diagnostic/
+v2/stack/*/gguf/
+v2/stack/*/gguf_gguf/
+v2/stack/*/logs/
+v3.0/logs/
+v3.0-rslora/logs/
+v3.1/logs/
+v3.2/logs/
+
+# v3.B ablation arms (B1/B3/B4/B6) — only contain weights/logs.
+# Per-arm eval JSON lives under results/B{1..6}/ and IS tracked.
+v3.B/
+
 # Model weight artifacts (reproducible from train.py + synth.verified.jsonl)
 # Modelfiles are small text and are kept for reproducibility.
 *.gguf

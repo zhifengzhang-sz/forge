@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v3.0-rslora",
+  "arm": "B5",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "setup() with types + actors registered; fromPromise with typed input; assign uses ({ event })/({ context }); invoke onDone/onError flow well-formed; final state. Idiomatic v5 throughout."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "setup() with named guard isDownloading registered in setup block; assign for progress; PAUSE properly guarded; all five states present. Clean v5 idiom."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Actor registered via setup.actors with typed fromPromise<Profile, {userId}>; invoke threads input from context; onDone assigns event.output; onError routes to 'failed'. Textbook v5."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "fromObservable wired correctly with typed input/output and parent invoke + WS_MESSAGE handler. The 'observable' is a hand-rolled Subscribable that fakes two messages rather than actually adapting WebSocket onmessage; structurally correct but the WS wrapping is illustrative rather than real."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v4→v5 conversion: setup() with typed context/events, assign uses ({ context }) destructuring, no Machine() residue. Minimal and correct."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "pipe + Either with three validators composed via chainW, then map to Email. Tagged ValidationError. Idiomatic fp-ts."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Effect.gen + yield* + catchTag pattern is correct, but Layer.effect is called with a string literal 'Config' instead of a Context.Tag, and the type Effect.Effect<User, never, Config> references Config as if it were a tag when only a Layer was declared. Compiles only as pseudocode. Fallback via catchTag→null then if-check is awkward; cleaner would be catchTag returning the default user directly."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Uses Option.chain in data-first form O.chain(u, fn) rather than data-last inside pipe — breaks the idiom the prompt asked for ('Use pipe and Option.map / Option.chain idiomatically'). Result is correct but the composition is half-pipe. Should be pipe(u, O.chain(...), O.map(...))."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Composition opens with pipe + TE.chainW which is fine, but the catchAll branch is broken: TE.tryCatch(e, (u)=>new FetchError(...)) misuses tryCatch — its first arg should be a thunk returning a Promise, not the error value. Also the error widening from OrderError to FetchError is not correctly handled. Code does not type-check or run."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Misses Layer.merge anchor. More importantly the composition is inverted: Layer.provide(LoggerLive, DatabaseLayer) reads as 'DatabaseLayer provides deps to LoggerLive' but Logger has no Database dependency in this code, so the relationship is wrong. For two independent services the idiomatic call is Layer.merge(LoggerLive, DatabaseLive). Logger interface and tag construction via Context.GenericTag are fine."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable input$.pipe(debounceTime(250), distinctUntilChanged(), switchMap(...)). Typed, concise, accurate prose on switchMap cancellation."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object form + map to typed ViewModel. Comments accurate (waits for first emission from each source). Clean."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "from(tasks).pipe(mergeMap(fn, 3)) — concurrency cap correctly passed as second arg to mergeMap. Concise."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Accurate: Subject has no replay; BehaviorSubject takes initial value, exposes getValue, emits current to late subscribers. Concrete currentUser$ example with asObservable pattern."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Custom OperatorFunction<T,T> with generic T, returns source$ → source$.pipe(tap({next,error,complete})). Type-safe and idiomatic."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated-union State and Event, initial state 'empty', evolve uses exhaustive switch with never-check, status-guarded transitions for ItemAdded/Removed. Idiomatic ES."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Decider<C,E,S> generic interface, initialState/decide/evolve, state-shape-aware command handling, withdrawal rejection on insufficient funds, exhaustive nevers. Throwing DomainError is one acceptable style for command rejection."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Reads stream → reduces via evolve → decides → appends with expectedRevision. Optimistic concurrency type uses bigint | 'no_stream' which is realistic for ES libraries. Clean handler."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Projector with CartSummary read model, project(state, event) over discriminated union, handles add/remove/checkout, exhaustive never, clamp on remove. Solid."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Tradeoff prose is accurate (storage vs compute, schema versioning burden). Signature has snapshot+version+evolve. The loadAggregate body uses a fromStream boolean toggle which is unusual — typical snapshot-aware loaders prefer snapshot then replay-from-version, not an either/or branch that ignores newer events when snapshot wins."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib, n<2 base case, tuple swap, docstring with complexity note. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 2,
+      "rationale": "Fabrication: model never actually invoked Read; instead mocked a 'typical' package.json with express/body-parser/morgan dependencies and summarized them. Acknowledges it's a 'typical summary' which mitigates slightly, but the prompt asked for an actual tool use and the response invents content."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers all four required dimensions (caching with ETags/CDN; over-fetching with field selection; schema evolution via versioning vs introspection+deprecation; tooling OpenAPI vs GraphiQL/Apollo). Length appropriate. Accurate."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps for parse → validate → persist extraction; emphasizes purity, separation of concerns, testability. No code. Matches prompt exactly."
+    }
+  ]
+}

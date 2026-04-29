@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-v0.7-r64",
+  "arm": "v0.7-r64",
+  "grader": "A",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Idiomatic v5 setup() with typed context/events and fromPromise registered under actors. Invokes checkEmail from a 'submit' state rather than gating progression at the email step, and the 'taken' field gets misused as a length flag. Otherwise structurally sound."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 3,
+      "rationale": "Defines a guards block but never wires a guard onto PAUSE — PAUSE is only available from 'downloading' by virtue of state placement, not a guarded transition. Guards defined are tautological (progress<100 etc.) and unused. Structure is otherwise correct v5."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Clean v5: setup() with typed actors map, invoke with src+input, onDone storing event.output via assign, onError moving to 'failed'. Idiomatic and correct."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 2,
+      "rationale": "fromObservable is expected to return an Observable but the code returns a ReadableStream — type-incorrect. The actual invoke of wsActor is commented out, so messages would never reach the parent. Has the right surface vocabulary but does not work as written."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v4→v5 conversion: setup() with typed context/events, named action via actions map, ({ context }) destructuring in assign. Clean."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Three composed validators chained with E.chainW preserving the error channel, final map projecting to Email. Clear, idiomatic fp-ts."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Effect.gen + Context.GenericTag + Layer.succeed/effect + Layer.provide composition + catchTag fallback on the typed UserNotFound. Hits all anchors and is structurally correct."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 3,
+      "rationale": "Works, but uses O.chain((x) => O.some(x.email)) where O.map suffices — non-idiomatic. The exercise was specifically to demonstrate idiomatic Option.map / Option.chain choice."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Concise pipe + TE.chainW threading FetchError through both legs. Correct types and rationale."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Two services with GenericTag, both layered. Uses Layer.provide rather than Layer.merge to combine Logger and Database — answers the composition prompt with a different (valid) primitive. Explanation correctly distinguishes succeed vs effect."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable debounceTime/distinctUntilChanged/switchMap exactly as spec. Cancellation semantics noted correctly."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest object form, typed ViewModel, map projection. Idiomatic."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "mergeMap with concurrency cap of 3 as positional argument, typed inputs. Concise and correct."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Accurate explanation of replay-on-subscribe semantics, BehaviorSubject<User|null> with a clear initial value, exposes asObservable() — exactly the right pattern."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Type-safe OperatorFunction<T,T> built from pipe + tap with full observer (next/error/complete). Generic preserved end-to-end."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "State and Event types as discriminated unions, exhaustive switch in evolve, immutable updates with spread. Initial-state shape implied by CartCreated branch."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 2,
+      "rationale": "Decider scaffolding is present but the business logic is broken: every emitted event has amount: 0, the Withdraw guard checks balance >= 0 instead of balance >= amount, and Cmd has no payload so amounts are unrecoverable. Structurally Decider-shaped but functionally wrong."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 1,
+      "rationale": "Fabrication: imports CommandHandler from '@temporalio/workflow', a non-existent API. The structure is a Temporal-flavored DSL invention rather than a load-decide-append handler with expectedRevision. Misses optimistic concurrency entirely."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Clean projector with discriminated event union and immutable folds. Doesn't introduce a ReadModel type alias but CartSummary fills that role. REMOVE_ITEM uses event.priceCents which the event type does not declare — minor type bug."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 4,
+      "rationale": "Reasonable tradeoffs table covering load latency, storage, replay, audit, scale. Signature includes Snapshot type with version and nextEventIndex but loadAggregate does not surface evolve nor a fold function — leaves the rehydration mechanism implicit."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative O(1)-space fib with correct base case, tuple swap, docstring. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Fabrication: claims to have read package.json without invoking the Read tool, then invents specific dependency names and versions ('react 18.2.0', 'axios 1.6.2', 'devDependencies all latest'). Direct hallucination of file contents."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers caching, over-fetching, schema evolution, and tooling with concrete examples (ETags, DataLoader, introspection, OpenAPI/GraphiQL). Closes with a pragmatic when-to-use call."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered, plan-only steps that map cleanly onto parse / validate / persist with rationale per step and a closing recomposition note. No code, as instructed."
+    }
+  ]
+}

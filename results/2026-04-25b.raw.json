@@ -1,0 +1,105 @@
+{
+  "model": "gemma4:31b gemma4-31b",
+  "arm": "",
+  "suite": "tools/eval/suite.json",
+  "temperature": 0.6,
+  "session_date": "2026-04-25b",
+  "responses": [
+    {
+      "id": "xstate-01",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "xstate-02",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "xstate-03",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "xstate-04",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "xstate-05",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "fp-01",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "fp-02",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "fp-03",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "fp-04",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "fp-05",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "rx-01",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "rx-02",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "rx-03",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "rx-04",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "rx-05",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "es-01",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "es-02",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "es-03",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "es-04",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "es-05",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "cap-01",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "cap-02",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "cap-03",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    },
+    {
+      "id": "cap-04",
+      "error": "400 Client Error: Bad Request for url: http://localhost:11434/api/generate"
+    }
+  ]
+}

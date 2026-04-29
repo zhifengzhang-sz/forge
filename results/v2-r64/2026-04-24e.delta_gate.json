@@ -1,0 +1,414 @@
+{
+  "arm": "v2-r64",
+  "baseline": "v0.7-r64",
+  "session": "2026-04-24e",
+  "trained_domains": [
+    "xstate",
+    "fp",
+    "reactive",
+    "eventsourcing"
+  ],
+  "tolerance": 0.3,
+  "arm_scores": [
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "grader_A_score": 1,
+      "grader_B_score": 2,
+      "mean": 1.5,
+      "disagreement": 1
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_B_score": 4,
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "grader_A_score": 4,
+      "grader_B_score": 4,
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "grader_A_score": 2,
+      "grader_B_score": 2,
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "grader_A_score": 3,
+      "grader_B_score": 4,
+      "mean": 3.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_B_score": 4,
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_B_score": 5,
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_B_score": 3,
+      "mean": 3.5,
+      "disagreement": 1
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "grader_A_score": 3,
+      "grader_B_score": 3,
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "grader_A_score": 3,
+      "grader_B_score": 3,
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "grader_A_score": 2,
+      "grader_B_score": 2,
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    }
+  ],
+  "baseline_scores": [
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "grader_A_score": 1,
+      "grader_B_score": 1,
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "grader_A_score": 3,
+      "grader_B_score": 4,
+      "mean": 3.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "grader_A_score": 2,
+      "grader_B_score": 2,
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "grader_A_score": 1,
+      "grader_B_score": 1,
+      "mean": 1.0,
+      "disagreement": 0
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "grader_A_score": 3,
+      "grader_B_score": 4,
+      "mean": 3.5,
+      "disagreement": 1
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "grader_A_score": 3,
+      "grader_B_score": 3,
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "grader_A_score": 4,
+      "grader_B_score": 4,
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "grader_A_score": 3,
+      "grader_B_score": 3,
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "grader_A_score": 3,
+      "grader_B_score": 3,
+      "mean": 3.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_B_score": 5,
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "grader_A_score": 4,
+      "grader_B_score": 5,
+      "mean": 4.5,
+      "disagreement": 1
+    },
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "grader_A_score": 4,
+      "grader_B_score": 4,
+      "mean": 4.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "grader_A_score": 2,
+      "grader_B_score": 2,
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "grader_A_score": 2,
+      "grader_B_score": 2,
+      "mean": 2.0,
+      "disagreement": 0
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "grader_A_score": 5,
+      "grader_B_score": 5,
+      "mean": 5.0,
+      "disagreement": 0
+    }
+  ],
+  "arm_domain_means": {
+    "capability": 4.125,
+    "eventsourcing": 4.1,
+    "fp": 4.5,
+    "reactive": 4.7,
+    "xstate": 3.6
+  },
+  "baseline_domain_means": {
+    "capability": 4.0,
+    "eventsourcing": 2.6,
+    "fp": 4.0,
+    "reactive": 4.8,
+    "xstate": 3.6
+  }
+}

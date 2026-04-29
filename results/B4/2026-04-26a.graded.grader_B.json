@@ -1,0 +1,151 @@
+{
+  "model": "ts-forge-B4",
+  "arm": "B4",
+  "grader": "B",
+  "graded": [
+    {
+      "id": "xstate-01",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5: setup() with types.context/events, fromPromise actor with typed input, .createMachine, assign uses ({ event }) destructuring, named guards inline. Typed event union. No v4 patterns."
+    },
+    {
+      "id": "xstate-02",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Clean v5 setup() with typed context/events and a named guard 'isDownloading'. Slight semantic weakness: guard is `progress < 100` rather than checking the current state, but functionally restricts pause. assign() correctly destructures ({ event })."
+    },
+    {
+      "id": "xstate-03",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Idiomatic v5 invoke: src by string ref, input function, onDone/onError with assign destructuring event.output and event.error. fromPromise typed input. failed state with re-entry. No v4 leakage."
+    },
+    {
+      "id": "xstate-04",
+      "domain": "xstate",
+      "score": 4,
+      "rationale": "Uses fromObservable with typed input and an inline Subscribable. Slight issue: CONNECT handler reads event.url but the InEvent union doesn't carry url on CONNECT (would TS-error). Subscribable hand-roll is unconventional vs returning a real Observable. Otherwise wired correctly."
+    },
+    {
+      "id": "xstate-05",
+      "domain": "xstate",
+      "score": 5,
+      "rationale": "Textbook v4->v5 migration: setup() + types + named action 'bumpCount' with assign, ({ context }) destructuring, no Machine() / no (ctx, event)."
+    },
+    {
+      "id": "fp-01",
+      "domain": "fp",
+      "score": 2,
+      "rationale": "Calls `.chain(f)` as a method on E.Either values — fp-ts Either does not expose a method `.chain`; chain is a top-level function `E.chain`. Custom helper and validateEmail both invoke `x.chain(...)` which is broken. Mixes pipe with broken method calls. Final E.map is fine. Sound idea, wrong API."
+    },
+    {
+      "id": "fp-02",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Effect.gen, Layer.merge, catchTag('UserNotFound') with typed Data.TaggedError, Context.GenericTag, pipe. Solid scaffold. Minor: Effect.succeed<User, UserNotFound>(...) is the wrong arity for succeed, and the dummy Users.get always succeeds so the catchTag branch is unreachable. Pattern is correct though."
+    },
+    {
+      "id": "fp-03",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Idiomatic pipe + O.chain + O.map. Acknowledges chain-vs-map distinction. Compact, correct."
+    },
+    {
+      "id": "fp-04",
+      "domain": "fp",
+      "score": 5,
+      "rationale": "Clean pipe + TE.chainW, typed declare for fetchUser/fetchOrders, returns TaskEither<FetchError, Orders>. Note on chainW vs chain. No async/await leakage."
+    },
+    {
+      "id": "fp-05",
+      "domain": "fp",
+      "score": 4,
+      "rationale": "Layer.succeed/Layer.effect, Layer.merge, Effect.gen, yield* both services. Uses Context.GenericTag (modern Effect, valid). Comment on Layer.merge vs Layer.provide. Auto-check missed literal 'Context.Tag' but GenericTag is the correct current API."
+    },
+    {
+      "id": "rx-01",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Pipeable: debounceTime(250) -> distinctUntilChanged -> filter -> switchMap. Correct cancellation note. Typed Result. No subscribe in the operator, no .then/mergeMap."
+    },
+    {
+      "id": "rx-02",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "combineLatest in object form with typed ViewModel, pipeable map, returns Observable<ViewModel>. Idiomatic."
+    },
+    {
+      "id": "rx-03",
+      "domain": "reactive",
+      "score": 4,
+      "rationale": "mergeMap with second-arg concurrency cap of 3 — correct. Slight signature drift from prompt: uploadFile$ typed as Observable<UploadResult> not Observable<Progress>, and map collapses to percent: 100 ignoring real progress. Core operator usage is right."
+    },
+    {
+      "id": "rx-04",
+      "domain": "reactive",
+      "score": 3,
+      "rationale": "Conceptual contrast Subject vs BehaviorSubject is correct (initial value, replay-current to late subscribers). But code has a syntax error: `export const logout: void => currentUser$.next(null);` is invalid TS (missing arrow function parens, type position wrong). Subscribe is shown."
+    },
+    {
+      "id": "rx-05",
+      "domain": "reactive",
+      "score": 5,
+      "rationale": "Generic OperatorFunction<T,T> implemented via tap, type-safe pass-through, example usage with subscribe, comment on type preservation. Idiomatic."
+    },
+    {
+      "id": "es-01",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Discriminated union state (empty/active), event union, initial state, evolve switch with exhaustive `never` default. ItemAdded handles empty-state edge case (defensive). Pure, no class."
+    },
+    {
+      "id": "es-02",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Decider<C,E,S> interface, initialState/decide/evolve, command vs event split, balance check rejects overdraft, exhaustive never. DomainError subclass for typed rejection. Pure record."
+    },
+    {
+      "id": "es-03",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "Typed EventStore with readStream/appendToStream and expectedRevision (bigint | 'no_stream' | 'any') — proper optimistic-concurrency idiom. Loads, folds via evolve, decides, appends with revision threading. No mutex/lock."
+    },
+    {
+      "id": "es-04",
+      "domain": "eventsourcing",
+      "score": 5,
+      "rationale": "project(state, event) is pure with discriminated event union, exhaustive never default, fold-style reduce wrapper. CartSummary fields match prompt (id, itemCount, totalCents). No DB calls leaking in."
+    },
+    {
+      "id": "es-05",
+      "domain": "eventsourcing",
+      "score": 3,
+      "rationale": "Reasonable tradeoff prose. Signature includes Snapshot<S,E> with version/state/streamRevision, evolve, initial. Bug: when a snapshot exists, returns snap.state directly without replaying events written after snap.streamRevision — that defeats correctness of a snapshot-aware loader. Should iterate events.readFromStream(streamName, snap.streamRevision)."
+    },
+    {
+      "id": "cap-01",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Iterative fib with docstring, constant space, base case for n<2, returns int. Clean."
+    },
+    {
+      "id": "cap-02",
+      "domain": "capability",
+      "score": 1,
+      "rationale": "Fabricates package.json content rather than actually invoking the Read tool. Says 'I'll use the Read tool' then prints invented JSON (react/axios/typescript/webpack) and summarizes that fiction. Canonical tool-use fabrication failure."
+    },
+    {
+      "id": "cap-03",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Covers caching (HTTP/ETag/CDN vs persisted queries), over-fetching, schema evolution (versioning vs introspection+deprecation), and tooling (OpenAPI vs GraphiQL/Apollo). 4-6 sentences. Balanced and accurate."
+    },
+    {
+      "id": "cap-04",
+      "domain": "capability",
+      "score": 5,
+      "rationale": "Three numbered steps separating parse/validate/persist as pure-then-effect, with composition note (parse -> validate -> persist), backward-compat wrapping, and per-layer testability. No premature code."
+    }
+  ]
+}
